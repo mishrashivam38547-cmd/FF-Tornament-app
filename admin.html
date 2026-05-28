@@ -9,60 +9,54 @@
         body { background-color: #121212; color: #ffffff; padding-bottom: 40px; }
         .header { background: linear-gradient(135deg, #2c3e50, #3498db); }
         input, select, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            background: #2d2d2d; 
-            border: 1px solid #444; 
-            color: white; 
-            border-radius: 6px; 
-            box-sizing: border-box;
+            width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; 
+            border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
         }
-        input::placeholder { color: #aaa; }
         h3 { color: #f9d423; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .req-box { background: #2d2d2d; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #f39c12;}
     </style>
 </head>
 <body>
 
     <div class="header">
         <h2>🛡️ TOURNAMENT ADMIN CONTROL</h2>
-        <p>Manage Matches, Winners & Giveaways</p>
+        <p>Manage Matches, Payments & Giveaways</p>
     </div>
 
     <div style="padding: 15px;">
         
         <div class="card">
-            <h3>🎮 Create New Match</h3>
+            <h3>📥 Player Deposit Requests (Manual QR)</h3>
+            <p style="font-size: 13px; color: #aaa;">Apna bank account check karein aur niche di gayi UTR ID match karke approve karein.</p>
             
-            <label>Match Title / Type:</label>
-            <input type="text" id="match-title-input" placeholder="e.g., Daily Mega Match (Squad)">
-            
-            <label>Match Date & Time:</label>
-            <input type="datetime-local" id="match-time-input">
-            
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label>Entry Fee (₹):</label>
-                    <input type="number" id="match-fee-input" placeholder="20">
-                </div>
-                <div style="flex: 1;">
-                    <label>Per Kill (₹):</label>
-                    <input type="number" id="match-kill-input" placeholder="5">
+            <div class="req-box">
+                <p style="margin: 3px 0;"><strong>User UID:</strong> 473920194 (SilentSniper)</p>
+                <p style="margin: 3px 0;"><strong>Amount:</strong> ₹ 50.00</p>
+                <p style="margin: 3px 0; color: #f9d423;"><strong>UTR/Txn ID:</strong> 412984729104</p>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button class="btn" style="background:#28a745; color:white; padding:6px;" onclick="alert('Payment Approved! Wallet Updated.')">Approve (Add Money)</button>
+                    <button class="btn" style="background:#dc3545; color:white; padding:6px;" onclick="alert('Request Rejected!')">Reject</button>
                 </div>
             </div>
+        </div>
 
+        <div class="card">
+            <h3>🎮 Create New Match</h3>
+            <label>Match Title:</label>
+            <input type="text" id="match-title-input" placeholder="e.g., Daily Mega Match (Squad)">
+            <label>Match Date & Time:</label>
+            <input type="datetime-local" id="match-time-input">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;"><label>Entry Fee (₹):</label><input type="number" id="match-fee-input" placeholder="20"></div>
+                <div style="flex: 1;"><label>Per Kill (₹):</label><input type="number" id="match-kill-input" placeholder="5"></div>
+            </div>
             <label>Total Prize Pool (₹):</label>
             <input type="number" id="match-prize-input" placeholder="500">
-            
-            <button class="btn-submit" style="background: #3498db;" onclick="alert('Naya Match Create Ho Gaya!')">Create & Publish Match</button>
+            <button class="btn-submit" style="background: #3498db;" onclick="alert('Match Created!')">Create & Publish Match</button>
         </div>
 
         <div class="card">
             <h3>🔑 Update Room ID & Password</h3>
-            <label>Select Match:</label>
-            <select>
-                <option>Daily Mega Match (Squad) - 08:00 PM</option>
-            </select>
             <input type="text" id="room-id" placeholder="Enter Room ID">
             <input type="text" id="room-pass" placeholder="Enter Room Password">
             <button class="btn-submit" onclick="alert('Room Details Updated!')">Publish Room Info</button>
@@ -72,25 +66,17 @@
             <h3>🏆 Winner & Payment Panel</h3>
             <input type="text" id="winner-uid" placeholder="Winner Free Fire UID">
             <input type="number" id="payment-amount" placeholder="Prize Money (₹)">
-            
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn btn-add" style="flex:1;" onclick="alert('Winner Marked!')">Set Winner</button>
-                <button class="btn btn-withdraw" style="flex:1; background:#28a745;" onclick="alert('Payment Sent to Winner Wallet!')">Winner Payment</button>
+                <button class="btn btn-withdraw" style="flex:1; background:#28a745;" onclick="alert('Paid to Wallet!')">Winner Payment</button>
             </div>
         </div>
 
         <div class="card">
             <h3>🎁 Upload Giveaway Item</h3>
-            <label style="font-weight: bold; font-size: 14px;">Select Product Image:</label>
             <input type="file" id="product-photo" accept="image/*">
-            <input type="text" id="product-title" placeholder="Product Title (e.g., 500 Diamonds)">
-            <button class="btn-submit" style="background: #e67e22;" onclick="alert('Giveaway Item Uploaded!')">Upload Giveaway Page</button>
-        </div>
-
-        <div class="card">
-            <h3>📢 Connect Social Media</h3>
-            <input type="url" id="wa-channel-link" placeholder="Paste WhatsApp Channel Link">
-            <button class="btn-submit" style="background: #25D366;" onclick="alert('WhatsApp Link Saved!')">Update WhatsApp Button</button>
+            <input type="text" id="product-title" placeholder="Product Title">
+            <button class="btn-submit" style="background: #e67e22;" onclick="alert('Giveaway Uploaded!')">Upload Giveaway Page</button>
         </div>
     </div>
 
