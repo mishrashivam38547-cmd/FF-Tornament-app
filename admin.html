@@ -21,13 +21,18 @@
         .card { background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #2d2d2d; }
         .btn-submit { width: 100%; padding: 12px; border: none; font-weight: bold; color: white; border-radius: 6px; cursor: pointer; margin-top: 10px;}
         .btn-mini { padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; }
+        
+        /* Screenshot Preview Box Styling */
+        .ss-preview {
+            max-width: 100%; margin-top: 10px; border: 2px dashed #444; border-radius: 6px; display: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h2>🛡️ TOURNAMENT ADMIN CONTROL</h2>
-        <p>Live Real-Time Data Panel</p>
+        <p>Live Panel with Screenshot Verification</p>
     </div>
 
     <div style="padding: 15px;">
@@ -61,13 +66,13 @@
     </div>
 
     <script>
-        // Your Web App's Firebase Configuration
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
             authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
             projectId: "ff-tornament-app-9e3ae",
             databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/",
-            storageBucket: "ff-tornament-app-9e3ae.firebasestorage.app",
+            storageBucket: "ff-tornament-app-9e3ae.appspot.com",
             messagingSenderId: "595326120234",
             appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
         };
@@ -75,10 +80,9 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Listen for new Deposit Requests from Users
         database.ref('depositRequests').on('value', (snapshot) => {
             const container = document.getElementById('requests-container');
-            container.innerHTML = ""; // Clear existing UI list
+            container.innerHTML = ""; 
             let data = snapshot.val();
             
             if(!data) {
@@ -86,7 +90,6 @@
                 return;
             }
 
-            // Loop object logs
             Object.keys(data).forEach((key) => {
                 let req = data[key];
                 if(req.status === "Pending") {
@@ -95,7 +98,13 @@
                             <p style="margin: 3px 0;"><strong>User Account:</strong> ${req.userUID}</p>
                             <p style="margin: 3px 0;"><strong>Amount Request:</strong> ₹ ${req.amount}</p>
                             <p style="margin: 3px 0; color: #f9d423;"><strong>UTR ID:</strong> ${req.utrId}</p>
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            
+                            <div style="margin: 8px 0;">
+                                <button class="btn-mini" style="background: #e67e22;" onclick="toggleScreenshot('${req.utrId}')">View Screenshot 🖼️</button>
+                                <img id="img-${req.utrId}" src="${req.screenshotUrl}" class="ss-preview" alt="Payment SS">
+                            </div>
+
+                            <div style="display: flex; gap: 8px; margin-top: 10px;">
                                 <button class="btn-mini" style="background:#28a745;" onclick="approveDeposit('${req.userUID}', ${req.amount}, '${req.utrId}')">Approve ✅</button>
                                 <button class="btn-mini" style="background:#dc3545;" onclick="rejectDeposit('${req.utrId}')">Reject ❌</button>
                             </div>
@@ -108,51 +117,49 @@
             }
         });
 
-        // Approve Function: Reads balance node -> Adds request amount -> Deletes Request Log
+        // Toggle visibility function for image node
+        function toggleScreenshot(utrId) {
+            let img = document.getElementById('img-' + utrId);
+            if(img.style.display === "none" || img.style.display === "") {
+                img.style.display = "block";
+            } else {
+                img.style.display = "none";
+            }
+        }
+
         function approveDeposit(uid, amount, utr) {
             let balanceRef = database.ref('users/' + uid + '/balance');
             balanceRef.once('value', (snapshot) => {
                 let currentBal = snapshot.val() ? parseFloat(snapshot.val()) : 0.00;
                 let finalBal = currentBal + parseFloat(amount);
                 
-                // Set total back inside user wallet card node
                 balanceRef.set(finalBal).then(() => {
-                    database.ref('depositRequests/' + utr).remove(); // Clear pending item log
-                    alert("Approved! User wallet automatically credited successfully.");
+                    database.ref('depositRequests/' + utr).remove(); 
+                    alert("Approved! Wallet updated.");
                 });
             });
         }
 
-        // Reject Function
         function rejectDeposit(utr) {
             database.ref('depositRequests/' + utr).remove().then(() => {
                 alert("Request Rejected and Removed.");
             });
         }
 
-        // Publish live match variables
         function publishMatchDetails() {
             let title = document.getElementById('match-title').value;
             let time = document.getElementById('match-time').value;
             let fee = document.getElementById('match-fee').value;
             let kill = document.getElementById('match-kill').value;
-
             if(!title || !time || !fee || !kill) { alert("Fields fill kijiye!"); return; }
-
-            database.ref('activeMatch').update({
-                title: title, time: time, fee: fee, kill: kill, roomId: "", roomPass: ""
-            }).then(() => { alert("Live Match Details Updated on User Front-End!"); });
+            database.ref('activeMatch').update({ title: title, time: time, fee: fee, kill: kill, roomId: "", roomPass: "" }).then(() => { alert("Match Updated!"); });
         }
 
-        // Publish Live Room Controls
         function publishRoomDetails() {
             let rId = document.getElementById('room-id').value;
             let rPass = document.getElementById('room-pass').value;
             if(!rId || !rPass) { alert("Enter both Room Context ID and Pass!"); return; }
-
-            database.ref('activeMatch').update({ roomId: rId, roomPass: rPass }).then(() => {
-                alert("Room Credentials Published successfully!");
-            });
+            database.ref('activeMatch').update({ roomId: rId, roomPass: rPass }).then(() => { alert("Room Info Published!"); });
         }
     </script>
 </body>
