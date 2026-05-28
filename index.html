@@ -165,7 +165,7 @@
 
         <div id="history-tab" class="tab-content">
             <div class="card"><h4>Match History</h4><p style="color:#777;" id="history-match-text">No matches played yet.</p></div>
-            <div class="card"><h4>Payment History</h4><p style="color:#777;" id="history-payment-text">No history available.</p></div>
+            <div class="card"><h4>Payment History</h4><div id="history-payment-container" style="font-size:14px; color:#ccc;">No history available.</div></div>
         </div>
 
         <div id="giveaway-tab" class="tab-content">
@@ -221,7 +221,6 @@
             if(link) globalWhatsAppChannelLink = link;
         });
 
-        // 🔥 FIX FETCH: PRODUCT IMAGE RENDER LIVE IN USER APP
         database.ref('appSettings/giveaway').on('value', (snapshot) => {
             let giveaway = snapshot.val();
             if(giveaway && giveaway.status === "Active") {
@@ -232,11 +231,8 @@
                 
                 let imgElement = document.getElementById('giveaway-product-image');
                 if(giveaway.productImg) {
-                    imgElement.src = giveaway.productImg;
-                    imgElement.style.display = "block";
-                } else {
-                    imgElement.style.display = "none";
-                }
+                    imgElement.src = giveaway.productImg; imgElement.style.display = "block";
+                } else { imgElement.style.display = "none"; }
             } else {
                 document.getElementById('giveaway-active-box').style.display = "none";
                 document.getElementById('giveaway-inactive-box').style.display = "block";
@@ -256,6 +252,32 @@
                     document.getElementById('room-info-box').style.color = "#28a745";
                 }
             }
+        });
+
+        // 🔥 FIX: USER SIDE LIVE DEPOSIT HISTORY LISTENER
+        database.ref('depositRequests').on('value', (snapshot) => {
+            let container = document.getElementById('history-payment-container');
+            container.innerHTML = "";
+            let data = snapshot.val();
+            let count = 0;
+            if(!data) { container.innerHTML = "No history available."; return; }
+            
+            for(let utr in data) {
+                let req = data[utr];
+                if(req.userUID === userSessionUID) {
+                    count++;
+                    let color = "#f39c12"; // Pending
+                    let statusText = "⏳ Pending Review";
+                    if(req.status === "Approved") { color = "#28a745"; statusText = "🎉 Approved & Added"; }
+                    if(req.status === "Rejected") { color = "#dc3545"; statusText = "❌ Rejected"; }
+                    
+                    container.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #333;">
+                        <strong>UTR:</strong> ${utr} | <strong>Amount:</strong> ₹${req.amount.toFixed(2)}<br>
+                        <span style="color:${color}; font-weight:bold;">${statusText}</span>
+                    </div>`;
+                }
+            }
+            if(count === 0) { container.innerHTML = "No history available."; }
         });
 
         function openWhatsAppChannel() { window.open(globalWhatsAppChannelLink, '_blank'); }
@@ -291,17 +313,12 @@
             if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! 12 digits ka number hota hai."); return; }
             if(fileInput.files.length === 0) { alert("❌ Kripya Screenshot select karein!"); return; }
 
-            submitBtn.innerText = "Uploading Screenshot...";
-            submitBtn.disabled = true;
-
+            submitBtn.innerText = "Uploading Screenshot..."; submitBtn.disabled = true;
             let file = fileInput.files[0];
             let formData = new FormData();
             formData.append("image", file);
 
-            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-                method: "POST",
-                body: formData
-            })
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
             .then(response => response.json())
             .then(result => {
                 if(result.success) {
@@ -309,7 +326,6 @@
                     database.ref('depositRequests/' + utr).set({
                         userUID: userSessionUID, amount: parseFloat(amt), utrId: utr, screenshotUrl: downloadURL, status: "Pending"
                     }).then(() => {
-                        document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Review</span>`;
                         alert("🎉 Request Submitted Successfully!");
                         submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false; closePaymentModal();
                     });
@@ -325,9 +341,7 @@
             if(!upi || !amt || amt <= 0) { alert("❌ Sahi UPI ID aur Amount bharein!"); return; }
             if(amt > currentWalletBalance) { alert("❌ Insufficient Balance!"); return; }
 
-            btn.innerText = "Sending Request...";
-            btn.disabled = true;
-
+            btn.innerText = "Sending Request..."; btn.disabled = true;
             let requestId = "WITHDRAW_" + Date.now();
             database.ref('withdrawRequests/' + requestId).set({
                 requestId: requestId, userUID: userSessionUID, upiId: upi, amount: amt, status: "Pending"
@@ -347,17 +361,12 @@
             if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
             if(fileInput.files.length === 0) { alert("❌ Kripya proof/profile screenshot select karein!"); return; }
 
-            btn.innerText = "Uploading Photo...";
-            btn.disabled = true;
-
+            btn.innerText = "Uploading Photo..."; btn.disabled = true;
             let file = fileInput.files[0];
             let formData = new FormData();
             formData.append("image", file);
 
-            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-                method: "POST",
-                body: formData
-            })
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
             .then(response => response.json())
             .then(result => {
                 if(result.success) {
