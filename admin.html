@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background-color: #f4f6f9; color: #333; }
+        .header { background: #2c3e50; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🛡️ TOURNAMENT ADMIN CONTROL</h2>
+        <p>Manage Matches, Winners & Giveaways</p>
+    </div>
+
+    <div style="padding: 15px;">
+        <div class="card">
+            <h3>🔑 Update Room ID & Password</h3>
+            <input type="text" id="room-id" placeholder="Enter Room ID">
+            <input type="text" id="room-pass" placeholder="Enter Room Password">
+            <button class="btn-submit" onclick="alert('Room Details Updated!')">Publish to User App</button>
+        </div>
+
+        <div class="card">
+            <h3>🏆 Winner & Payment Panel</h3>
+            <input type="text" id="winner-uid" placeholder="Winner Free Fire UID">
+            <input type="number" id="prize-amount" placeholder="Prize Money (₹)">
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-add" style="flex:1;" onclick="alert('Winner Marked!')">Set Winner</button>
+                <button class="btn btn-withdraw" style="flex:1; background:#28a745;" onclick="alert('Payment Sent to Winner Wallet!')">Winner Payment</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🎁 Upload Giveaway Item</h3>
+            <label style="font-weight: bold; font-size: 14px;">Select Product Image:</label>
+            <input type="file" id="product-photo" accept="image/*">
+            <input type="text" id="product-title" placeholder="Product Title (e.g., 500 Diamonds)">
+            <button class="btn-submit" style="background: #e67e22;" onclick="alert('Giveaway Item Uploaded!')">Upload & Update Giveaway Page</button>
+        </div>
+
+        <div class="card">
+            <h3>📢 Connect Social Media</h3>
+            <input type="url" id="wa-channel-link" placeholder="Paste WhatsApp Channel Link">
+            <button class="btn-submit" style="background: #25D366;" onclick="alert('WhatsApp Link Saved!')">Update WhatsApp Button</button>
+        </div>
+    </div>
+
+</body>
+</html>
