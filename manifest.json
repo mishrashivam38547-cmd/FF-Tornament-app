@@ -1,0 +1,21 @@
+{
+  "short_name": "RS7_esport",
+  "name": "RS7_esport Tournament",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/60X9Z8c/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.ibb.co/VvZ6mby/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#121212",
+  "theme_color": "#ff4e50",
+  "display": "standalone",
+  "orientation": "portrait"
+}
