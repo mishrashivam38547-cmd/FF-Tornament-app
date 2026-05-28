@@ -4,7 +4,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Free Fire MAX Tournament</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Universal Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            padding-bottom: 30px;
+        }
+
+        /* Header Grid Layout (Left Text, Right Wallet & Add Money) */
+        .header {
+            background: linear-gradient(135deg, #ff4e50, #f9d423);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .header-left {
+            max-width: 50%;
+        }
+        .header-left h2 { 
+            margin: 0; 
+            font-size: 18px; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5); 
+            line-height: 1.2;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 45%;
+            align-items: flex-end;
+        }
+
+        /* Wallet Side-Card */
+        .wallet-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            width: 100%;
+            box-sizing: border-box;
+            text-align: right;
+        }
+        .wallet-card span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff;}
+        .wallet-card h3 { margin: 2px 0 0 0; font-size: 16px; font-weight: bold;}
+
+        /* Top Right Add Money Button */
+        .btn-add { 
+            background-color: #121212; 
+            color: #fff; 
+            border: 1px solid #ff4e50;
+            width: 100%;
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 15px;
+        }
+
+        /* Bottom Action Layout */
+        .action-buttons-bottom {
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-withdraw { 
+            background-color: #333; 
+            color: white; 
+            border: 1px solid #444; 
+            width: 100%;
+            font-size: 14px;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tab-btn.active {
+            background: #ff4e50;
+            color: white;
+        }
+
+        /* Dynamic Tab Content Control */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* App Cards layout */
+        .card, .match-card {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #2d2d2d;
+        }
+
+        /* Match Specifics */
+        .match-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #f9d423; }
+        .match-details p { margin: 5px 0; font-size: 14px; color: #ccc; }
+        .room-info {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            color: #ff4e50;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .btn-join, .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .btn-submit { background: #ff4e50; margin-top: 10px; }
+
+        /* Form Elements inside Dark Cards */
+        input[type="text"], input[type="tel"], textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        /* Modal (Popup) Base Design */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.8); 
+        }
+        .modal-content {
+            background-color: #1e1e1e;
+            margin: 30% auto; 
+            padding: 20px;
+            border: 1px solid #444;
+            width: 85%; 
+            max-width: 400px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            text-align: center;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: #fff; }
+    </style>
 </head>
 <body>
 
@@ -25,18 +227,15 @@
     <div id="payment-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-            <h3>💳 Add Money via UPI QR</h3>
-            <p style="font-size: 13px; color: #ccc;">Niche diye gaye QR Code ko scan karke payment kijiye, phir Transaction ID (UTR) submit karein.</p>
+            <h3>💳 Add Money via UPI App</h3>
+            <p style="font-size: 13px; color: #ccc;">Amount daliye aur niche diye gaye button par click karke kisi bhi UPI app (PhonePe, Paytm, GPay) se pay kijiye.</p>
             
-            <div class="qr-container">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=YOUR_UPI_ID@okaxis&pn=SilentSniper&cu=INR" alt="UPI QR Code">
-                <p style="font-size: 12px; color: #f9d423; margin: 5px 0;">UPI ID: YOUR_UPI_ID@okaxis</p>
-            </div>
-
-            <div class="payment-form">
-                <input type="number" id="pay-amount" placeholder="Enter Amount Paid (₹)" required>
-                <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR/Txn ID" required>
-                <button class="btn-submit" onclick="submitPaymentRequest()">Submit Payment Request</button>
+            <div class="payment-form" style="margin-top: 20px;">
+                <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
+                
+                <button class="btn-submit" style="background: #28a745;" onclick="startUPIPayment()">Pay via UPI Apps</button>
+                
+                <p style="font-size: 11px; color: #ff4e50; margin-top: 15px;">⚠️ Note: Payment karne ke baad transaction successful hone ka wait karein.</p>
             </div>
         </div>
     </div>
@@ -106,11 +305,17 @@
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
         function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
 
-        function submitPaymentRequest() {
-            let amt = document.getElementById('pay-amount').value;
-            let utr = document.getElementById('pay-utr').value;
-            if(!amt || !utr) { alert("Please enter both Amount and UTR ID!"); return; }
-            alert("Payment Request Submitted! Admin verification ke baad balance add ho jayega.");
+        // UPI Intent Payment System
+        function startUPIPayment() {
+            let amount = document.getElementById('pay-amount').value;
+            if(!amount || amount <= 0) { alert("Kripya sahi amount dalein!"); return; }
+
+            // ⚠️ YAHAN APNI ASLI UPI ID AUR APNA NAAM DALEIN
+            let upiId = "YOUR_UPI_ID@okaxis"; 
+            let merchantName = "Silent Sniper Tournament"; 
+
+            let upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
+            window.location.href = upiUrl;
             closePaymentModal();
         }
 
