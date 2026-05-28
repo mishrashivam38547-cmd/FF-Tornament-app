@@ -145,6 +145,7 @@
             <button class="tab-btn" onclick="switchTab('history')">History</button>
             <button class="tab-btn" onclick="switchTab('giveaway')">Giveaway Claim</button>
         </div>
+
         <div id="matches-tab" class="tab-content active">
             <div class="match-card">
                 <div class="match-title" id="display-match-title">🔥 Loading Match...</div>
@@ -157,17 +158,20 @@
                 <button class="btn-join" onclick="openJoinModal()">JOIN TOURNAMENT</button>
             </div>
         </div>
+
         <div id="history-tab" class="tab-content">
             <div class="card"><h4>Match History</h4><p style="color:#777;" id="history-match-text">No matches played yet.</p></div>
             <div class="card"><h4>Payment History</h4><p style="color:#777;" id="history-payment-text">No history available.</p></div>
         </div>
+
         <div id="giveaway-tab" class="tab-content">
             <div class="card">
                 <h4>🎁 Claim Your Giveaway Reward</h4>
+                <p style="font-size: 13px; color: #ccc; margin-bottom: 10px;">Apni details bharein aur niche diye button par click karke WhatsApp par submit karein.</p>
                 <input type="text" id="winner-name" placeholder="Enter Your Full Name">
                 <input type="tel" id="winner-phone" placeholder="Enter WhatsApp Number">
-                <textarea id="winner-address" placeholder="Enter Full Delivery Address" rows="4"></textarea>
-                <button class="btn-submit" onclick="sendAddressToWhatsApp()">Submit Details to Admin</button>
+                <textarea id="winner-address" placeholder="Enter Full Delivery Address with Pincode" rows="4"></textarea>
+                <button class="btn-submit" style="background: #25d366;" onclick="sendAddressToWhatsApp()">Submit Details via WhatsApp</button>
             </div>
         </div>
     </div>
@@ -214,7 +218,7 @@
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabName + '-tab').classList.add('active');
-            event.currentTarget.classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
         }
 
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
@@ -224,14 +228,14 @@
         function openWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'block'; }
         function closeWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
 
+        // ✅ UPDATED: AAPKI ASLI UPI ID SET KAR DI HAI
         function startUPIPayment() {
             let amount = parseFloat(document.getElementById('pay-amount').value);
             if(!amount || amount <= 0) { alert("Kripya sahi amount dalein!"); return; }
-            let upiId = "mishrashivam38547@okaxis"; 
-            window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniper&am=${amount}&cu=INR`;
+            let upiId = "mishrashivam5740@oksbi"; 
+            window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniperTournament&am=${amount}&cu=INR`;
         }
 
-        // 🔥 NEW IMGBB UPLOAD LOGIC (FREE & NO UPGRADE REQUIRED)
         function submitPaymentRequest() {
             let amt = document.getElementById('pay-amount').value;
             let utr = document.getElementById('pay-utr').value.trim();
@@ -245,15 +249,12 @@
             submitBtn.innerText = "Uploading Screenshot...";
             submitBtn.disabled = true;
 
-            // Form data formatting for ImgBB API Request
             let file = fileInput.files[0];
             let formData = new FormData();
             formData.append("image", file);
 
-            // ⚠️ APNI IMGBB API KEY HAR BAAR YAHA UPDATE KAREIN
-            const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f";
+            const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
-            // Sending photo to ImgBB via fetch request API
             fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
                 method: "POST",
                 body: formData
@@ -261,9 +262,8 @@
             .then(response => response.json())
             .then(result => {
                 if(result.success) {
-                    let downloadURL = result.data.url; // Free live direct link generated
+                    let downloadURL = result.data.url; 
                     
-                    // Push data directly into Firebase Realtime Database
                     database.ref('depositRequests/' + utr).set({
                         userUID: userSessionUID,
                         amount: parseFloat(amt),
@@ -272,19 +272,19 @@
                         status: "Pending"
                     }).then(() => {
                         document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Review</span>`;
-                        alert("🎉 Request Submitted successfully!");
+                        alert("🎉 Request Submitted Successfully!");
                         submitBtn.innerText = "2. Submit Payment Request";
                         submitBtn.disabled = false;
                         closePaymentModal();
                     });
                 } else {
-                    alert("Upload Failed! Kripya sahi ImgBB API Key check karein.");
+                    alert("Upload Failed! ImgBB Key check karein.");
                     submitBtn.innerText = "2. Submit Payment Request";
                     submitBtn.disabled = false;
                 }
             })
             .catch(error => {
-                alert("Network Error during screenshot upload!");
+                alert("Network Error during upload!");
                 submitBtn.innerText = "2. Submit Payment Request";
                 submitBtn.disabled = false;
             });
@@ -306,8 +306,21 @@
         }
 
         function submitWithdrawRequest() { alert("Withdraw request sent!"); closeWithdrawModal(); }
-        function sendAddressToWhatsApp() { window.open(`https://wa.me/91XXXXXXXXXX?text=Winner Details`, '_blank'); }
+
+        // ✅ UPDATED: AAPKA ASLI WHATSAPP NUMBER AUR MESSAGE FORMAT
+        function sendAddressToWhatsApp() { 
+            let name = document.getElementById('winner-name').value.trim();
+            let phone = document.getElementById('winner-phone').value.trim();
+            let address = document.getElementById('winner-address').value.trim();
+
+            if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
+
+            let whatsappNumber = "918858509091"; // Format with country code
+            let textMessage = `🎁 *Giveaway Winner Details* 🎁%0A%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}`;
+            
+            window.open(`https://wa.me/${whatsappNumber}?text=${textMessage}`, '_blank'); 
+        }
     </script>
 </body>
-            </html>
-            
+    </html>
+    
