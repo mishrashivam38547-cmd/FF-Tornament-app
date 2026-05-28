@@ -14,7 +14,7 @@
         h2, h3 { color: #333; border-bottom: 2px solid #ff4e50; padding-bottom: 8px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="text"], input[type="number"], select, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .btn-update { background: #ff4e50; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
         .btn-update:hover { background: #e03e40; }
         .card { background: #fff9f9; border: 1px solid #ffe0e0; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
@@ -32,42 +32,46 @@
 
     <div class="card" style="background: #eef7ff; border-color: #ccdfff;">
         <h3>📢 Social & Giveaway Management</h3>
-        
         <div class="form-group">
             <label>WhatsApp Channel Link:</label>
             <input type="text" id="admin-channel-url" placeholder="Paste your WhatsApp Channel full URL here">
         </div>
-        
         <hr style="border:0; border-top: 1px solid #ccc; margin: 15px 0;">
         
         <div class="form-group">
             <label>Giveaway Title:</label>
-            <input type="text" id="admin-giveaway-title" placeholder="e.g., Alok Character Giveaway">
+            <input type="text" id="admin-giveaway-title" placeholder="e.g., Free Fire Diamond Giveaway">
         </div>
         <div class="form-group">
             <label>Giveaway Item Description:</label>
-            <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds + Custom Bundle">
+            <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds (Photo Proof Required)">
         </div>
+        
+        <div class="form-group">
+            <label>Upload Giveaway Product Photo (Optional):</label>
+            <input type="file" id="admin-giveaway-file" accept="image/*">
+            <input type="hidden" id="admin-giveaway-existing-img">
+        </div>
+
         <div class="form-group">
             <label>Giveaway Status:</label>
             <select id="admin-giveaway-status">
                 <option value="Inactive">🔒 Inactive (Hide from Users)</option>
-                <option value="Active">🔓 Active (Show Form to Users)</option>
+                <option value="Active">🔓 Active (Show Form + Upload Input)</option>
             </select>
         </div>
-        
-        <button class="btn-update" style="background: #007bff;" onclick="updateSocialAndGiveaway()">Save Settings Live</button>
+        <button class="btn-update" id="btn-save-settings" style="background: #007bff;" onclick="updateSocialAndGiveaway()">Save Settings Live</button>
     </div>
 
     <div class="card">
         <h3>🎮 Live Match Update</h3>
         <div class="form-group">
             <label>Match Title:</label>
-            <input type="text" id="match-title" placeholder="e.g., Sunday Grand Cup">
+            <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
         </div>
         <div class="form-group">
             <label>Match Time:</label>
-            <input type="text" id="match-time" placeholder="e.g., 09:00 PM">
+            <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
         </div>
         <div class="form-group">
             <label>Entry Fee (₹):</label>
@@ -78,7 +82,7 @@
             <input type="number" id="match-kill" value="5">
         </div>
         <div class="form-group">
-            <label>Room ID (Visible 15 mins before):</label>
+            <label>Room ID:</label>
             <input type="text" id="room-id" placeholder="Enter Room ID">
         </div>
         <div class="form-group">
@@ -88,9 +92,14 @@
         <button class="btn-update" onclick="updateMatchDetails()">Update Match Live</button>
     </div>
 
-    <div class="card" style="background: #f9f9f9;">
-        <h3>📥 User Deposit Requests (Pending Screenshots)</h3>
+    <div class="card" style="background: #f9f9f9; border-color: #ddd;">
+        <h3>📥 User Deposit Requests (Money Approvals)</h3>
         <div id="deposit-requests-container">Loading requests...</div>
+    </div>
+
+    <div class="card" style="background: #fffdf5; border-color: #ffeaa7;">
+        <h3 style="color: #d63031; border-bottom-color: #d63031;">📤 User Withdrawal Requests (Payouts)</h3>
+        <div id="withdraw-requests-container">Loading withdrawal requests...</div>
     </div>
 </div>
 
@@ -106,8 +115,8 @@
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
-    // Load Existing Admin Data
     database.ref('appSettings/whatsappChannel').once('value', (snapshot) => {
         if(snapshot.val()) document.getElementById('admin-channel-url').value = snapshot.val();
     });
@@ -118,28 +127,64 @@
             document.getElementById('admin-giveaway-title').value = giveaway.title || "";
             document.getElementById('admin-giveaway-desc').value = giveaway.description || "";
             document.getElementById('admin-giveaway-status').value = giveaway.status || "Inactive";
+            document.getElementById('admin-giveaway-existing-img').value = giveaway.productImg || "";
         }
     });
 
-    // Save Social & Giveaway Settings function
+    // 🔥 FIX: UPLOAD PRODUCT PHOTO TO IMGBB AND UPDATE IN DATABASE
     function updateSocialAndGiveaway() {
         let channelLink = document.getElementById('admin-channel-url').value.trim();
         let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
         let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
         let giveawayStatus = document.getElementById('admin-giveaway-status').value;
+        let fileInput = document.getElementById('admin-giveaway-file');
+        let existingImg = document.getElementById('admin-giveaway-existing-img').value;
+        let btn = document.getElementById('btn-save-settings');
 
         if(!channelLink) { alert("WhatsApp Channel URL daalna zaroori hai!"); return; }
 
-        database.ref('appSettings').update({
-            whatsappChannel: channelLink,
-            giveaway: {
-                title: giveawayTitle,
-                description: giveawayDesc,
-                status: giveawayStatus
-            }
-        }).then(() => {
-            alert("🎉 Settings Updated successfully!");
-        });
+        function saveData(imageUrl) {
+            database.ref('appSettings').update({
+                whatsappChannel: channelLink,
+                giveaway: {
+                    title: giveawayTitle,
+                    description: giveawayDesc,
+                    status: giveawayStatus,
+                    productImg: imageUrl
+                }
+            }).then(() => {
+                alert("🎉 Settings with Product Photo Updated Successfully!");
+                btn.innerText = "Save Settings Live";
+                btn.disabled = false;
+            });
+        }
+
+        if(fileInput.files.length > 0) {
+            btn.innerText = "Uploading Product Photo...";
+            btn.disabled = true;
+            
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append("image", file);
+
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if(result.success) {
+                    document.getElementById('admin-giveaway-existing-img').value = result.data.url;
+                    saveData(result.data.url);
+                } else {
+                    alert("Image upload failed!");
+                    btn.disabled = false;
+                    btn.innerText = "Save Settings Live";
+                }
+            }).catch(() => { btn.disabled = false; });
+        } else {
+            saveData(existingImg);
+        }
     }
 
     function updateMatchDetails() {
@@ -149,56 +194,52 @@
         let kill = document.getElementById('match-kill').value;
         let rId = document.getElementById('room-id').value;
         let rPass = document.getElementById('room-pass').value;
-
-        database.ref('activeMatch').set({
-            title: title, time: time, fee: fee, kill: kill, roomId: rId, roomPass: rPass
-        }).then(() => { alert("Match Live Updated!"); });
+        database.ref('activeMatch').set({ title: title, time: time, fee: fee, kill: kill, roomId: rId, roomPass: rPass }).then(() => { alert("Match Live Updated!"); });
     }
 
-    // Load Live Pending Requests with ImgBB Link Screenshots
+    // Load Deposit Requests
     database.ref('depositRequests').on('value', (snapshot) => {
-        let container = document.getElementById('deposit-requests-container');
-        container.innerHTML = "";
+        let container = document.getElementById('deposit-requests-container'); container.innerHTML = "";
         let data = snapshot.val();
-        
         if(!data) { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; return; }
-
         for(let utr in data) {
             if(data[utr].status === "Pending") {
-                let req = data[utr];
-                let box = document.createElement('div');
-                box.className = "request-box";
-                box.innerHTML = `
-                    <div>
-                        <strong>UTR:</strong> ${utr} <br>
-                        <strong>User:</strong> ${req.userUID} <br>
-                        <strong>Amount:</strong> ₹${req.amount} <br>
-                        <a class="screenshot-link" href="${req.screenshotUrl}" target="_blank">🖼️ View Screenshot</a>
-                    </div>
-                    <div>
-                        <button class="btn-action btn-approve" onclick="approveDeposit('${utr}', '${req.userUID}', ${req.amount})">Approve</button>
-                        <button class="btn-action btn-reject" onclick="rejectDeposit('${utr}')">Reject</button>
-                    </div>
-                `;
+                let req = data[utr]; let box = document.createElement('div'); box.className = "request-box";
+                box.innerHTML = `<div><strong>UTR:</strong> ${utr}<br><strong>User:</strong> ${req.userUID}<br><strong>Amount:</strong> ₹${req.amount}<br><a class="screenshot-link" href="${req.screenshotUrl}" target="_blank">🖼️ View Screenshot</a></div>
+                    <div><button class="btn-action btn-approve" onclick="approveDeposit('${utr}', '${req.userUID}', ${req.amount})">Approve</button><button class="btn-action btn-reject" onclick="rejectDeposit('${utr}')">Reject</button></div>`;
                 container.appendChild(box);
             }
         }
-        if(container.innerHTML === "") { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; }
     });
 
     function approveDeposit(utr, userUID, amount) {
-        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => {
-            return (currentBalance || 0) + amount;
-        }).then(() => {
-            database.ref('depositRequests/' + utr).update({ status: "Approved" });
-            alert("Deposit Approved! Balance Added to User.");
+        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { return (currentBalance || 0) + amount; }).then(() => {
+            database.ref('depositRequests/' + utr).update({ status: "Approved" }); alert("Deposit Approved!");
         });
     }
+    function rejectDeposit(utr) { database.ref('depositRequests/' + utr).update({ status: "Rejected" }); alert("Request Rejected!"); }
 
-    function rejectDeposit(utr) {
-        database.ref('depositRequests/' + utr).update({ status: "Rejected" });
-        alert("Request Rejected!");
+    // Load Withdrawal Requests
+    database.ref('withdrawRequests').on('value', (snapshot) => {
+        let container = document.getElementById('withdraw-requests-container'); container.innerHTML = "";
+        let data = snapshot.val();
+        if(!data) { container.innerHTML = "<p style='color:green;'>No pending withdrawal requests.</p>"; return; }
+        for(let reqId in data) {
+            if(data[reqId].status === "Pending") {
+                let req = data[reqId]; let box = document.createElement('div'); box.className = "request-box"; box.style.borderLeftColor = "#d63031";
+                box.innerHTML = `<div><strong>User ID:</strong> ${req.userUID} <br><strong>UPI ID:</strong> <span style="color:#d63031; font-weight:bold;">${req.upiId}</span> <br><strong>Amount to Pay:</strong> ₹${req.amount}</div>
+                    <div><button class="btn-action btn-approve" style="background:#28a745;" onclick="approveWithdrawal('${reqId}', '${req.userUID}', ${req.amount})">Paid (Approve)</button><button class="btn-action btn-reject" style="background:#dc3545;" onclick="rejectWithdrawal('${reqId}')">Reject</button></div>`;
+                container.appendChild(box);
+            }
+        }
+    });
+
+    function approveWithdrawal(reqId, userUID, amount) {
+        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { if (currentBalance >= amount) { return currentBalance - amount; } else { return currentBalance; } }).then(() => {
+            database.ref('withdrawRequests/' + reqId).update({ status: "Approved" }); alert("🎉 Payout Approved!");
+        });
     }
+    function rejectWithdrawal(reqId) { database.ref('withdrawRequests/' + reqId).update({ status: "Rejected" }); alert("Withdrawal request rejected!"); }
 </script>
 </body>
 </html>
