@@ -6,6 +6,7 @@
     <title>Free Fire MAX Tournament</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
@@ -14,6 +15,24 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212; color: #ffffff; padding-bottom: 30px;
         }
+        /* 🔐 LOGIN SCREEN STYLES */
+        #login-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; background: linear-gradient(135deg, #1e1e1e, #121212); text-align: center; padding: 20px;
+        }
+        .login-card { background: #1e1e1e; padding: 40px 20px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); max-width: 360px; width: 100%; }
+        .login-card h2 { margin: 0 0 10px 0; color: #ff4e50; }
+        .btn-google {
+            background-color: #ffffff; color: #000000; border: none; padding: 12px 24px;
+            font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn-google:hover { background-color: #f1f1f1; }
+
+        /* 🎮 APP CONTAINER (Hidden initially) */
+        #app-container { display: none; }
+
         .header {
             background: linear-gradient(135deg, #ff4e50, #f9d423);
             padding: 15px; display: flex; justify-content: space-between; align-items: center;
@@ -21,25 +40,26 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .header-left { max-width: 50%; }
-        .header-left h2 { margin: 0; font-size: 18px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); line-height: 1.2; }
+        .header-left h2 { margin: 0; font-size: 16px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); line-height: 1.2; }
         .header-right { display: flex; flex-direction: column; gap: 8px; width: 45%; align-items: flex-end; }
         .wallet-card {
             background: rgba(255, 255, 255, 0.2); padding: 6px 12px; border-radius: 8px;
             backdrop-filter: blur(5px); width: 100%; box-sizing: border-box; text-align: right;
         }
-        .wallet-card span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff;}
+        .wallet-card span { font-size: 10px; text-transform: uppercase; color: #fff;}
         .wallet-card h3 { margin: 2px 0 0 0; font-size: 16px; font-weight: bold;}
         .btn-add { 
             background-color: #121212; color: #fff; border: 1px solid #ff4e50;
             width: 100%; padding: 8px; font-size: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;
         }
+        .btn-logout { background: transparent; border: none; color: #fff; font-size: 11px; text-decoration: underline; cursor: pointer; margin-top: 2px; }
         .btn-channel {
             background-color: #0088cc; color: #fff; border: none;
-            width: 100%; padding: 6px; font-size: 11px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: block; box-sizing: border-box;
+            width: 100%; padding: 6px; font-size: 11px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: block; box-sizing: border-box; margin-top: 5px;
         }
         .main-content { padding: 15px; }
         .action-buttons-bottom { margin-bottom: 15px; }
-        .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-withdraw { background-color: #333; color: white; border: 1px solid #444; width: 100%; font-size: 14px; }
         .tabs { display: flex; background: #1e1e1e; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
         .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #888; font-weight: bold; cursor: pointer; font-size: 13px; }
@@ -62,136 +82,140 @@
         }
         .btn-submit { background: #ff4e50; margin-top: 10px; }
         input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="file"] {
-            width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d;
-            border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
+            width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
         }
         .error-msg { color: #ff4e50; font-size: 12px; margin-top: -5px; margin-bottom: 5px; display: none; font-weight: bold; }
-        .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); 
-        }
-        .modal-content {
-            background-color: #1e1e1e; margin: 15% auto; padding: 20px; border: 1px solid #444;
-            width: 85%; max-width: 400px; border-radius: 12px; box-sizing: border-box; text-align: center; position: relative;
-        }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: #1e1e1e; margin: 15% auto; padding: 20px; border: 1px solid #444; width: 85%; max-width: 400px; border-radius: 12px; box-sizing: border-box; text-align: center; position: relative; }
         .close-btn { position: absolute; right: 15px; top: 10px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
         .product-img-view { width: 100%; max-height: 180px; border-radius: 8px; object-fit: contain; margin: 10px 0; background: #121212; border: 1px solid #333; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="header-left">
-            <h2>Silent Sniper Tournament</h2>
-            <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()">📢 Join Channel</button>
-        </div>
-        <div class="header-right">
-            <div class="wallet-card">
-                <span>Wallet Balance</span>
-                <h3 id="user-balance">₹ 0.00</h3>
-            </div>
-            <button class="btn btn-add" onclick="openPaymentModal()">➕ Add Money</button>
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>Silent Sniper App</h2>
+            <p style="color: #aaa; font-size: 14px;">Tournaments me join karne ke liye login karein</p>
+            <button class="btn-google" onclick="loginWithGoogle()">
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google Logo" width="18">
+                Sign in with Google
+            </button>
         </div>
     </div>
 
-    <div id="payment-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-            <h3>💳 Add Money via UPI</h3>
-            <p style="font-size: 13px; color: #ccc;">Step 1: Amount daal kar payment kijiye.</p>
-            <div class="payment-form" style="margin-top: 15px;">
-                <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
-                <button class="btn-submit" style="background: #28a745; margin-bottom: 15px;" onclick="startUPIPayment()">1. Open UPI Apps to Pay</button>
-                <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
-                <p style="font-size: 13px; color: #ccc;">Step 2: UTR ID aur Screenshot dalein.</p>
-                <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR ID">
-                <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423;">Upload Payment Screenshot:</label>
-                <input type="file" id="pay-screenshot" accept="image/*">
-                <button class="btn-submit" id="btn-submit-req" style="background: #3498db;" onclick="submitPaymentRequest()">2. Submit Payment Request</button>
+    <div id="app-container">
+        <div class="header">
+            <div class="header-left">
+                <h2 id="welcome-username">Loading Player...</h2>
+                <button class="btn-logout" onclick="logoutFirebase()">Logout</button>
+                <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()">📢 Join Channel</button>
             </div>
-        </div>
-    </div>
-
-    <div id="join-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeJoinModal()">&times;</span>
-            <h3>📝 Enter Player Details</h3>
-            <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">Match Entry Fee: <span style="color:#f9d423; font-weight:bold;">₹20</span></p>
-            <div class="payment-form" style="text-align: left;">
-                <label>Free Fire Game Name (IGN):</label>
-                <input type="text" id="player-name" placeholder="e.g., RRQ_JACK">
-                <label>Free Fire Game UID:</label>
-                <input type="text" id="player-uid" placeholder="e.g., 1234567890">
-                <div id="uid-error" class="error-msg">❌ Invalid UID!</div>
-                <button class="btn-submit" style="background: #28a745;" onclick="processJoinTournament()">Confirm & Join Match</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="withdraw-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeWithdrawModal()">&times;</span>
-            <h3>📤 Withdraw Money</h3>
-            <div class="payment-form" style="text-align: left; margin-top: 15px;">
-                <input type="text" id="withdraw-upi" placeholder="Enter Your UPI ID">
-                <input type="number" id="withdraw-amount" placeholder="Enter Amount (₹)">
-                <button class="btn-submit" id="btn-withdraw-req" style="background: #ff4e50;" onclick="submitWithdrawRequest()">Submit Withdrawal Request</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div class="action-buttons-bottom">
-            <button class="btn btn-withdraw" onclick="openWithdrawModal()">📤 Withdraw Balance</button>
-        </div>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('matches')">Matches</button>
-            <button class="tab-btn" onclick="switchTab('history')">History</button>
-            <button class="tab-btn" onclick="switchTab('giveaway')">Giveaway Claim</button>
-        </div>
-
-        <div id="matches-tab" class="tab-content active">
-            <div class="match-card">
-                <div class="match-title" id="display-match-title">🔥 Loading Match...</div>
-                <div class="match-details">
-                    <p><strong>Time:</strong> <span id="display-match-time">-</span></p>
-                    <p><strong>Entry Fee:</strong> ₹ <span id="display-match-fee">0</span></p>
-                    <p><strong>Per Kill:</strong> ₹ <span id="display-match-kill">0</span></p>
+            <div class="header-right">
+                <div class="wallet-card">
+                    <span>Wallet Balance</span>
+                    <h3 id="user-balance">₹ 0.00</h3>
                 </div>
-                <div class="room-info" id="room-info-box">🔒 Room ID & Pass will be visible 15 mins before match.</div>
-                <button class="btn-join" onclick="openJoinModal()">JOIN TOURNAMENT</button>
+                <button class="btn btn-add" onclick="openPaymentModal()">➕ Add Money</button>
             </div>
         </div>
 
-        <div id="history-tab" class="tab-content">
-            <div class="card"><h4>Match History</h4><p style="color:#777;" id="history-match-text">No matches played yet.</p></div>
-            <div class="card"><h4>Payment History</h4><div id="history-payment-container" style="font-size:14px; color:#ccc;">No history available.</div></div>
+        <div id="payment-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+                <h3>💳 Add Money via UPI</h3>
+                <p style="font-size: 13px; color: #ccc;">Step 1: Amount daal kar payment kijiye.</p>
+                <div class="payment-form" style="margin-top: 15px;">
+                    <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
+                    <button class="btn-submit" style="background: #28a745; margin-bottom: 15px;" onclick="startUPIPayment()">1. Open UPI Apps to Pay</button>
+                    <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+                    <p style="font-size: 13px; color: #ccc;">Step 2: UTR ID aur Screenshot dalein.</p>
+                    <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR ID">
+                    <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423;">Upload Payment Screenshot:</label>
+                    <input type="file" id="pay-screenshot" accept="image/*">
+                    <button class="btn-submit" id="btn-submit-req" style="background: #3498db;" onclick="submitPaymentRequest()">2. Submit Payment Request</button>
+                </div>
+            </div>
         </div>
 
-        <div id="giveaway-tab" class="tab-content">
-            <div class="card" id="giveaway-active-box">
-                <h4 id="giveaway-title">🎁 Claim Your Giveaway Reward</h4>
-                <p style="font-size: 14px; color: #f9d423; margin-bottom: 5px;" id="giveaway-desc">Loading Details...</p>
-                
-                <img id="giveaway-product-image" class="product-img-view" alt="Giveaway Item">
-
-                <input type="text" id="winner-name" placeholder="Enter Your Full Name">
-                <input type="tel" id="winner-phone" placeholder="Enter WhatsApp Number">
-                <textarea id="winner-address" placeholder="Enter Full Delivery Address with Pincode" rows="3"></textarea>
-                
-                <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423; font-weight: bold;">Upload Profile / Winning Screenshot:</label>
-                <input type="file" id="giveaway-screenshot" accept="image/*">
-                
-                <button class="btn-submit" id="btn-giveaway-submit" style="background: #25d366;" onclick="uploadGiveawayPhotoAndSend()">Submit Details via WhatsApp</button>
+        <div id="join-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeJoinModal()">&times;</span>
+                <h3>📝 Enter Player Details</h3>
+                <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">Match Entry Fee: <span style="color:#f9d423; font-weight:bold;">₹20</span></p>
+                <div class="payment-form" style="text-align: left;">
+                    <label>Free Fire Game Name (IGN):</label>
+                    <input type="text" id="player-name" placeholder="e.g., RRQ_JACK">
+                    <label>Free Fire Game UID:</label>
+                    <input type="text" id="player-uid" placeholder="e.g., 1234567890">
+                    <div id="uid-error" class="error-msg">❌ Invalid UID!</div>
+                    <button class="btn-submit" style="background: #28a745;" onclick="processJoinTournament()">Confirm & Join Match</button>
+                </div>
             </div>
-            <div class="card" id="giveaway-inactive-box" style="display: none; text-align: center;">
-                <h4>🔒 No Active Giveaway</h4>
-                <p style="color: #888;">Abhi koi giveaway active nahi hai. Agle giveaway ke liye WhatsApp channel join karein!</p>
+        </div>
+
+        <div id="withdraw-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeWithdrawModal()">&times;</span>
+                <h3>📤 Withdraw Money</h3>
+                <div class="payment-form" style="text-align: left; margin-top: 15px;">
+                    <input type="text" id="withdraw-upi" placeholder="Enter Your UPI ID">
+                    <input type="number" id="withdraw-amount" placeholder="Enter Amount (₹)">
+                    <button class="btn-submit" id="btn-withdraw-req" style="background: #ff4e50;" onclick="submitWithdrawRequest()">Submit Withdrawal Request</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="action-buttons-bottom">
+                <button class="btn btn-withdraw" onclick="openWithdrawModal()">📤 Withdraw Balance</button>
+            </div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('matches')">Matches</button>
+                <button class="tab-btn" onclick="switchTab('history')">History</button>
+                <button class="tab-btn" onclick="switchTab('giveaway')">Giveaway Claim</button>
+            </div>
+
+            <div id="matches-tab" class="tab-content active">
+                <div class="match-card">
+                    <div class="match-title" id="display-match-title">🔥 Loading Match...</div>
+                    <div class="match-details">
+                        <p><strong>Time:</strong> <span id="display-match-time">-</span></p>
+                        <p><strong>Entry Fee:</strong> ₹ <span id="display-match-fee">0</span></p>
+                        <p><strong>Per Kill:</strong> ₹ <span id="display-match-kill">0</span></p>
+                    </div>
+                    <div class="room-info" id="room-info-box">🔒 Room ID & Pass will be visible 15 mins before match.</div>
+                    <button class="btn-join" onclick="openJoinModal()">JOIN TOURNAMENT</button>
+                </div>
+            </div>
+
+            <div id="history-tab" class="tab-content">
+                <div class="card"><h4>Match History</h4><p style="color:#777;" id="history-match-text">No matches played yet.</p></div>
+                <div class="card"><h4>Payment History</h4><div id="history-payment-container" style="font-size:14px; color:#ccc;">No history available.</div></div>
+            </div>
+
+            <div id="giveaway-tab" class="tab-content">
+                <div class="card" id="giveaway-active-box">
+                    <h4 id="giveaway-title">🎁 Claim Your Giveaway Reward</h4>
+                    <p style="font-size: 14px; color: #f9d423; margin-bottom: 5px;" id="giveaway-desc">Loading Details...</p>
+                    <img id="giveaway-product-image" class="product-img-view" alt="Giveaway Item">
+                    <input type="text" id="winner-name" placeholder="Enter Your Full Name">
+                    <input type="tel" id="winner-phone" placeholder="Enter WhatsApp Number">
+                    <textarea id="winner-address" placeholder="Enter Full Delivery Address with Pincode" rows="3"></textarea>
+                    <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423; font-weight: bold;">Upload Profile / Winning Screenshot:</label>
+                    <input type="file" id="giveaway-screenshot" accept="image/*">
+                    <button class="btn-submit" id="btn-giveaway-submit" style="background: #25d366;" onclick="uploadGiveawayPhotoAndSend()">Submit Details via WhatsApp</button>
+                </div>
+                <div class="card" id="giveaway-inactive-box" style="display: none; text-align: center;">
+                    <h4>🔒 No Active Giveaway</h4>
+                    <p style="color: #888;">Abhi koi giveaway active nahi hai. Agle giveaway ke liye WhatsApp channel join karein!</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
             authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
@@ -203,22 +227,106 @@
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
 
-        const userSessionUID = "Player_SilentSniper77"; 
-        let currentWalletBalance = 0.00;
+        let userSessionUID = ""; 
+        let playerIGN = "";
+        let currentWalletBalance = 0.00; 
         let activeMatchFee = 20;
         let globalWhatsAppChannelLink = "https://whatsapp.com";
         const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
-        database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
-            let val = snapshot.val();
-            currentWalletBalance = val ? parseFloat(val) : 0.00;
-            document.getElementById('user-balance').innerText = "₹ " + currentWalletBalance.toFixed(2);
+        // 🔐 GOOGLE LOGIN FUNCTION
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+            .then((result) => {
+                console.log("Login Successful!");
+            })
+            .catch((error) => {
+                alert("❌ Login Failed: " + error.message);
+            });
+        }
+
+        // 🚪 LOGOUT FUNCTION
+        function logoutFirebase() {
+            auth.signOut().then(() => {
+                location.reload();
+            });
+        }
+
+        // 🔄 FIREBASE AUTH STATE OBSERVER (Hamesha check karega banda login hai ya nahi)
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User login hai -> Main App dikhao, Login Screen chupao
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+
+                userSessionUID = user.uid; // Unique Google ID
+                playerIGN = user.displayName; // Google Name
+
+                document.getElementById('welcome-username').innerText = "🎮 " + playerIGN;
+
+                // Realtime me user ka account balance sync aur create karein
+                setupUserDatabase();
+                startLiveListeners();
+            } else {
+                // User login nahi hai -> Login Screen dikhao, App chupao
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+            }
         });
 
+        function setupUserDatabase() {
+            database.ref('users/' + userSessionUID).once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    database.ref('users/' + userSessionUID).set({
+                        uid: userSessionUID,
+                        name: playerIGN,
+                        balance: 0.00
+                    });
+                }
+            });
+        }
+
+        function startLiveListeners() {
+            // 💰 Live Balance Sync
+            database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
+                let val = snapshot.val();
+                currentWalletBalance = val !== null ? parseFloat(val) : 0.00;
+                document.getElementById('user-balance').innerText = "₹ " + currentWalletBalance.toFixed(2);
+            });
+
+            // 📥 User Side Live Deposit History Listener
+            database.ref('depositRequests').on('value', (snapshot) => {
+                let container = document.getElementById('history-payment-container');
+                container.innerHTML = "";
+                let data = snapshot.val();
+                let count = 0;
+                if(!data) { container.innerHTML = "No history available."; return; }
+                
+                for(let utr in data) {
+                    let req = data[utr];
+                    if(req.userUID === userSessionUID) {
+                        count++;
+                        let color = "#f39c12"; 
+                        let statusText = "⏳ Pending Review";
+                        if(req.status === "Approved") { color = "#28a745"; statusText = "🎉 Approved & Added"; }
+                        if(req.status === "Rejected") { color = "#dc3545"; statusText = "❌ Rejected"; }
+                        
+                        container.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #333;">
+                            <strong>UTR:</strong> ${utr} | <strong>Amount:</strong> ₹${req.amount.toFixed(2)}<br>
+                            <span style="color:${color}; font-weight:bold;">${statusText}</span>
+                        </div>`;
+                    }
+                }
+                if(count === 0) { container.innerHTML = "No history available."; }
+            });
+        }
+
+        // --- Other Live Global Observers ---
         database.ref('appSettings/whatsappChannel').on('value', (snapshot) => {
-            let link = snapshot.val();
-            if(link) globalWhatsAppChannelLink = link;
+            let link = snapshot.val(); if(link) globalWhatsAppChannelLink = link;
         });
 
         database.ref('appSettings/giveaway').on('value', (snapshot) => {
@@ -228,11 +336,8 @@
                 document.getElementById('giveaway-inactive-box').style.display = "none";
                 document.getElementById('giveaway-title').innerText = "🎁 " + (giveaway.title || "Giveaway Claim");
                 document.getElementById('giveaway-desc').innerText = "Item: " + (giveaway.description || "Free Fire Rewards");
-                
                 let imgElement = document.getElementById('giveaway-product-image');
-                if(giveaway.productImg) {
-                    imgElement.src = giveaway.productImg; imgElement.style.display = "block";
-                } else { imgElement.style.display = "none"; }
+                if(giveaway.productImg) { imgElement.src = giveaway.productImg; imgElement.style.display = "block"; } else { imgElement.style.display = "none"; }
             } else {
                 document.getElementById('giveaway-active-box').style.display = "none";
                 document.getElementById('giveaway-inactive-box').style.display = "block";
@@ -243,45 +348,18 @@
             let data = snapshot.val();
             if(data) {
                 document.getElementById('display-match-title').innerText = data.title || "Daily Mega Match";
-                document.getElementById('display-match-time').innerText = data.time || "08:00 PM";
+      document.getElementById('display-match-time').innerText = data.time || "08:00 PM";
                 document.getElementById('display-match-fee').innerText = data.fee || "20";
                 document.getElementById('display-match-kill').innerText = data.kill || "5";
                 activeMatchFee = parseFloat(data.fee) || 20;
                 if(data.roomId && data.roomPass) {
-                    document.getElementById('room-info-box').innerHTML = `🔑 **Room ID:** ${data.roomId} | **Pass:** ${data.roomPass}`;
+                    document.getElementById('room-info-box').innerHTML = `🔑 Room ID: ${data.roomId} | Pass: ${data.roomPass}`;
                     document.getElementById('room-info-box').style.color = "#28a745";
                 }
             }
         });
 
-        // 🔥 FIX: USER SIDE LIVE DEPOSIT HISTORY LISTENER
-        database.ref('depositRequests').on('value', (snapshot) => {
-            let container = document.getElementById('history-payment-container');
-            container.innerHTML = "";
-            let data = snapshot.val();
-            let count = 0;
-            if(!data) { container.innerHTML = "No history available."; return; }
-            
-            for(let utr in data) {
-                let req = data[utr];
-                if(req.userUID === userSessionUID) {
-                    count++;
-                    let color = "#f39c12"; // Pending
-                    let statusText = "⏳ Pending Review";
-                    if(req.status === "Approved") { color = "#28a745"; statusText = "🎉 Approved & Added"; }
-                    if(req.status === "Rejected") { color = "#dc3545"; statusText = "❌ Rejected"; }
-                    
-                    container.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #333;">
-                        <strong>UTR:</strong> ${utr} | <strong>Amount:</strong> ₹${req.amount.toFixed(2)}<br>
-                        <span style="color:${color}; font-weight:bold;">${statusText}</span>
-                    </div>`;
-                }
-            }
-            if(count === 0) { container.innerHTML = "No history available."; }
-        });
-
         function openWhatsAppChannel() { window.open(globalWhatsAppChannelLink, '_blank'); }
-
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -291,7 +369,10 @@
 
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
         function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
-        function openJoinModal() { document.getElementById('join-modal').style.display = 'block'; }
+        function openJoinModal() { 
+            document.getElementById('join-modal').style.display = 'block'; 
+            document.getElementById('player-name').value = playerIGN;
+        }
         function closeJoinModal() { document.getElementById('join-modal').style.display = 'none'; document.getElementById('uid-error').style.display = 'none'; }
         function openWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'block'; }
         function closeWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
@@ -308,15 +389,12 @@
             let utr = document.getElementById('pay-utr').value.trim();
             let fileInput = document.getElementById('pay-screenshot');
             let submitBtn = document.getElementById('btn-submit-req');
-            
             if(!amt || !utr) { alert("Kripya Amount aur UTR ID dono dalein!"); return; }
             if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! 12 digits ka number hota hai."); return; }
             if(fileInput.files.length === 0) { alert("❌ Kripya Screenshot select karein!"); return; }
 
             submitBtn.innerText = "Uploading Screenshot..."; submitBtn.disabled = true;
-            let file = fileInput.files[0];
-            let formData = new FormData();
-            formData.append("image", file);
+            let file = fileInput.files[0]; let formData = new FormData(); formData.append("image", file);
 
             fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
             .then(response => response.json())
@@ -324,7 +402,7 @@
                 if(result.success) {
                     let downloadURL = result.data.url; 
                     database.ref('depositRequests/' + utr).set({
-                        userUID: userSessionUID, amount: parseFloat(amt), utrId: utr, screenshotUrl: downloadURL, status: "Pending"
+                        userUID: userSessionUID, playerName: playerIGN, amount: parseFloat(amt), utrId: utr, screenshotUrl: downloadURL, status: "Pending"
                     }).then(() => {
                         alert("🎉 Request Submitted Successfully!");
                         submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false; closePaymentModal();
@@ -337,50 +415,17 @@
             let upi = document.getElementById('withdraw-upi').value.trim();
             let amt = parseFloat(document.getElementById('withdraw-amount').value);
             let btn = document.getElementById('btn-withdraw-req');
-
             if(!upi || !amt || amt <= 0) { alert("❌ Sahi UPI ID aur Amount bharein!"); return; }
-            if(amt > currentWalletBalance) { alert("❌ Insufficient Balance!"); return; }
+            if(amt > currentWalletBalance) { alert(`❌ Insufficient Balance!\nAapka balance ₹${currentWalletBalance.toFixed(2)} hai.`); return; }
 
             btn.innerText = "Sending Request..."; btn.disabled = true;
             let requestId = "WITHDRAW_" + Date.now();
             database.ref('withdrawRequests/' + requestId).set({
-                requestId: requestId, userUID: userSessionUID, upiId: upi, amount: amt, status: "Pending"
+                requestId: requestId, userUID: userSessionUID, playerName: playerIGN, upiId: upi, amount: amt, status: "Pending"
             }).then(() => {
                 alert("🎉 Withdrawal Request Submitted!");
                 btn.innerText = "Submit Withdrawal Request"; btn.disabled = false; closeWithdrawModal();
             });
-        }
-
-        function uploadGiveawayPhotoAndSend() {
-            let name = document.getElementById('winner-name').value.trim();
-            let phone = document.getElementById('winner-phone').value.trim();
-            let address = document.getElementById('winner-address').value.trim();
-            let fileInput = document.getElementById('giveaway-screenshot');
-            let btn = document.getElementById('btn-giveaway-submit');
-
-            if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
-            if(fileInput.files.length === 0) { alert("❌ Kripya proof/profile screenshot select karein!"); return; }
-
-            btn.innerText = "Uploading Photo..."; btn.disabled = true;
-            let file = fileInput.files[0];
-            let formData = new FormData();
-            formData.append("image", file);
-
-            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
-            .then(response => response.json())
-            .then(result => {
-                if(result.success) {
-                    let photoUrl = result.data.url; 
-                    let whatsappNumber = "918858509091"; 
-                    let textMessage = `🎁 *Giveaway Claim Details* 🎁%0A%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}%0A*Screenshot Link:* ${photoUrl}`;
-                    
-                    window.open(`https://wa.me/${whatsappNumber}?text=${textMessage}`, '_blank');
-                    btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false;
-                } else {
-                    alert("❌ Photo Upload Failed!");
-                    btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false;
-                }
-            }).catch(() => { btn.disabled = false; });
         }
 
         function processJoinTournament() {
@@ -392,10 +437,34 @@
 
             let newBal = currentWalletBalance - activeMatchFee;
             database.ref('users/' + userSessionUID + '/balance').set(newBal);
-            database.ref('matchParticipants/' + uid).set({ name: name, uid: uid });
+            database.ref('matchParticipants/' + uid).set({ name: name, uid: uid, timeJoined: Date.now() });
             document.getElementById('history-match-text').innerHTML = `<span>Joined Match (UID: ${uid})</span>`;
             alert("🎉 Success! Match Registered.");
             closeJoinModal();
+        }
+
+        function uploadGiveawayPhotoAndSend() {
+            let name = document.getElementById('winner-name').value.trim();
+            let phone = document.getElementById('winner-phone').value.trim();
+            let address = document.getElementById('winner-address').value.trim();
+            let fileInput = document.getElementById('giveaway-screenshot');
+            let btn = document.getElementById('btn-giveaway-submit');
+            if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
+            if(fileInput.files.length === 0) { alert("❌ Kripya proof/profile screenshot select karein!"); return; }
+
+            btn.innerText = "Uploading Photo..."; btn.disabled = true;
+            let file = fileInput.files[0]; let formData = new FormData(); formData.append("image", file);
+
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
+            .then(response => response.json())
+            .then(result => {
+                if(result.success) {
+                    let photoUrl = result.data.url; let whatsappNumber = "918858509091"; 
+                    let textMessage = `🎁 *Giveaway Claim Details* 🎁%0A%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}%0A*Screenshot Link:* ${photoUrl}`;
+                    window.open(`https://wa.me/${whatsappNumber}?text=${textMessage}`, '_blank');
+                    btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false;
+                } else { alert("❌ Photo Upload Failed!"); btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false; }
+            }).catch(() => { btn.disabled = false; });
         }
     </script>
 </body>
