@@ -226,6 +226,30 @@
             messagingSenderId: "595326120234",
             appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
         };
+        // --- PWA INSTALLATION SYSTEM ---
+let deferredPrompt;
+const installBtn = document.getElementById('install-pwa-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if(installBtn) installBtn.style.display = 'block';
+});
+
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
+    });
+}
+
+window.addEventListener('appinstalled', () => {
+    if(installBtn) installBtn.style.display = 'none';
+});
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
