@@ -8,56 +8,91 @@ body {
     padding-bottom: 30px;
 }
 
-/* Header UI */
+/* Header Grid Layout (Left Text, Right Wallet & Add Money) */
 .header {
     background: linear-gradient(135deg, #ff4e50, #f9d423);
-    padding: 20px;
-    text-align: center;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
-.header h2 { margin: 0; font-size: 24px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
-.header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
 
-/* Wallet UI */
+.header-left {
+    max-width: 50%;
+}
+.header-left h2 { 
+    margin: 0; 
+    font-size: 18px; 
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); 
+    line-height: 1.2;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 45%;
+    align-items: flex-end;
+}
+
+/* Wallet Side-Card */
 .wallet-card {
     background: rgba(255, 255, 255, 0.2);
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 15px;
+    padding: 6px 12px;
+    border-radius: 8px;
     backdrop-filter: blur(5px);
+    width: 100%;
+    box-sizing: border-box;
+    text-align: right;
 }
-.wallet-card span { font-size: 12px; text-transform: uppercase; letter-spacing: 1px;}
-.wallet-card h3 { margin: 5px 0 0 0; font-size: 22px; }
+.wallet-card span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff;}
+.wallet-card h3 { margin: 2px 0 0 0; font-size: 16px; font-weight: bold;}
 
-/* Action Buttons Grid */
-.action-buttons {
-    display: flex;
-    justify-content: space-around;
+/* Top Right Add Money Button */
+.btn-add { 
+    background-color: #121212; 
+    color: #fff; 
+    border: 1px solid #ff4e50;
+    width: 100%;
+    padding: 8px;
+    font-size: 12px;
+}
+
+/* Main Content Area */
+.main-content {
     padding: 15px;
-    gap: 10px;
+}
+
+/* Bottom Action Layout */
+.action-buttons-bottom {
+    margin-bottom: 15px;
 }
 .btn {
-    flex: 1;
     padding: 12px;
     border: none;
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    font-size: 14px;
     transition: 0.2s;
 }
-.btn-add { background-color: #ff4e50; color: white; }
-.btn-withdraw { background-color: #333; color: white; border: 1px solid #444; }
+.btn-withdraw { 
+    background-color: #333; 
+    color: white; 
+    border: 1px solid #444; 
+    width: 100%;
+    font-size: 14px;
+}
 
 /* Navigation Tabs */
 .tabs {
     display: flex;
     background: #1e1e1e;
-    margin: 10px 15px;
     border-radius: 8px;
     overflow: hidden;
+    margin-bottom: 15px;
 }
 .tab-btn {
     flex: 1;
@@ -75,7 +110,7 @@ body {
 }
 
 /* Dynamic Tab Content Control */
-.tab-content { display: none; padding: 0 15px; }
+.tab-content { display: none; }
 .tab-content.active { display: block; }
 
 /* App Cards layout */
