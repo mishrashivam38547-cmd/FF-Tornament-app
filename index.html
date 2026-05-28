@@ -16,7 +16,7 @@
             padding-bottom: 30px;
         }
 
-        /* Header Grid Layout (Left Text, Right Wallet & Add Money) */
+        /* Header Grid Layout */
         .header {
             background: linear-gradient(135deg, #ff4e50, #f9d423);
             padding: 15px;
@@ -28,15 +28,8 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        .header-left {
-            max-width: 50%;
-        }
-        .header-left h2 { 
-            margin: 0; 
-            font-size: 18px; 
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5); 
-            line-height: 1.2;
-        }
+        .header-left { max-width: 50%; }
+        .header-left h2 { margin: 0; font-size: 18px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); line-height: 1.2; }
 
         .header-right {
             display: flex;
@@ -59,152 +52,63 @@
         .wallet-card span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff;}
         .wallet-card h3 { margin: 2px 0 0 0; font-size: 16px; font-weight: bold;}
 
-        /* Top Right Add Money Button */
         .btn-add { 
-            background-color: #121212; 
-            color: #fff; 
-            border: 1px solid #ff4e50;
-            width: 100%;
-            padding: 8px;
-            font-size: 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
+            background-color: #121212; color: #fff; border: 1px solid #ff4e50;
+            width: 100%; padding: 8px; font-size: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;
         }
 
-        /* Main Content Area */
-        .main-content {
-            padding: 15px;
-        }
-
-        /* Bottom Action Layout */
-        .action-buttons-bottom {
-            margin-bottom: 15px;
-        }
-        .btn {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-withdraw { 
-            background-color: #333; 
-            color: white; 
-            border: 1px solid #444; 
-            width: 100%;
-            font-size: 14px;
-        }
+        .main-content { padding: 15px; }
+        .action-buttons-bottom { margin-bottom: 15px; }
+        
+        .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-withdraw { background-color: #333; color: white; border: 1px solid #444; width: 100%; font-size: 14px; }
 
         /* Navigation Tabs */
-        .tabs {
-            display: flex;
-            background: #1e1e1e;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: #888;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .tab-btn.active {
-            background: #ff4e50;
-            color: white;
-        }
+        .tabs { display: flex; background: #1e1e1e; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #888; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .tab-btn.active { background: #ff4e50; color: white; }
 
-        /* Dynamic Tab Content Control */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         /* App Cards layout */
         .card, .match-card {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border: 1px solid #2d2d2d;
+            background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #2d2d2d;
         }
 
-        /* Match Specifics */
         .match-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #f9d423; }
         .match-details p { margin: 5px 0; font-size: 14px; color: #ccc; }
+        
         .room-info {
-            background: #2d2d2d;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 13px;
-            color: #ff4e50;
-            margin: 10px 0;
-            font-weight: bold;
+            background: #2d2d2d; padding: 10px; border-radius: 6px; text-align: center;
+            font-size: 13px; color: #ff4e50; margin: 10px 0; font-weight: bold;
         }
+        
         .btn-join, .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background: #28a745;
-            border: none;
-            color: white;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
+            width: 100%; padding: 12px; background: #28a745; border: none; color: white;
+            font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 15px;
         }
         .btn-submit { background: #ff4e50; margin-top: 10px; }
 
-        /* Form Elements inside Dark Cards */
-        input[type="text"], input[type="tel"], textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 6px;
-            box-sizing: border-box;
+        input[type="text"], input[type="number"], input[type="tel"], textarea {
+            width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d;
+            border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
         }
+
+        /* Error Text Style */
+        .error-msg { color: #ff4e50; font-size: 12px; margin-top: -5px; margin-bottom: 5px; display: none; font-weight: bold; }
 
         /* Modal (Popup) Base Design */
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.8); 
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); 
         }
         .modal-content {
-            background-color: #1e1e1e;
-            margin: 30% auto; 
-            padding: 20px;
-            border: 1px solid #444;
-            width: 85%; 
-            max-width: 400px;
-            border-radius: 12px;
-            box-sizing: border-box;
-            text-align: center;
-            position: relative;
+            background-color: #1e1e1e; margin: 30% auto; padding: 20px; border: 1px solid #444;
+            width: 85%; max-width: 400px; border-radius: 12px; box-sizing: border-box; text-align: center; position: relative;
         }
-        .close-btn {
-            position: absolute;
-            right: 15px;
-            top: 10px;
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .close-btn { position: absolute; right: 15px; top: 10px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: #fff; }
     </style>
 </head>
@@ -228,14 +132,41 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closePaymentModal()">&times;</span>
             <h3>💳 Add Money via UPI App</h3>
-            <p style="font-size: 13px; color: #ccc;">Amount daliye aur niche diye gaye button par click karke kisi bhi UPI app (PhonePe, Paytm, GPay) se pay kijiye.</p>
-            
+            <p style="font-size: 13px; color: #ccc;">Amount daliye aur kisi bhi UPI app se pay kijiye.</p>
             <div class="payment-form" style="margin-top: 20px;">
                 <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
-                
                 <button class="btn-submit" style="background: #28a745;" onclick="startUPIPayment()">Pay via UPI Apps</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="join-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeJoinModal()">&times;</span>
+            <h3>📝 Enter Player Details</h3>
+            <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">Match Entry Fee: <span style="color:#f9d423; font-weight:bold;">₹20</span></p>
+            
+            <div class="payment-form" style="text-align: left;">
+                <label>Free Fire Game Name (IGN):</label>
+                <input type="text" id="player-name" placeholder="e.g., RRQ_JACK">
                 
-                <p style="font-size: 11px; color: #ff4e50; margin-top: 15px;">⚠️ Note: Payment karne ke baad transaction successful hone ka wait karein.</p>
+                <label>Free Fire Game UID:</label>
+                <input type="text" id="player-uid" placeholder="e.g., 1234567890">
+                <div id="uid-error" class="error-msg">❌ Invalid UID! UID sirf numbers me 8 se 12 digits ki honi chahiye.</div>
+                
+                <button class="btn-submit" style="background: #28a745;" onclick="processJoinTournament()">Confirm & Join Match</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="withdraw-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeWithdrawModal()">&times;</span>
+            <h3>📤 Withdraw Money</h3>
+            <div class="payment-form" style="text-align: left; margin-top: 15px;">
+                <input type="text" id="withdraw-upi" placeholder="Enter Your UPI ID (e.g., name@upi)">
+                <input type="number" id="withdraw-amount" placeholder="Enter Amount to Withdraw (₹)">
+                <button class="btn-submit" onclick="submitWithdrawRequest()">Request Withdrawal</button>
             </div>
         </div>
     </div>
@@ -243,7 +174,7 @@
     <div class="main-content">
         
         <div class="action-buttons-bottom">
-            <button class="btn btn-withdraw" onclick="alert('Withdraw Request Sent!')">📤 Withdraw Balance</button>
+            <button class="btn btn-withdraw" onclick="openWithdrawModal()">📤 Withdraw Balance</button>
         </div>
 
         <div class="tabs">
@@ -263,18 +194,18 @@
                 <div class="room-info" id="room-info-box">
                     🔒 Room ID & Pass will be visible 15 mins before match.
                 </div>
-                <button class="btn-join" onclick="alert('Joined Successfully!')">JOIN TOURNAMENT</button>
+                <button class="btn-join" onclick="openJoinModal()">JOIN TOURNAMENT</button>
             </div>
         </div>
 
         <div id="history-tab" class="tab-content">
             <div class="card">
                 <h4>Match History</h4>
-                <p style="color:#777;">No matches played yet.</p>
+                <p style="color:#777;" id="history-match-text">No matches played yet.</p>
             </div>
             <div class="card">
                 <h4>Payment History</h4>
-                <p style="color:#777;">No history available.</p>
+                <p style="color:#777;" id="history-payment-text">No history available.</p>
             </div>
         </div>
 
@@ -294,6 +225,10 @@
     </div>
 
     <script>
+        // Global variables for local demo simulation
+        let walletBalance = 0.00;
+        let matchEntryFee = 20;
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -301,22 +236,84 @@
             event.currentTarget.classList.add('active');
         }
 
-        // Popup Open/Close Functions
+        // Modals Control
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
         function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
+        
+        function openJoinModal() { document.getElementById('join-modal').style.display = 'block'; }
+        function closeJoinModal() { 
+            document.getElementById('join-modal').style.display = 'none'; 
+            document.getElementById('uid-error').style.display = 'none';
+        }
 
-        // UPI Intent Payment System
+        function openWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'block'; }
+        function closeWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
+
+        // UPI Intent Payment Simulation
         function startUPIPayment() {
-            let amount = document.getElementById('pay-amount').value;
+            let amount = parseFloat(document.getElementById('pay-amount').value);
             if(!amount || amount <= 0) { alert("Kripya sahi amount dalein!"); return; }
 
-            // ⚠️ YAHAN APNI ASLI UPI ID AUR APNA NAAM DALEIN
             let upiId = "YOUR_UPI_ID@okaxis"; 
             let merchantName = "Silent Sniper Tournament"; 
-
             let upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
+            
+            // Simulating balance add for demo purpose
+            walletBalance += amount;
+            document.getElementById('user-balance').innerText = "₹ " + walletBalance.toFixed(2);
+            document.getElementById('history-payment-text').innerHTML = `<span style="color:#28a745;">+ ₹${amount.toFixed(2)} Added Successfully</span>`;
+
             window.location.href = upiUrl;
             closePaymentModal();
+        }
+
+        // 🛡️ GAME LOGIC: JOIN MATCH WITH UID VALIDATION & ERROR HANDLING
+        function processJoinTournament() {
+            let name = document.getElementById('player-name').value.trim();
+            let uid = document.getElementById('player-uid').value.trim();
+            let uidError = document.getElementById('uid-error');
+
+            // 1. Check if fields are empty
+            if(!name || !uid) {
+                alert("Kripya Game Name aur Game UID dono bharein!");
+                return;
+            }
+
+            // 2. UID Validation Regular Expression (Sirf numbers, 8 se 12 length)
+            let uidPattern = /^[0-9]{8,12}$/;
+            if(!uidPattern.test(uid)) {
+                uidError.style.display = 'block'; // Error dikhayein
+                return;
+            } else {
+                uidError.style.display = 'none';  // Error chhupayein
+            }
+
+            // 3. Wallet Balance Validation Check
+            if(walletBalance < matchEntryFee) {
+                alert(`⚠️ Insufficient Balance! Match join karne ke liye ₹${matchEntryFee} chahiye. Aapka balance ₹${walletBalance.toFixed(2)} hai. Kripya Add Money karein.`);
+                closeJoinModal();
+                return;
+            }
+
+            // 4. Dedicate Balance & Join Success
+            walletBalance -= matchEntryFee;
+            document.getElementById('user-balance').innerText = "₹ " + walletBalance.toFixed(2);
+            document.getElementById('history-match-text').innerHTML = `<span style="color:#f9d423;">Joined: Daily Mega Match (UID: ${uid})</span>`;
+            
+            alert(`🎉 Badhai ho! Aap successfully match me register ho chuke hain. \nName: ${name}\nUID: ${uid}`);
+            closeJoinModal();
+        }
+
+        // Withdraw Process
+        function submitWithdrawRequest() {
+            let upi = document.getElementById('withdraw-upi').value;
+            let amount = parseFloat(document.getElementById('withdraw-amount').value);
+
+            if(!upi || !amount || amount <= 0) { alert("Please enter valid UPI ID and Amount!"); return; }
+            if(amount > walletBalance) { alert("Aapke wallet me itna balance nahi hai!"); return; }
+
+            alert("Withdraw request sent to admin! Verify hone me 1-2 ghante lagenge.");
+            closeWithdrawModal();
         }
 
         function sendAddressToWhatsApp() {
