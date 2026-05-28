@@ -412,22 +412,48 @@
         }
 
         function submitWithdrawRequest() {
-            let upi = document.getElementById('withdraw-upi').value.trim();
-            let amt = parseFloat(document.getElementById('withdraw-amount').value);
-            let btn = document.getElementById('btn-withdraw-req');
-            if(!upi || !amt || amt <= 0) { alert("❌ Sahi UPI ID aur Amount bharein!"); return; }
-            if(amt > currentWalletBalance) { alert(`❌ Insufficient Balance!\nAapka balance ₹${currentWalletBalance.toFixed(2)} hai.`); return; }
+    let upi = document.getElementById('withdraw-upi').value.trim();
+    
+    // 🔴 FIX: parseFloat lagana zaroori hai taaki input "100" text se badal kar number 100 ban jaye
+    let amt = parseFloat(document.getElementById('withdraw-amount').value);
+    let btn = document.getElementById('btn-withdraw-req');
 
-            btn.innerText = "Sending Request..."; btn.disabled = true;
-            let requestId = "WITHDRAW_" + Date.now();
-            database.ref('withdrawRequests/' + requestId).set({
-                requestId: requestId, userUID: userSessionUID, playerName: playerIGN, upiId: upi, amount: amt, status: "Pending"
-            }).then(() => {
-                alert("🎉 Withdrawal Request Submitted!");
-                btn.innerText = "Submit Withdrawal Request"; btn.disabled = false; closeWithdrawModal();
-            });
+    // Input Validations
+    if (!upi || isNaN(amt) || amt <= 0) { 
+        alert("❌ Kripya sahi UPI ID aur Amount bharein!"); 
+        return; 
+    }
+    
+    // 🛑 LOGIC FIX: Ab dono numbers hain, toh comparison 100% sahi hoga
+    if (amt > currentWalletBalance) { 
+        alert(`❌ Insufficient Balance!\nAapka balance ₹${currentWalletBalance.toFixed(2)} hai.`); 
+        return; 
+    }
+
+    // Request Processing
+    btn.innerText = "Sending Request..."; 
+    btn.disabled = true;
+    
+    let requestId = "WITHDRAW_" + Date.now();
+    database.ref('withdrawRequests/' + requestId).set({
+        requestId: requestId, 
+        userUID: userSessionUID, 
+        playerName: playerIGN, 
+        upiId: upi, 
+        amount: amt, 
+        status: "Pending"
+    }).then(() => {
+        alert("🎉 Withdrawal Request Submitted!");
+        btn.innerText = "Submit Withdrawal Request"; 
+        btn.disabled = false; 
+        closeWithdrawModal();
+    }).catch((error) => {
+        alert("❌ Error: " + error.message);
+        btn.innerText = "Submit Withdrawal Request"; 
+        btn.disabled = false;
+    });
         }
-
+        
         function processJoinTournament() {
             let name = document.getElementById('player-name').value.trim();
             let uid = document.getElementById('player-uid').value.trim();
