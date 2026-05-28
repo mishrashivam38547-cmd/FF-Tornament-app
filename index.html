@@ -230,7 +230,6 @@
 let deferredPrompt;
 const installBtn = document.getElementById('install-pwa-btn');
 
-// Browser ka default install prompt catch karna
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -238,18 +237,16 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 if (installBtn) {
     installBtn.addEventListener('click', async () => {
-        // Tarika A: Agar browser prompt ready hai
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             deferredPrompt = null;
+            installBtn.style.display = 'none';
         } else {
-            // Tarika B: Agar browser automatic block kar raha hai (Sabse Best Jugaad)
             alert("📱 App Install Kaise Karein:\n\n1. Upar right corner me 3 Dots (Menu) par click karein.\n2. 'Install app' ya 'Add to Home screen' par click karein.\n\nBas 2 second me app aapki screen par aa jayegi!");
         }
     });
 }
-
 window.addEventListener('appinstalled', () => {
     if(installBtn) installBtn.style.display = 'none';
 });
