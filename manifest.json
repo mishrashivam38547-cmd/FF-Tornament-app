@@ -1,21 +1,23 @@
 {
   "short_name": "RS7_esport",
   "name": "RS7_esport Tournament",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#ff4e50",
   "icons": [
     {
       "src": "https://i.ibb.co/KxCdV44k/file-00000000a8f4720bb42372ea336d1919.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "any maskable"
     },
     {
       "src": "https://i.ibb.co/KxCdV44k/file-00000000a8f4720bb42372ea336d1919.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": "/",
-  "background_color": "#121212",
-  "theme_color": "#ff4e50",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }
