@@ -4,163 +4,201 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tournament Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        body { background-color: #121212; color: #ffffff; padding-bottom: 40px; font-family: sans-serif;}
-        .header { background: linear-gradient(135deg, #2c3e50, #3498db); padding: 20px; text-align: center; border-radius: 0 0 15px 15px;}
-        input, select, textarea { 
-            width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; 
-            border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
-        }
-        h3 { color: #f9d423; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .req-box { background: #2d2d2d; padding: 12px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #f39c12;}
-        .card { background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #2d2d2d; }
-        .btn-submit { width: 100%; padding: 12px; border: none; font-weight: bold; color: white; border-radius: 6px; cursor: pointer; margin-top: 10px;}
-        .btn-mini { padding: 8px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; }
-        
-        /* Screenshot Preview Box Styling */
-        .ss-preview {
-            max-width: 100%; margin-top: 10px; border: 2px dashed #444; border-radius: 6px; display: none;
-        }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2, h3 { color: #333; border-bottom: 2px solid #ff4e50; padding-bottom: 8px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-update { background: #ff4e50; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .btn-update:hover { background: #e03e40; }
+        .card { background: #fff9f9; border: 1px solid #ffe0e0; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+        .request-box { border-left: 5px solid #ff4e50; background: #fafafa; padding: 10px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-action { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        .btn-approve { background: #28a745; color: white; }
+        .btn-reject { background: #dc3545; color: white; }
+        .screenshot-link { color: #007bff; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>🛡️ TOURNAMENT ADMIN CONTROL</h2>
-        <p>Live Panel with Screenshot Verification</p>
+<div class="container">
+    <h2>🛠️ Silent Sniper Admin Control Panel</h2>
+
+    <div class="card" style="background: #eef7ff; border-color: #ccdfff;">
+        <h3>📢 Social & Giveaway Management</h3>
+        
+        <div class="form-group">
+            <label>WhatsApp Channel Link:</label>
+            <input type="text" id="admin-channel-url" placeholder="Paste your WhatsApp Channel full URL here">
+        </div>
+        
+        <hr style="border:0; border-top: 1px solid #ccc; margin: 15px 0;">
+        
+        <div class="form-group">
+            <label>Giveaway Title:</label>
+            <input type="text" id="admin-giveaway-title" placeholder="e.g., Alok Character Giveaway">
+        </div>
+        <div class="form-group">
+            <label>Giveaway Item Description:</label>
+            <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds + Custom Bundle">
+        </div>
+        <div class="form-group">
+            <label>Giveaway Status:</label>
+            <select id="admin-giveaway-status">
+                <option value="Inactive">🔒 Inactive (Hide from Users)</option>
+                <option value="Active">🔓 Active (Show Form to Users)</option>
+            </select>
+        </div>
+        
+        <button class="btn-update" style="background: #007bff;" onclick="updateSocialAndGiveaway()">Save Settings Live</button>
     </div>
 
-    <div style="padding: 15px;">
-        
-        <div class="card">
-            <h3>📥 Player Deposit Requests (Live Sync)</h3>
-            <div id="requests-container">
-                <p style="color: #aaa; font-style: italic;">No pending deposit requests found...</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>🎮 Create & Update Match</h3>
+    <div class="card">
+        <h3>🎮 Live Match Update</h3>
+        <div class="form-group">
             <label>Match Title:</label>
-            <input type="text" id="match-title" placeholder="e.g., Daily Mega Match (Squad)">
-            <label>Match Date & Time:</label>
-            <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;"><label>Entry Fee (₹):</label><input type="number" id="match-fee" placeholder="20"></div>
-                <div style="flex: 1;"><label>Per Kill (₹):</label><input type="number" id="match-kill" placeholder="5"></div>
-            </div>
-            <button class="btn-submit" style="background: #3498db;" onclick="publishMatchDetails()">Publish Live Match</button>
+            <input type="text" id="match-title" placeholder="e.g., Sunday Grand Cup">
         </div>
-
-        <div class="card">
-            <h3>🔑 Update Room ID & Password</h3>
+        <div class="form-group">
+            <label>Match Time:</label>
+            <input type="text" id="match-time" placeholder="e.g., 09:00 PM">
+        </div>
+        <div class="form-group">
+            <label>Entry Fee (₹):</label>
+            <input type="number" id="match-fee" value="20">
+        </div>
+        <div class="form-group">
+            <label>Per Kill Reward (₹):</label>
+            <input type="number" id="match-kill" value="5">
+        </div>
+        <div class="form-group">
+            <label>Room ID (Visible 15 mins before):</label>
             <input type="text" id="room-id" placeholder="Enter Room ID">
-            <input type="text" id="room-pass" placeholder="Enter Room Password">
-            <button class="btn-submit" style="background: #28a745;" onclick="publishRoomDetails()">Publish Room Info</button>
         </div>
+        <div class="form-group">
+            <label>Room Password:</label>
+            <input type="text" id="room-pass" placeholder="Enter Room Pass">
+        </div>
+        <button class="btn-update" onclick="updateMatchDetails()">Update Match Live</button>
     </div>
 
-    <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
-            authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
-            projectId: "ff-tornament-app-9e3ae",
-            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/",
-            storageBucket: "ff-tornament-app-9e3ae.appspot.com",
-            messagingSenderId: "595326120234",
-            appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    <div class="card" style="background: #f9f9f9;">
+        <h3>📥 User Deposit Requests (Pending Screenshots)</h3>
+        <div id="deposit-requests-container">Loading requests...</div>
+    </div>
+</div>
 
-        database.ref('depositRequests').on('value', (snapshot) => {
-            const container = document.getElementById('requests-container');
-            container.innerHTML = ""; 
-            let data = snapshot.val();
-            
-            if(!data) {
-                container.innerHTML = `<p style="color: #aaa; font-style: italic;">No pending deposit requests found...</p>`;
-                return;
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
+        authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
+        projectId: "ff-tornament-app-9e3ae",
+        databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
+        messagingSenderId: "595326120234",
+        appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Load Existing Admin Data
+    database.ref('appSettings/whatsappChannel').once('value', (snapshot) => {
+        if(snapshot.val()) document.getElementById('admin-channel-url').value = snapshot.val();
+    });
+
+    database.ref('appSettings/giveaway').once('value', (snapshot) => {
+        let giveaway = snapshot.val();
+        if(giveaway) {
+            document.getElementById('admin-giveaway-title').value = giveaway.title || "";
+            document.getElementById('admin-giveaway-desc').value = giveaway.description || "";
+            document.getElementById('admin-giveaway-status').value = giveaway.status || "Inactive";
+        }
+    });
+
+    // Save Social & Giveaway Settings function
+    function updateSocialAndGiveaway() {
+        let channelLink = document.getElementById('admin-channel-url').value.trim();
+        let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
+        let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
+        let giveawayStatus = document.getElementById('admin-giveaway-status').value;
+
+        if(!channelLink) { alert("WhatsApp Channel URL daalna zaroori hai!"); return; }
+
+        database.ref('appSettings').update({
+            whatsappChannel: channelLink,
+            giveaway: {
+                title: giveawayTitle,
+                description: giveawayDesc,
+                status: giveawayStatus
             }
-
-            Object.keys(data).forEach((key) => {
-                let req = data[key];
-                if(req.status === "Pending") {
-                    let htmlBox = `
-                        <div class="req-box" id="box-${req.utrId}">
-                            <p style="margin: 3px 0;"><strong>User Account:</strong> ${req.userUID}</p>
-                            <p style="margin: 3px 0;"><strong>Amount Request:</strong> ₹ ${req.amount}</p>
-                            <p style="margin: 3px 0; color: #f9d423;"><strong>UTR ID:</strong> ${req.utrId}</p>
-                            
-                            <div style="margin: 8px 0;">
-                                <button class="btn-mini" style="background: #e67e22;" onclick="toggleScreenshot('${req.utrId}')">View Screenshot 🖼️</button>
-                                <img id="img-${req.utrId}" src="${req.screenshotUrl}" class="ss-preview" alt="Payment SS">
-                            </div>
-
-                            <div style="display: flex; gap: 8px; margin-top: 10px;">
-                                <button class="btn-mini" style="background:#28a745;" onclick="approveDeposit('${req.userUID}', ${req.amount}, '${req.utrId}')">Approve ✅</button>
-                                <button class="btn-mini" style="background:#dc3545;" onclick="rejectDeposit('${req.utrId}')">Reject ❌</button>
-                            </div>
-                        </div>`;
-                    container.innerHTML += htmlBox;
-                }
-            });
-            if(container.innerHTML === "") {
-                container.innerHTML = `<p style="color: #aaa; font-style: italic;">No pending deposit requests found...</p>`;
-            }
+        }).then(() => {
+            alert("🎉 Settings Updated successfully!");
         });
+    }
 
-        // Toggle visibility function for image node
-        function toggleScreenshot(utrId) {
-            let img = document.getElementById('img-' + utrId);
-            if(img.style.display === "none" || img.style.display === "") {
-                img.style.display = "block";
-            } else {
-                img.style.display = "none";
+    function updateMatchDetails() {
+        let title = document.getElementById('match-title').value;
+        let time = document.getElementById('match-time').value;
+        let fee = document.getElementById('match-fee').value;
+        let kill = document.getElementById('match-kill').value;
+        let rId = document.getElementById('room-id').value;
+        let rPass = document.getElementById('room-pass').value;
+
+        database.ref('activeMatch').set({
+            title: title, time: time, fee: fee, kill: kill, roomId: rId, roomPass: rPass
+        }).then(() => { alert("Match Live Updated!"); });
+    }
+
+    // Load Live Pending Requests with ImgBB Link Screenshots
+    database.ref('depositRequests').on('value', (snapshot) => {
+        let container = document.getElementById('deposit-requests-container');
+        container.innerHTML = "";
+        let data = snapshot.val();
+        
+        if(!data) { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; return; }
+
+        for(let utr in data) {
+            if(data[utr].status === "Pending") {
+                let req = data[utr];
+                let box = document.createElement('div');
+                box.className = "request-box";
+                box.innerHTML = `
+                    <div>
+                        <strong>UTR:</strong> ${utr} <br>
+                        <strong>User:</strong> ${req.userUID} <br>
+                        <strong>Amount:</strong> ₹${req.amount} <br>
+                        <a class="screenshot-link" href="${req.screenshotUrl}" target="_blank">🖼️ View Screenshot</a>
+                    </div>
+                    <div>
+                        <button class="btn-action btn-approve" onclick="approveDeposit('${utr}', '${req.userUID}', ${req.amount})">Approve</button>
+                        <button class="btn-action btn-reject" onclick="rejectDeposit('${utr}')">Reject</button>
+                    </div>
+                `;
+                container.appendChild(box);
             }
         }
+        if(container.innerHTML === "") { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; }
+    });
 
-        function approveDeposit(uid, amount, utr) {
-            let balanceRef = database.ref('users/' + uid + '/balance');
-            balanceRef.once('value', (snapshot) => {
-                let currentBal = snapshot.val() ? parseFloat(snapshot.val()) : 0.00;
-                let finalBal = currentBal + parseFloat(amount);
-                
-                balanceRef.set(finalBal).then(() => {
-                    database.ref('depositRequests/' + utr).remove(); 
-                    alert("Approved! Wallet updated.");
-                });
-            });
-        }
+    function approveDeposit(utr, userUID, amount) {
+        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => {
+            return (currentBalance || 0) + amount;
+        }).then(() => {
+            database.ref('depositRequests/' + utr).update({ status: "Approved" });
+            alert("Deposit Approved! Balance Added to User.");
+        });
+    }
 
-        function rejectDeposit(utr) {
-            database.ref('depositRequests/' + utr).remove().then(() => {
-                alert("Request Rejected and Removed.");
-            });
-        }
-
-        function publishMatchDetails() {
-            let title = document.getElementById('match-title').value;
-            let time = document.getElementById('match-time').value;
-            let fee = document.getElementById('match-fee').value;
-            let kill = document.getElementById('match-kill').value;
-            if(!title || !time || !fee || !kill) { alert("Fields fill kijiye!"); return; }
-            database.ref('activeMatch').update({ title: title, time: time, fee: fee, kill: kill, roomId: "", roomPass: "" }).then(() => { alert("Match Updated!"); });
-        }
-
-        function publishRoomDetails() {
-            let rId = document.getElementById('room-id').value;
-            let rPass = document.getElementById('room-pass').value;
-            if(!rId || !rPass) { alert("Enter both Room Context ID and Pass!"); return; }
-            database.ref('activeMatch').update({ roomId: rId, roomPass: rPass }).then(() => { alert("Room Info Published!"); });
-        }
-    </script>
+    function rejectDeposit(utr) {
+        database.ref('depositRequests/' + utr).update({ status: "Rejected" });
+        alert("Request Rejected!");
+    }
+</script>
 </body>
 </html>
