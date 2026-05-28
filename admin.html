@@ -4,16 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tournament Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
+    
     <style>
-        body { background-color: #121212; color: #ffffff; padding-bottom: 40px; }
-        .header { background: linear-gradient(135deg, #2c3e50, #3498db); }
-        input, select, textarea { 
-            width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; 
-            border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
+        body { 
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212; color: #ffffff; padding-bottom: 40px; 
         }
-        h3 { color: #f9d423; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .req-box { background: #2d2d2d; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #f39c12;}
+        .header { 
+            background: linear-gradient(135deg, #2c3e50, #3498db); 
+            padding: 20px; text-align: center;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .header h2 { margin: 0; font-size: 22px; color: #fff; }
+        .header p { margin: 5px 0 0 0; font-size: 13px; color: #ccc; }
+
+        .card {
+            background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #2d2d2d;
+        }
+        h3 { color: #f9d423; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px; font-size: 16px; }
+        
+        label { font-size: 13px; color: #aaa; font-weight: bold; display: block; margin-top: 10px; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin: 6px 0 12px 0; background: #2d2d2d; 
+            border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #3498db; outline: none; }
+        
+        .btn-submit {
+            width: 100%; padding: 12px; background: #ff4e50; border: none; color: white;
+            font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 15px; transition: 0.2s;
+        }
+        .btn-submit:active { transform: scale(0.98); }
+
+        .btn { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; }
+        .req-box { background: #2d2d2d; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #f39c12; }
     </style>
 </head>
 <body>
@@ -25,60 +54,99 @@
 
     <div style="padding: 15px;">
         
-        <div class="card">
+        <div class="card" id="deposit-card">
             <h3>📥 Player Deposit Requests (Manual QR)</h3>
-            <p style="font-size: 13px; color: #aaa;">Apna bank account check karein aur niche di gayi UTR ID match karke approve karein.</p>
+            <p style="font-size: 12px; color: #aaa; margin-top: -5px;">Apna bank account check karke UTR verification ke baad approve karein.</p>
             
-            <div class="req-box">
-                <p style="margin: 3px 0;"><strong>User UID:</strong> 473920194 (SilentSniper)</p>
-                <p style="margin: 3px 0;"><strong>Amount:</strong> ₹ 50.00</p>
-                <p style="margin: 3px 0; color: #f9d423;"><strong>UTR/Txn ID:</strong> 412984729104</p>
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button class="btn" style="background:#28a745; color:white; padding:6px;" onclick="alert('Payment Approved! Wallet Updated.')">Approve (Add Money)</button>
-                    <button class="btn" style="background:#dc3545; color:white; padding:6px;" onclick="alert('Request Rejected!')">Reject</button>
+            <div class="req-box" id="sample-request">
+                <p style="margin: 3px 0; font-size: 14px;"><strong>User UID:</strong> 473920194 (SilentSniper)</p>
+                <p style="margin: 3px 0; font-size: 14px;"><strong>Amount:</strong> <span style="color:#28a745; font-weight:bold;">₹ 50.00</span></p>
+                <p style="margin: 3px 0; color: #f9d423; font-size: 14px;"><strong>UTR/Txn ID:</strong> 412984729104</p>
+                
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button class="btn" style="background:#28a745; color:white; flex: 1;" onclick="approveDeposit()">Approve Deposit</button>
+                    <button class="btn" style="background:#dc3545; color:white; flex: 1;" onclick="rejectDeposit()">Reject</button>
                 </div>
             </div>
         </div>
 
         <div class="card">
             <h3>🎮 Create New Match</h3>
-            <label>Match Title:</label>
-            <input type="text" id="match-title-input" placeholder="e.g., Daily Mega Match (Squad)">
+            
+            <label>Match Title / Mode:</label>
+            <input type="text" id="match-title" placeholder="e.g., Daily Mega Match (Squad)">
+            
             <label>Match Date & Time:</label>
-            <input type="datetime-local" id="match-time-input">
+            <input type="datetime-local" id="match-time">
+            
             <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;"><label>Entry Fee (₹):</label><input type="number" id="match-fee-input" placeholder="20"></div>
-                <div style="flex: 1;"><label>Per Kill (₹):</label><input type="number" id="match-kill-input" placeholder="5"></div>
+                <div style="flex: 1;">
+                    <label>Entry Fee (₹):</label>
+                    <input type="number" id="match-fee" placeholder="20">
+                </div>
+                <div style="flex: 1;">
+                    <label>Per Kill (₹):</label>
+                    <input type="number" id="match-kill" placeholder="5">
+                </div>
             </div>
+
             <label>Total Prize Pool (₹):</label>
-            <input type="number" id="match-prize-input" placeholder="500">
-            <button class="btn-submit" style="background: #3498db;" onclick="alert('Match Created!')">Create & Publish Match</button>
+            <input type="number" id="match-prize" placeholder="500">
+            
+            <button class="btn-submit" style="background: #3498db;" onclick="createNewMatch()">Create & Publish Match</button>
         </div>
 
         <div class="card">
             <h3>🔑 Update Room ID & Password</h3>
-            <input type="text" id="room-id" placeholder="Enter Room ID">
+            <label>Select Match:</label>
+            <select id="room-match-select">
+                <option value="mega">Daily Mega Match (Squad) - 08:00 PM</option>
+            </select>
+            
+            <label>Room ID:</label>
+            <input type="text" id="room-id" placeholder="Enter Custom Room ID">
+            
+            <label>Room Password:</label>
             <input type="text" id="room-pass" placeholder="Enter Room Password">
-            <button class="btn-submit" onclick="alert('Room Details Updated!')">Publish Room Info</button>
+            
+            <button class="btn-submit" style="background: #28a745;" onclick="publishRoomDetails()">Publish Room Info</button>
         </div>
 
         <div class="card">
-            <h3>🏆 Winner & Payment Panel</h3>
-            <input type="text" id="winner-uid" placeholder="Winner Free Fire UID">
-            <input type="number" id="payment-amount" placeholder="Prize Money (₹)">
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-add" style="flex:1;" onclick="alert('Winner Marked!')">Set Winner</button>
-                <button class="btn btn-withdraw" style="flex:1; background:#28a745;" onclick="alert('Paid to Wallet!')">Winner Payment</button>
-            </div>
+            <h3>🏆 Winner & Reward Panel</h3>
+            
+            <label>Winner Free Fire UID:</label>
+            <input type="text" id="winner-uid" placeholder="Enter Winner's Game UID">
+            
+            <label>Prize Money to Transfer (₹):</label>
+            <input type="number" id="winner-prize" placeholder="e.g., 200">
+            
+            <button class="btn-submit" style="background:#e67e22;" onclick="sendWinnerReward()">Send Prize to Wallet</button>
         </div>
 
         <div class="card">
-            <h3>🎁 Upload Giveaway Item</h3>
-            <input type="file" id="product-photo" accept="image/*">
-            <input type="text" id="product-title" placeholder="Product Title">
-            <button class="btn-submit" style="background: #e67e22;" onclick="alert('Giveaway Uploaded!')">Upload Giveaway Page</button>
+            <h3>🎁 Upload New Giveaway Item</h3>
+            <label>Product Title / Description:</label>
+            <input type="text" id="giveaway-title" placeholder="e.g., 500 Diamonds / Weekly Membership">
+            
+            <label>Select Banner Image:</label>
+            <input type="file" id="giveaway-image" accept="image/*" style="background: transparent; border: none; padding: 5px 0;">
+            
+            <button class="btn-submit" style="background: #9b59b6;" onclick="uploadGiveaway()">Publish Giveaway Event</button>
         </div>
     </div>
 
-</body>
-</html>
+    <script>
+        // 1. Approve Deposit Request
+        function approveDeposit() {
+            alert("✅ Deposit Request Approved!\n₹50.00 player ke wallet balance me successfully credit ho gaye hain.");
+            document.getElementById('sample-request').style.opacity = "0.5";
+            document.getElementById('sample-request').innerHTML = "<p style='color:#28a745; text-align:center; font-weight:bold; margin: 10px 0;'>💸 This transaction was approved!</p>";
+        }
+
+        // 2. Reject Deposit Request
+        function rejectDeposit() {
+            let confirmation = confirm("Kya aap sach me is payment request को Reject karna chahte hain?");
+            if(confirmation) {
+                alert("❌ Request Rejected!\nPlayer ko koi balance nahi diya gaya.");
+                document.getElementById('sample-request').
