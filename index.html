@@ -7,16 +7,13 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <style>
-        /* Universal Styles */
         body {
             margin: 0; padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212; color: #ffffff; padding-bottom: 30px;
         }
-        /* Header Grid Layout */
         .header {
             background: linear-gradient(135deg, #ff4e50, #f9d423);
             padding: 15px; display: flex; justify-content: space-between; align-items: center;
@@ -40,13 +37,11 @@
         .action-buttons-bottom { margin-bottom: 15px; }
         .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-withdraw { background-color: #333; color: white; border: 1px solid #444; width: 100%; font-size: 14px; }
-        /* Tabs */
         .tabs { display: flex; background: #1e1e1e; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
         .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #888; font-weight: bold; cursor: pointer; font-size: 13px; }
         .tab-btn.active { background: #ff4e50; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        /* Cards Layout */
         .card, .match-card {
             background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #2d2d2d;
@@ -67,7 +62,6 @@
             border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
         }
         .error-msg { color: #ff4e50; font-size: 12px; margin-top: -5px; margin-bottom: 5px; display: none; font-weight: bold; }
-        /* Modal Popup */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0;
             width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); 
@@ -97,14 +91,14 @@
     <div id="payment-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closePaymentModal()">&times;</span>
-            <h3>💳 Add Money via UPI App</h3>
-            <p style="font-size: 13px; color: #ccc;">Step 1: Amount daal kar niche se payment kijiye.</p>
+            <h3>💳 Add Money via UPI</h3>
+            <p style="font-size: 13px; color: #ccc;">Step 1: Amount daal kar payment kijiye.</p>
             <div class="payment-form" style="margin-top: 15px;">
                 <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
                 <button class="btn-submit" style="background: #28a745; margin-bottom: 15px;" onclick="startUPIPayment()">1. Open UPI Apps to Pay</button>
                 <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
-                <p style="font-size: 13px; color: #ccc;">Step 2: UTR ID daal kar payment ka Screenshot upload karein.</p>
-                <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR/Txn ID">
+                <p style="font-size: 13px; color: #ccc;">Step 2: UTR ID aur Screenshot dalein.</p>
+                <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR ID">
                 
                 <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423;">Upload Payment Screenshot:</label>
                 <input type="file" id="pay-screenshot" accept="image/*">
@@ -124,7 +118,7 @@
                 <input type="text" id="player-name" placeholder="e.g., RRQ_JACK">
                 <label>Free Fire Game UID:</label>
                 <input type="text" id="player-uid" placeholder="e.g., 1234567890">
-                <div id="uid-error" class="error-msg">❌ Invalid UID! Numbers me 8 se 12 digits honi chahiye.</div>
+                <div id="uid-error" class="error-msg">❌ Invalid UID!</div>
                 <button class="btn-submit" style="background: #28a745;" onclick="processJoinTournament()">Confirm & Join Match</button>
             </div>
         </div>
@@ -146,13 +140,11 @@
         <div class="action-buttons-bottom">
             <button class="btn btn-withdraw" onclick="openWithdrawModal()">📤 Withdraw Balance</button>
         </div>
-
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('matches')">Matches</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
             <button class="tab-btn" onclick="switchTab('giveaway')">Giveaway Claim</button>
         </div>
-
         <div id="matches-tab" class="tab-content active">
             <div class="match-card">
                 <div class="match-title" id="display-match-title">🔥 Loading Match...</div>
@@ -161,24 +153,14 @@
                     <p><strong>Entry Fee:</strong> ₹ <span id="display-match-fee">0</span></p>
                     <p><strong>Per Kill:</strong> ₹ <span id="display-match-kill">0</span></p>
                 </div>
-                <div class="room-info" id="room-info-box">
-                    🔒 Room ID & Pass will be visible 15 mins before match.
-                </div>
+                <div class="room-info" id="room-info-box">🔒 Room ID & Pass will be visible 15 mins before match.</div>
                 <button class="btn-join" onclick="openJoinModal()">JOIN TOURNAMENT</button>
             </div>
         </div>
-
         <div id="history-tab" class="tab-content">
-            <div class="card">
-                <h4>Match History</h4>
-                <p style="color:#777;" id="history-match-text">No matches played yet.</p>
-            </div>
-            <div class="card">
-                <h4>Payment History</h4>
-                <p style="color:#777;" id="history-payment-text">No history available.</p>
-            </div>
+            <div class="card"><h4>Match History</h4><p style="color:#777;" id="history-match-text">No matches played yet.</p></div>
+            <div class="card"><h4>Payment History</h4><p style="color:#777;" id="history-payment-text">No history available.</p></div>
         </div>
-
         <div id="giveaway-tab" class="tab-content">
             <div class="card">
                 <h4>🎁 Claim Your Giveaway Reward</h4>
@@ -191,20 +173,17 @@
     </div>
 
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
             authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
             projectId: "ff-tornament-app-9e3ae",
             databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
-            storageBucket: "ff-tornament-app-9e3ae.appspot.com", // Fixed bucket string structure
             messagingSenderId: "595326120234",
             appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
         };
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const storage = firebase.storage(); // Initialized Storage
 
         const userSessionUID = "Player_SilentSniper77"; 
         let currentWalletBalance = 0.00;
@@ -252,7 +231,7 @@
             window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniper&am=${amount}&cu=INR`;
         }
 
-        // Upload Image + Push Object data to Database Log
+        // 🔥 NEW IMGBB UPLOAD LOGIC (FREE & NO UPGRADE REQUIRED)
         function submitPaymentRequest() {
             let amt = document.getElementById('pay-amount').value;
             let utr = document.getElementById('pay-utr').value.trim();
@@ -260,22 +239,31 @@
             let submitBtn = document.getElementById('btn-submit-req');
             
             if(!amt || !utr) { alert("Kripya Amount aur UTR ID dono dalein!"); return; }
-            if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! UTR 12 digits ka number hota hai."); return; }
-            if(fileInput.files.length === 0) { alert("❌ Kripya payment ka Screenshot select karein!"); return; }
+            if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! 12 digits ka number hota hai."); return; }
+            if(fileInput.files.length === 0) { alert("❌ Kripya Screenshot select karein!"); return; }
 
-            // Loading status display
             submitBtn.innerText = "Uploading Screenshot...";
             submitBtn.disabled = true;
 
+            // Form data formatting for ImgBB API Request
             let file = fileInput.files[0];
-            let storageRef = storage.ref('screenshots/' + utr + '_' + file.name);
+            let formData = new FormData();
+            formData.append("image", file);
 
-            // Upload to Firebase Storage
-            storageRef.put(file).then((snapshot) => {
-                // Get Image Live Public Link URL
-                snapshot.ref.getDownloadURL().then((downloadURL) => {
+            // ⚠️ APNI IMGBB API KEY HAR BAAR YAHA UPDATE KAREIN
+            const imgbbApiKey = "YOUR_IMGBB_API_KEY_HERE"; 
+
+            // Sending photo to ImgBB via fetch request API
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result.success) {
+                    let downloadURL = result.data.url; // Free live direct link generated
                     
-                    // Save into Database with Image Link
+                    // Push data directly into Firebase Realtime Database
                     database.ref('depositRequests/' + utr).set({
                         userUID: userSessionUID,
                         amount: parseFloat(amt),
@@ -283,17 +271,20 @@
                         screenshotUrl: downloadURL,
                         status: "Pending"
                     }).then(() => {
-                        document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Review (Screenshot Attached)</span>`;
-                        alert("🎉 Request Submitted! Screenshot ke saath aapki request admin ko bhej di gayi hai.");
-                        
-                        // Reset form fields
+                        document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Review</span>`;
+                        alert("🎉 Request Submitted successfully!");
                         submitBtn.innerText = "2. Submit Payment Request";
                         submitBtn.disabled = false;
                         closePaymentModal();
                     });
-                });
-            }).catch((error) => {
-                alert("Upload failed! Storage setup check kijiye.");
+                } else {
+                    alert("Upload Failed! Kripya sahi ImgBB API Key check karein.");
+                    submitBtn.innerText = "2. Submit Payment Request";
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                alert("Network Error during screenshot upload!");
                 submitBtn.innerText = "2. Submit Payment Request";
                 submitBtn.disabled = false;
             });
@@ -304,33 +295,19 @@
             let uid = document.getElementById('player-uid').value.trim();
             if(!name || !uid) { alert("Kripya dono fields bharein!"); return; }
             if(!/^[0-9]{8,12}$/.test(uid)) { document.getElementById('uid-error').style.display = 'block'; return; }
-
-            if(currentWalletBalance < activeMatchFee) {
-                alert(`⚠️ Insufficient Balance! Match ke liye ₹${activeMatchFee} chahiye.`);
-                closeJoinModal();
-                return;
-            }
+            if(currentWalletBalance < activeMatchFee) { alert(`⚠️ Insufficient Balance!`); closeJoinModal(); return; }
 
             let newBal = currentWalletBalance - activeMatchFee;
             database.ref('users/' + userSessionUID + '/balance').set(newBal);
             database.ref('matchParticipants/' + uid).set({ name: name, uid: uid });
-
-            document.getElementById('history-match-text').innerHTML = `<span style="color:#f9d423;">Joined: Match Registered (UID: ${uid})</span>`;
+            document.getElementById('history-match-text').innerHTML = `<span>Joined Match (UID: ${uid})</span>`;
             alert("🎉 Success! Match Registered.");
             closeJoinModal();
         }
 
-        function submitWithdrawRequest() {
-            let upi = document.getElementById('withdraw-upi').value;
-            let amount = parseFloat(document.getElementById('withdraw-amount').value);
-            if(!upi || !amount || amount > currentWalletBalance) { alert("Invalid Request or Insufficient Balance!"); return; }
-            alert("Withdraw request sent to admin!");
-            closeWithdrawModal();
-        }
-
-        function sendAddressToWhatsApp() {
-            window.open(`https://wa.me/91XXXXXXXXXX?text=Winner Details`, '_blank');
-        }
+        function submitWithdrawRequest() { alert("Withdraw request sent!"); closeWithdrawModal(); }
+        function sendAddressToWhatsApp() { window.open(`https://wa.me/91XXXXXXXXXX?text=Winner Details`, '_blank'); }
     </script>
 </body>
-</html>
+            </html>
+            
