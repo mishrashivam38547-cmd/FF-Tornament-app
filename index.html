@@ -132,10 +132,19 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closePaymentModal()">&times;</span>
             <h3>💳 Add Money via UPI App</h3>
-            <p style="font-size: 13px; color: #ccc;">Amount daliye aur kisi bhi UPI app se pay kijiye.</p>
-            <div class="payment-form" style="margin-top: 20px;">
+            <p style="font-size: 13px; color: #ccc;">Step 1: Amount daal kar niche diye button se payment kijiye.</p>
+            
+            <div class="payment-form" style="margin-top: 15px;">
                 <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
-                <button class="btn-submit" style="background: #28a745;" onclick="startUPIPayment()">Pay via UPI Apps</button>
+                <button class="btn-submit" style="background: #28a745; margin-bottom: 15px;" onclick="startUPIPayment()">1. Open UPI Apps to Pay</button>
+                
+                <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+                
+                <p style="font-size: 13px; color: #ccc;">Step 2: Payment karne ke baad wapas is box me 12-Digit UTR/Txn ID daal kar request submit karein.</p>
+                <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR/Txn ID">
+                <button class="btn-submit" style="background: #3498db;" onclick="submitPaymentRequest()">2. Submit Payment Request</button>
+                
+                <p style="font-size: 11px; color: #f39c12; margin-top: 10px;">⚠️ Note: Admin se approval milte hi balance add ho jayega (Kripya 10-15 mins wait karein).</p>
             </div>
         </div>
     </div>
@@ -225,7 +234,7 @@
     </div>
 
     <script>
-        // Global variables for local demo simulation
+        // Balance remains 0 until Firebase/Admin verification is active
         let walletBalance = 0.00;
         let matchEntryFee = 20;
 
@@ -249,7 +258,7 @@
         function openWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'block'; }
         function closeWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
 
-        // UPI Intent Payment Simulation
+        // Step 1: Open UPI App with parameters
         function startUPIPayment() {
             let amount = parseFloat(document.getElementById('pay-amount').value);
             if(!amount || amount <= 0) { alert("Kripya sahi amount dalein!"); return; }
@@ -258,49 +267,64 @@
             let merchantName = "Silent Sniper Tournament"; 
             let upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
             
-            // Simulating balance add for demo purpose
-            walletBalance += amount;
-            document.getElementById('user-balance').innerText = "₹ " + walletBalance.toFixed(2);
-            document.getElementById('history-payment-text').innerHTML = `<span style="color:#28a745;">+ ₹${amount.toFixed(2)} Added Successfully</span>`;
-
+            // Just opens upi app, strictly DOES NOT add money to front-end local balance anymore.
             window.location.href = upiUrl;
+        }
+
+        // Step 2: Submit UTR Request for Admin Verification
+        function submitPaymentRequest() {
+            let amt = document.getElementById('pay-amount').value;
+            let utr = document.getElementById('pay-utr').value.trim();
+            
+            if(!amt || !utr) { 
+                alert("Kripya Amount aur Payment ki UTR ID dono dalein!"); 
+                return; 
+            }
+            
+            // Check if UTR is numeric and standard length (12 digits)
+            let utrPattern = /^[0-9]{12}$/;
+            if(!utrPattern.test(utr)) {
+                alert("❌ Invalid UTR ID! Bank se mili UTR ID hamesha 12 digits ka number hoti hai.");
+                return;
+            }
+
+            // Simulating History status update for user reference
+            document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Deposit Request (UTR: ${utr}) Pending Admin Review</span>`;
+            
+            alert("🎉 Payment Request Submitted! Admin aapka UTR check karke jaldi hi balance approve kar dega.");
             closePaymentModal();
         }
 
-        // 🛡️ GAME LOGIC: JOIN MATCH WITH UID VALIDATION & ERROR HANDLING
+        // GAME LOGIC: JOIN MATCH
         function processJoinTournament() {
             let name = document.getElementById('player-name').value.trim();
             let uid = document.getElementById('player-uid').value.trim();
             let uidError = document.getElementById('uid-error');
 
-            // 1. Check if fields are empty
             if(!name || !uid) {
                 alert("Kripya Game Name aur Game UID dono bharein!");
                 return;
             }
 
-            // 2. UID Validation Regular Expression (Sirf numbers, 8 se 12 length)
             let uidPattern = /^[0-9]{8,12}$/;
             if(!uidPattern.test(uid)) {
-                uidError.style.display = 'block'; // Error dikhayein
+                uidError.style.display = 'block';
                 return;
             } else {
-                uidError.style.display = 'none';  // Error chhupayein
+                uidError.style.display = 'none';
             }
 
-            // 3. Wallet Balance Validation Check
             if(walletBalance < matchEntryFee) {
-                alert(`⚠️ Insufficient Balance! Match join karne ke liye ₹${matchEntryFee} chahiye. Aapka balance ₹${walletBalance.toFixed(2)} hai. Kripya Add Money karein.`);
+                alert(`⚠️ Insufficient Balance! Match join karne ke liye ₹${matchEntryFee} chahiye. Aapka balance ₹${walletBalance.toFixed(2)} hai. Kripya Add Money karke Admin approval ka wait karein.`);
                 closeJoinModal();
                 return;
             }
 
-            // 4. Dedicate Balance & Join Success
             walletBalance -= matchEntryFee;
             document.getElementById('user-balance').innerText = "₹ " + walletBalance.toFixed(2);
             document.getElementById('history-match-text').innerHTML = `<span style="color:#f9d423;">Joined: Daily Mega Match (UID: ${uid})</span>`;
             
-            alert(`🎉 Badhai ho! Aap successfully match me register ho chuke hain. \nName: ${name}\nUID: ${uid}`);
+            alert(`🎉 Success! Match Registered.`);
             closeJoinModal();
         }
 
@@ -312,7 +336,7 @@
             if(!upi || !amount || amount <= 0) { alert("Please enter valid UPI ID and Amount!"); return; }
             if(amount > walletBalance) { alert("Aapke wallet me itna balance nahi hai!"); return; }
 
-            alert("Withdraw request sent to admin! Verify hone me 1-2 ghante lagenge.");
+            alert("Withdraw request sent to admin!");
             closeWithdrawModal();
         }
 
