@@ -7,6 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <style>
         /* Universal Styles */
@@ -61,7 +62,7 @@
             font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 15px;
         }
         .btn-submit { background: #ff4e50; margin-top: 10px; }
-        input[type="text"], input[type="number"], input[type="tel"], textarea {
+        input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="file"] {
             width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d;
             border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box;
         }
@@ -72,7 +73,7 @@
             width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); 
         }
         .modal-content {
-            background-color: #1e1e1e; margin: 30% auto; padding: 20px; border: 1px solid #444;
+            background-color: #1e1e1e; margin: 15% auto; padding: 20px; border: 1px solid #444;
             width: 85%; max-width: 400px; border-radius: 12px; box-sizing: border-box; text-align: center; position: relative;
         }
         .close-btn { position: absolute; right: 15px; top: 10px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -102,9 +103,13 @@
                 <input type="number" id="pay-amount" placeholder="Enter Amount (₹)" required>
                 <button class="btn-submit" style="background: #28a745; margin-bottom: 15px;" onclick="startUPIPayment()">1. Open UPI Apps to Pay</button>
                 <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
-                <p style="font-size: 13px; color: #ccc;">Step 2: Payment ke baad 12-Digit UTR ID dalein.</p>
+                <p style="font-size: 13px; color: #ccc;">Step 2: UTR ID daal kar payment ka Screenshot upload karein.</p>
                 <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR/Txn ID">
-                <button class="btn-submit" style="background: #3498db;" onclick="submitPaymentRequest()">2. Submit Payment Request</button>
+                
+                <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423;">Upload Payment Screenshot:</label>
+                <input type="file" id="pay-screenshot" accept="image/*">
+                
+                <button class="btn-submit" id="btn-submit-req" style="background: #3498db;" onclick="submitPaymentRequest()">2. Submit Payment Request</button>
             </div>
         </div>
     </div>
@@ -186,33 +191,31 @@
     </div>
 
     <script>
-        // Your Web App's Firebase Configuration
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
             authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
             projectId: "ff-tornament-app-9e3ae",
-            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", // Handled URL structure
-            storageBucket: "ff-tornament-app-9e3ae.firebasestorage.app",
+            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
+            storageBucket: "ff-tornament-app-9e3ae.appspot.com", // Fixed bucket string structure
             messagingSenderId: "595326120234",
             appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
         };
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const storage = firebase.storage(); // Initialized Storage
 
-        // Standard Dummy Static User Session ID for Demo (Since No Authentication Screen is built yet)
         const userSessionUID = "Player_SilentSniper77"; 
         let currentWalletBalance = 0.00;
         let activeMatchFee = 20;
 
-        // Sync Balance from Firebase in Real-Time
         database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
             let val = snapshot.val();
             currentWalletBalance = val ? parseFloat(val) : 0.00;
             document.getElementById('user-balance').innerText = "₹ " + currentWalletBalance.toFixed(2);
         });
 
-        // Sync Active Match from Firebase dynamically
         database.ref('activeMatch').on('value', (snapshot) => {
             let data = snapshot.val();
             if(data) {
@@ -221,7 +224,6 @@
                 document.getElementById('display-match-fee').innerText = data.fee || "20";
                 document.getElementById('display-match-kill').innerText = data.kill || "5";
                 activeMatchFee = parseFloat(data.fee) || 20;
-                
                 if(data.roomId && data.roomPass) {
                     document.getElementById('room-info-box').innerHTML = `🔑 **Room ID:** ${data.roomId} | **Pass:** ${data.roomPass}`;
                     document.getElementById('room-info-box').style.color = "#28a745";
@@ -246,28 +248,54 @@
         function startUPIPayment() {
             let amount = parseFloat(document.getElementById('pay-amount').value);
             if(!amount || amount <= 0) { alert("Kripya sahi amount dalein!"); return; }
-            let upiId = "mishrashivam38547@okaxis"; // Apni exact ID customize kar sakte hain
+            let upiId = "mishrashivam38547@okaxis"; 
             window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniper&am=${amount}&cu=INR`;
         }
 
-        // Send Request to Firebase Database (Pending Status)
+        // Upload Image + Push Object data to Database Log
         function submitPaymentRequest() {
             let amt = document.getElementById('pay-amount').value;
             let utr = document.getElementById('pay-utr').value.trim();
+            let fileInput = document.getElementById('pay-screenshot');
+            let submitBtn = document.getElementById('btn-submit-req');
             
             if(!amt || !utr) { alert("Kripya Amount aur UTR ID dono dalein!"); return; }
-            if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! UTR hamesha 12 digits ka number hota hai."); return; }
+            if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! UTR 12 digits ka number hota hai."); return; }
+            if(fileInput.files.length === 0) { alert("❌ Kripya payment ka Screenshot select karein!"); return; }
 
-            // Save deposit object directly inside Firebase node
-            database.ref('depositRequests/' + utr).set({
-                userUID: userSessionUID,
-                amount: parseFloat(amt),
-                utrId: utr,
-                status: "Pending"
-            }).then(() => {
-                document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Admin Review</span>`;
-                alert("🎉 Request Submitted! Admin verification ke baad balance add ho jayega.");
-                closePaymentModal();
+            // Loading status display
+            submitBtn.innerText = "Uploading Screenshot...";
+            submitBtn.disabled = true;
+
+            let file = fileInput.files[0];
+            let storageRef = storage.ref('screenshots/' + utr + '_' + file.name);
+
+            // Upload to Firebase Storage
+            storageRef.put(file).then((snapshot) => {
+                // Get Image Live Public Link URL
+                snapshot.ref.getDownloadURL().then((downloadURL) => {
+                    
+                    // Save into Database with Image Link
+                    database.ref('depositRequests/' + utr).set({
+                        userUID: userSessionUID,
+                        amount: parseFloat(amt),
+                        utrId: utr,
+                        screenshotUrl: downloadURL,
+                        status: "Pending"
+                    }).then(() => {
+                        document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Review (Screenshot Attached)</span>`;
+                        alert("🎉 Request Submitted! Screenshot ke saath aapki request admin ko bhej di gayi hai.");
+                        
+                        // Reset form fields
+                        submitBtn.innerText = "2. Submit Payment Request";
+                        submitBtn.disabled = false;
+                        closePaymentModal();
+                    });
+                });
+            }).catch((error) => {
+                alert("Upload failed! Storage setup check kijiye.");
+                submitBtn.innerText = "2. Submit Payment Request";
+                submitBtn.disabled = false;
             });
         }
 
@@ -283,7 +311,6 @@
                 return;
             }
 
-            // Deduct entry amount and save joiner context inside firebase logs
             let newBal = currentWalletBalance - activeMatchFee;
             database.ref('users/' + userSessionUID + '/balance').set(newBal);
             database.ref('matchParticipants/' + uid).set({ name: name, uid: uid });
@@ -302,9 +329,6 @@
         }
 
         function sendAddressToWhatsApp() {
-            let name = document.getElementById('winner-name').value;
-            let phone = document.getElementById('winner-phone').value;
-            let address = document.getElementById('winner-address').value;
             window.open(`https://wa.me/91XXXXXXXXXX?text=Winner Details`, '_blank');
         }
     </script>
