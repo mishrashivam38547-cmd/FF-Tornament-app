@@ -33,6 +33,10 @@
             background-color: #121212; color: #fff; border: 1px solid #ff4e50;
             width: 100%; padding: 8px; font-size: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;
         }
+        .btn-channel {
+            background-color: #0088cc; color: #fff; border: none;
+            width: 100%; padding: 6px; font-size: 11px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: block; box-sizing: border-box;
+        }
         .main-content { padding: 15px; }
         .action-buttons-bottom { margin-bottom: 15px; }
         .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -78,6 +82,7 @@
     <div class="header">
         <div class="header-left">
             <h2>Silent Sniper Tournament</h2>
+            <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()">📢 Join Channel</button>
         </div>
         <div class="header-right">
             <div class="wallet-card">
@@ -99,10 +104,8 @@
                 <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
                 <p style="font-size: 13px; color: #ccc;">Step 2: UTR ID aur Screenshot dalein.</p>
                 <input type="text" id="pay-utr" placeholder="Enter 12-Digit Ref/UTR ID">
-                
                 <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423;">Upload Payment Screenshot:</label>
                 <input type="file" id="pay-screenshot" accept="image/*">
-                
                 <button class="btn-submit" id="btn-submit-req" style="background: #3498db;" onclick="submitPaymentRequest()">2. Submit Payment Request</button>
             </div>
         </div>
@@ -165,13 +168,18 @@
         </div>
 
         <div id="giveaway-tab" class="tab-content">
-            <div class="card">
-                <h4>🎁 Claim Your Giveaway Reward</h4>
+            <div class="card" id="giveaway-active-box">
+                <h4 id="giveaway-title">🎁 Claim Your Giveaway Reward</h4>
+                <p style="font-size: 14px; color: #f9d423;" id="giveaway-desc">Loading Giveaway Details...</p>
                 <p style="font-size: 13px; color: #ccc; margin-bottom: 10px;">Apni details bharein aur niche diye button par click karke WhatsApp par submit karein.</p>
                 <input type="text" id="winner-name" placeholder="Enter Your Full Name">
                 <input type="tel" id="winner-phone" placeholder="Enter WhatsApp Number">
                 <textarea id="winner-address" placeholder="Enter Full Delivery Address with Pincode" rows="4"></textarea>
                 <button class="btn-submit" style="background: #25d366;" onclick="sendAddressToWhatsApp()">Submit Details via WhatsApp</button>
+            </div>
+            <div class="card" id="giveaway-inactive-box" style="display: none; text-align: center;">
+                <h4>🔒 No Active Giveaway</h4>
+                <p style="color: #888;">Abhi koi giveaway active nahi hai. Agle giveaway ke liye WhatsApp channel join karein!</p>
             </div>
         </div>
     </div>
@@ -192,11 +200,32 @@
         const userSessionUID = "Player_SilentSniper77"; 
         let currentWalletBalance = 0.00;
         let activeMatchFee = 20;
+        let globalWhatsAppChannelLink = "https://whatsapp.com";
 
         database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
             let val = snapshot.val();
             currentWalletBalance = val ? parseFloat(val) : 0.00;
             document.getElementById('user-balance').innerText = "₹ " + currentWalletBalance.toFixed(2);
+        });
+
+        // Live WhatsApp Channel Data Fetch
+        database.ref('appSettings/whatsappChannel').on('value', (snapshot) => {
+            let link = snapshot.val();
+            if(link) globalWhatsAppChannelLink = link;
+        });
+
+        // Live Giveaway Data Fetch
+        database.ref('appSettings/giveaway').on('value', (snapshot) => {
+            let giveaway = snapshot.val();
+            if(giveaway && giveaway.status === "Active") {
+                document.getElementById('giveaway-active-box').style.display = "block";
+                document.getElementById('giveaway-inactive-box').style.display = "none";
+                document.getElementById('giveaway-title').innerText = "🎁 " + (giveaway.title || "Giveaway Claim");
+                document.getElementById('giveaway-desc').innerText = "Item: " + (giveaway.description || "Free Fire Rewards");
+            } else {
+                document.getElementById('giveaway-active-box').style.display = "none";
+                document.getElementById('giveaway-inactive-box').style.display = "block";
+            }
         });
 
         database.ref('activeMatch').on('value', (snapshot) => {
@@ -214,6 +243,10 @@
             }
         });
 
+        function openWhatsAppChannel() {
+            window.open(globalWhatsAppChannelLink, '_blank');
+        }
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -228,7 +261,6 @@
         function openWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'block'; }
         function closeWithdrawModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
 
-        // ✅ UPDATED: AAPKI ASLI UPI ID SET KAR DI HAI
         function startUPIPayment() {
             let amount = parseFloat(document.getElementById('pay-amount').value);
             if(!amount || amount <= 0) { alert("Kripya sahi amount dalein!"); return; }
@@ -307,7 +339,6 @@
 
         function submitWithdrawRequest() { alert("Withdraw request sent!"); closeWithdrawModal(); }
 
-        // ✅ UPDATED: AAPKA ASLI WHATSAPP NUMBER AUR MESSAGE FORMAT
         function sendAddressToWhatsApp() { 
             let name = document.getElementById('winner-name').value.trim();
             let phone = document.getElementById('winner-phone').value.trim();
@@ -315,12 +346,11 @@
 
             if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
 
-            let whatsappNumber = "918858509091"; // Format with country code
+            let whatsappNumber = "918858509091"; 
             let textMessage = `🎁 *Giveaway Winner Details* 🎁%0A%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}`;
             
             window.open(`https://wa.me/${whatsappNumber}?text=${textMessage}`, '_blank'); 
         }
     </script>
 </body>
-    </html>
-    
+</html>
