@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Fire MAX Tournament</title>
+    <title>RS7_esport Tournament</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -94,19 +94,20 @@
 <body>
 
     <div id="login-screen">
-        <div class="login-card">
-            <h2>Silent Sniper App</h2>
-            <p style="color: #aaa; font-size: 14px;">Tournaments me join karne ke liye login karein</p>
-            <button class="btn-google" onclick="loginWithGoogle()">
-                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google Logo" width="18">
-                Sign in with Google
-            </button>
-        </div>
+    <div class="login-card">
+        <h2>RS7_esport</h2>
+        <p style="color: #aaa; font-size: 14px;">Tournaments me join karne ke liye login karein</p>
+        <button class="btn-google" onclick="loginWithGoogle()">
+            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google Logo" width="18">
+            Sign in with Google
+        </button>
+    </div>
     </div>
 
     <div id="app-container">
         <div class="header">
             <div class="header-left">
+                <h1 style="font-size: 20px; margin: 0 0 5px 0; color: #fff;">RS7_esport</h1>
                 <h2 id="welcome-username">Loading Player...</h2>
                 <button class="btn-logout" onclick="logoutFirebase()">Logout</button>
                 <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()">📢 Join Channel</button>
