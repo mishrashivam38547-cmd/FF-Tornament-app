@@ -75,6 +75,7 @@
             width: 85%; max-width: 400px; border-radius: 12px; box-sizing: border-box; text-align: center; position: relative;
         }
         .close-btn { position: absolute; right: 15px; top: 10px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .product-img-view { width: 100%; max-height: 180px; border-radius: 8px; object-fit: contain; margin: 10px 0; background: #121212; border: 1px solid #333; display: none; }
     </style>
 </head>
 <body>
@@ -134,7 +135,7 @@
             <div class="payment-form" style="text-align: left; margin-top: 15px;">
                 <input type="text" id="withdraw-upi" placeholder="Enter Your UPI ID">
                 <input type="number" id="withdraw-amount" placeholder="Enter Amount (₹)">
-                <button class="btn-submit" onclick="submitWithdrawRequest()">Request Withdrawal</button>
+                <button class="btn-submit" id="btn-withdraw-req" style="background: #ff4e50;" onclick="submitWithdrawRequest()">Submit Withdrawal Request</button>
             </div>
         </div>
     </div>
@@ -170,12 +171,18 @@
         <div id="giveaway-tab" class="tab-content">
             <div class="card" id="giveaway-active-box">
                 <h4 id="giveaway-title">🎁 Claim Your Giveaway Reward</h4>
-                <p style="font-size: 14px; color: #f9d423;" id="giveaway-desc">Loading Giveaway Details...</p>
-                <p style="font-size: 13px; color: #ccc; margin-bottom: 10px;">Apni details bharein aur niche diye button par click karke WhatsApp par submit karein.</p>
+                <p style="font-size: 14px; color: #f9d423; margin-bottom: 5px;" id="giveaway-desc">Loading Details...</p>
+                
+                <img id="giveaway-product-image" class="product-img-view" alt="Giveaway Item">
+
                 <input type="text" id="winner-name" placeholder="Enter Your Full Name">
                 <input type="tel" id="winner-phone" placeholder="Enter WhatsApp Number">
-                <textarea id="winner-address" placeholder="Enter Full Delivery Address with Pincode" rows="4"></textarea>
-                <button class="btn-submit" style="background: #25d366;" onclick="sendAddressToWhatsApp()">Submit Details via WhatsApp</button>
+                <textarea id="winner-address" placeholder="Enter Full Delivery Address with Pincode" rows="3"></textarea>
+                
+                <label style="display:block; text-align:left; font-size:12px; margin-top:5px; color:#f9d423; font-weight: bold;">Upload Profile / Winning Screenshot:</label>
+                <input type="file" id="giveaway-screenshot" accept="image/*">
+                
+                <button class="btn-submit" id="btn-giveaway-submit" style="background: #25d366;" onclick="uploadGiveawayPhotoAndSend()">Submit Details via WhatsApp</button>
             </div>
             <div class="card" id="giveaway-inactive-box" style="display: none; text-align: center;">
                 <h4>🔒 No Active Giveaway</h4>
@@ -201,6 +208,7 @@
         let currentWalletBalance = 0.00;
         let activeMatchFee = 20;
         let globalWhatsAppChannelLink = "https://whatsapp.com";
+        const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
         database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
             let val = snapshot.val();
@@ -208,13 +216,12 @@
             document.getElementById('user-balance').innerText = "₹ " + currentWalletBalance.toFixed(2);
         });
 
-        // Live WhatsApp Channel Data Fetch
         database.ref('appSettings/whatsappChannel').on('value', (snapshot) => {
             let link = snapshot.val();
             if(link) globalWhatsAppChannelLink = link;
         });
 
-        // Live Giveaway Data Fetch
+        // 🔥 FIX FETCH: PRODUCT IMAGE RENDER LIVE IN USER APP
         database.ref('appSettings/giveaway').on('value', (snapshot) => {
             let giveaway = snapshot.val();
             if(giveaway && giveaway.status === "Active") {
@@ -222,6 +229,14 @@
                 document.getElementById('giveaway-inactive-box').style.display = "none";
                 document.getElementById('giveaway-title').innerText = "🎁 " + (giveaway.title || "Giveaway Claim");
                 document.getElementById('giveaway-desc').innerText = "Item: " + (giveaway.description || "Free Fire Rewards");
+                
+                let imgElement = document.getElementById('giveaway-product-image');
+                if(giveaway.productImg) {
+                    imgElement.src = giveaway.productImg;
+                    imgElement.style.display = "block";
+                } else {
+                    imgElement.style.display = "none";
+                }
             } else {
                 document.getElementById('giveaway-active-box').style.display = "none";
                 document.getElementById('giveaway-inactive-box').style.display = "block";
@@ -243,9 +258,7 @@
             }
         });
 
-        function openWhatsAppChannel() {
-            window.open(globalWhatsAppChannelLink, '_blank');
-        }
+        function openWhatsAppChannel() { window.open(globalWhatsAppChannelLink, '_blank'); }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -285,8 +298,6 @@
             let formData = new FormData();
             formData.append("image", file);
 
-            const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
-
             fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
                 method: "POST",
                 body: formData
@@ -295,31 +306,72 @@
             .then(result => {
                 if(result.success) {
                     let downloadURL = result.data.url; 
-                    
                     database.ref('depositRequests/' + utr).set({
-                        userUID: userSessionUID,
-                        amount: parseFloat(amt),
-                        utrId: utr,
-                        screenshotUrl: downloadURL,
-                        status: "Pending"
+                        userUID: userSessionUID, amount: parseFloat(amt), utrId: utr, screenshotUrl: downloadURL, status: "Pending"
                     }).then(() => {
                         document.getElementById('history-payment-text').innerHTML = `<span style="color:#f39c12;">⏳ ₹${parseFloat(amt).toFixed(2)} Pending Review</span>`;
                         alert("🎉 Request Submitted Successfully!");
-                        submitBtn.innerText = "2. Submit Payment Request";
-                        submitBtn.disabled = false;
-                        closePaymentModal();
+                        submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false; closePaymentModal();
                     });
-                } else {
-                    alert("Upload Failed! ImgBB Key check karein.");
-                    submitBtn.innerText = "2. Submit Payment Request";
-                    submitBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                alert("Network Error during upload!");
-                submitBtn.innerText = "2. Submit Payment Request";
-                submitBtn.disabled = false;
+                } else { alert("Upload Failed!"); submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false; }
+            }).catch(() => { submitBtn.disabled = false; });
+        }
+
+        function submitWithdrawRequest() {
+            let upi = document.getElementById('withdraw-upi').value.trim();
+            let amt = parseFloat(document.getElementById('withdraw-amount').value);
+            let btn = document.getElementById('btn-withdraw-req');
+
+            if(!upi || !amt || amt <= 0) { alert("❌ Sahi UPI ID aur Amount bharein!"); return; }
+            if(amt > currentWalletBalance) { alert("❌ Insufficient Balance!"); return; }
+
+            btn.innerText = "Sending Request...";
+            btn.disabled = true;
+
+            let requestId = "WITHDRAW_" + Date.now();
+            database.ref('withdrawRequests/' + requestId).set({
+                requestId: requestId, userUID: userSessionUID, upiId: upi, amount: amt, status: "Pending"
+            }).then(() => {
+                alert("🎉 Withdrawal Request Submitted!");
+                btn.innerText = "Submit Withdrawal Request"; btn.disabled = false; closeWithdrawModal();
             });
+        }
+
+        function uploadGiveawayPhotoAndSend() {
+            let name = document.getElementById('winner-name').value.trim();
+            let phone = document.getElementById('winner-phone').value.trim();
+            let address = document.getElementById('winner-address').value.trim();
+            let fileInput = document.getElementById('giveaway-screenshot');
+            let btn = document.getElementById('btn-giveaway-submit');
+
+            if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
+            if(fileInput.files.length === 0) { alert("❌ Kripya proof/profile screenshot select karein!"); return; }
+
+            btn.innerText = "Uploading Photo...";
+            btn.disabled = true;
+
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append("image", file);
+
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result.success) {
+                    let photoUrl = result.data.url; 
+                    let whatsappNumber = "918858509091"; 
+                    let textMessage = `🎁 *Giveaway Claim Details* 🎁%0A%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}%0A*Screenshot Link:* ${photoUrl}`;
+                    
+                    window.open(`https://wa.me/${whatsappNumber}?text=${textMessage}`, '_blank');
+                    btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false;
+                } else {
+                    alert("❌ Photo Upload Failed!");
+                    btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false;
+                }
+            }).catch(() => { btn.disabled = false; });
         }
 
         function processJoinTournament() {
@@ -335,21 +387,6 @@
             document.getElementById('history-match-text').innerHTML = `<span>Joined Match (UID: ${uid})</span>`;
             alert("🎉 Success! Match Registered.");
             closeJoinModal();
-        }
-
-        function submitWithdrawRequest() { alert("Withdraw request sent!"); closeWithdrawModal(); }
-
-        function sendAddressToWhatsApp() { 
-            let name = document.getElementById('winner-name').value.trim();
-            let phone = document.getElementById('winner-phone').value.trim();
-            let address = document.getElementById('winner-address').value.trim();
-
-            if(!name || !phone || !address) { alert("❌ Kripya saari details bharein!"); return; }
-
-            let whatsappNumber = "918858509091"; 
-            let textMessage = `🎁 *Giveaway Winner Details* 🎁%0A%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}`;
-            
-            window.open(`https://wa.me/${whatsappNumber}?text=${textMessage}`, '_blank'); 
         }
     </script>
 </body>
