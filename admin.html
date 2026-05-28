@@ -131,7 +131,6 @@
         }
     });
 
-    // 🔥 FIX: UPLOAD PRODUCT PHOTO TO IMGBB AND UPDATE IN DATABASE
     function updateSocialAndGiveaway() {
         let channelLink = document.getElementById('admin-channel-url').value.trim();
         let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
@@ -146,45 +145,30 @@
         function saveData(imageUrl) {
             database.ref('appSettings').update({
                 whatsappChannel: channelLink,
-                giveaway: {
-                    title: giveawayTitle,
-                    description: giveawayDesc,
-                    status: giveawayStatus,
-                    productImg: imageUrl
-                }
+                giveaway: { title: giveawayTitle, description: giveawayDesc, status: giveawayStatus, productImg: imageUrl }
             }).then(() => {
                 alert("🎉 Settings with Product Photo Updated Successfully!");
-                btn.innerText = "Save Settings Live";
-                btn.disabled = false;
+                btn.innerText = "Save Settings Live"; btn.disabled = false;
             });
         }
 
         if(fileInput.files.length > 0) {
-            btn.innerText = "Uploading Product Photo...";
-            btn.disabled = true;
-            
+            btn.innerText = "Uploading Product Photo..."; btn.disabled = true;
             let file = fileInput.files[0];
             let formData = new FormData();
             formData.append("image", file);
 
-            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-                method: "POST",
-                body: formData
-            })
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
             .then(res => res.json())
             .then(result => {
                 if(result.success) {
                     document.getElementById('admin-giveaway-existing-img').value = result.data.url;
                     saveData(result.data.url);
                 } else {
-                    alert("Image upload failed!");
-                    btn.disabled = false;
-                    btn.innerText = "Save Settings Live";
+                    alert("Image upload failed!"); btn.disabled = false; btn.innerText = "Save Settings Live";
                 }
             }).catch(() => { btn.disabled = false; });
-        } else {
-            saveData(existingImg);
-        }
+        } else { saveData(existingImg); }
     }
 
     function updateMatchDetails() {
@@ -197,41 +181,53 @@
         database.ref('activeMatch').set({ title: title, time: time, fee: fee, kill: kill, roomId: rId, roomPass: rPass }).then(() => { alert("Match Live Updated!"); });
     }
 
-    // Load Deposit Requests
+    // 📥 FIXED DEPOSIT REQUEST LISTENING (Shows ONLY Pending ones)
     database.ref('depositRequests').on('value', (snapshot) => {
         let container = document.getElementById('deposit-requests-container'); container.innerHTML = "";
         let data = snapshot.val();
+        let hasPending = false;
         if(!data) { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; return; }
         for(let utr in data) {
             if(data[utr].status === "Pending") {
+                hasPending = true;
                 let req = data[utr]; let box = document.createElement('div'); box.className = "request-box";
                 box.innerHTML = `<div><strong>UTR:</strong> ${utr}<br><strong>User:</strong> ${req.userUID}<br><strong>Amount:</strong> ₹${req.amount}<br><a class="screenshot-link" href="${req.screenshotUrl}" target="_blank">🖼️ View Screenshot</a></div>
                     <div><button class="btn-action btn-approve" onclick="approveDeposit('${utr}', '${req.userUID}', ${req.amount})">Approve</button><button class="btn-action btn-reject" onclick="rejectDeposit('${utr}')">Reject</button></div>`;
                 container.appendChild(box);
             }
         }
+        if(!hasPending) { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; }
     });
 
     function approveDeposit(utr, userUID, amount) {
-        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { return (currentBalance || 0) + amount; }).then(() => {
-            database.ref('depositRequests/' + utr).update({ status: "Approved" }); alert("Deposit Approved!");
+        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { 
+            return (currentBalance || 0) + amount; 
+        }).then(() => {
+            database.ref('depositRequests/' + utr).update({ status: "Approved" }); 
+            alert("Deposit Approved! Money Added to User Wallet.");
         });
     }
-    function rejectDeposit(utr) { database.ref('depositRequests/' + utr).update({ status: "Rejected" }); alert("Request Rejected!"); }
+    function rejectDeposit(utr) { 
+        database.ref('depositRequests/' + utr).update({ status: "Rejected" }); 
+        alert("Request Rejected!"); 
+    }
 
-    // Load Withdrawal Requests
+    // Load Withdrawal Requests (Shows ONLY Pending ones)
     database.ref('withdrawRequests').on('value', (snapshot) => {
         let container = document.getElementById('withdraw-requests-container'); container.innerHTML = "";
         let data = snapshot.val();
+        let hasPending = false;
         if(!data) { container.innerHTML = "<p style='color:green;'>No pending withdrawal requests.</p>"; return; }
         for(let reqId in data) {
             if(data[reqId].status === "Pending") {
+                hasPending = true;
                 let req = data[reqId]; let box = document.createElement('div'); box.className = "request-box"; box.style.borderLeftColor = "#d63031";
                 box.innerHTML = `<div><strong>User ID:</strong> ${req.userUID} <br><strong>UPI ID:</strong> <span style="color:#d63031; font-weight:bold;">${req.upiId}</span> <br><strong>Amount to Pay:</strong> ₹${req.amount}</div>
                     <div><button class="btn-action btn-approve" style="background:#28a745;" onclick="approveWithdrawal('${reqId}', '${req.userUID}', ${req.amount})">Paid (Approve)</button><button class="btn-action btn-reject" style="background:#dc3545;" onclick="rejectWithdrawal('${reqId}')">Reject</button></div>`;
                 container.appendChild(box);
             }
         }
+        if(!hasPending) { container.innerHTML = "<p style='color:green;'>No pending withdrawal requests.</p>"; }
     });
 
     function approveWithdrawal(reqId, userUID, amount) {
