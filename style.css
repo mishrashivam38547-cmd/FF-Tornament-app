@@ -1,0 +1,127 @@
+/* Universal Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    padding-bottom: 30px;
+}
+
+/* Header UI */
+.header {
+    background: linear-gradient(135deg, #ff4e50, #f9d423);
+    padding: 20px;
+    text-align: center;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.header h2 { margin: 0; font-size: 24px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+.header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
+
+/* Wallet UI */
+.wallet-card {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 15px;
+    backdrop-filter: blur(5px);
+}
+.wallet-card span { font-size: 12px; text-transform: uppercase; letter-spacing: 1px;}
+.wallet-card h3 { margin: 5px 0 0 0; font-size: 22px; }
+
+/* Action Buttons Grid */
+.action-buttons {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+    gap: 10px;
+}
+.btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+.btn-add { background-color: #ff4e50; color: white; }
+.btn-withdraw { background-color: #333; color: white; border: 1px solid #444; }
+
+/* Navigation Tabs */
+.tabs {
+    display: flex;
+    background: #1e1e1e;
+    margin: 10px 15px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+}
+.tab-btn.active {
+    background: #ff4e50;
+    color: white;
+}
+
+/* Dynamic Tab Content Control */
+.tab-content { display: none; padding: 0 15px; }
+.tab-content.active { display: block; }
+
+/* App Cards layout */
+.card, .match-card {
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: 1px solid #2d2d2d;
+}
+
+/* Match Specifics */
+.match-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #f9d423; }
+.match-details p { margin: 5px 0; font-size: 14px; color: #ccc; }
+.room-info {
+    background: #2d2d2d;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    color: #ff4e50;
+    margin: 10px 0;
+    font-weight: bold;
+}
+.btn-join, .btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: #28a745;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+}
+.btn-submit { background: #ff4e50; margin-top: 10px; }
+
+/* Form Elements inside Dark Cards */
+input[type="text"], input[type="tel"], textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: #2d2d2d;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
