@@ -265,37 +265,41 @@
     }
     // BUTTON 2 CODE: Room ID & Password Upload ONLY
     function updateRoomCredentials() {
-        let rId = document.getElementById('room-id').value;
-        let rPass = document.getElementById('room-pass').value;
-        let matchStatus = document.getElementById('match-status').value;
+    let rId = document.getElementById('room-id').value;
+    let rPass = document.getElementById('room-pass').value;
+    let matchStatus = document.getElementById('match-status').value;
+    
+    // Agar aapke paas koi select kiya hua match ID hai
+    let matchId = window.currentEditingMatchId; 
 
-        if(!rId || !rPass) { alert("Room ID aur Password dono fill karein!"); return; }
+    if(!matchId) { alert("Pehle upar se naya match create karein ya purana select karein!"); return; }
+    if(!rId || !rPass) { alert("Room ID aur Password dono fill karein!"); return; }
 
-        database.ref('activeMatch').update({ 
-            roomId: rId, 
-            roomPass: rPass,
-            matchStatus: matchStatus
-        }).then(() => { 
-            alert("🔑 Room ID & Password Uploaded. Status is now Live!"); 
-        });
+    database.ref('matches/' + matchId).update({ 
+        roomId: rId, 
+        roomPass: rPass,
+        matchStatus: matchStatus
+    }).then(() => { 
+        alert("🔑 Room ID & Password Updated for this match!"); 
+    });
     }
-
     // BUTTON 3 CODE: Result Upload ONLY
     function uploadMatchResult() {
-        let winnerName = document.getElementById('match-winner').value;
-        let winnerKills = document.getElementById('match-winner-kills').value;
+    let winnerName = document.getElementById('match-winner').value;
+    let winnerKills = document.getElementById('match-winner-kills').value;
+    let matchId = window.currentEditingMatchId;
 
-        if(!winnerName) { alert("Winner ka naam daalna zaroori hai!"); return; }
+    if(!matchId) { alert("Match ID nahi mili!"); return; }
+    if(!winnerName) { alert("Winner ka naam daalna zaroori hai!"); return; }
 
-        database.ref('activeMatch').update({ 
-            winnerName: winnerName,   
-            winnerKills: winnerKills,
-            matchStatus: "Completed" // Result aane par status automatically Completed ho jayega
-        }).then(() => { 
-            alert("🏆 Match Result Saved and Status set to Completed!"); 
-        });
+    database.ref('matches/' + matchId).update({ 
+        winnerName: winnerName,   
+        winnerKills: winnerKills,
+        matchStatus: "Completed"
+    }).then(() => { 
+        alert("🏆 Result Uploaded and Match moved to History!"); 
+    });
     }
-
     // 📥 DEPOSIT LISTENER (Pending)
     database.ref('depositRequests').on('value', (snapshot) => {
         let container = document.getElementById('deposit-requests-container'); container.innerHTML = "";
