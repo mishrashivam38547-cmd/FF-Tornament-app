@@ -370,46 +370,113 @@ window.addEventListener('appinstalled', () => {
             }
         });
 
-        // Matches fetch karne ka loop
+        // 🔥 GLOBALS: Saare matches store karne ke liye taaki tab switch karne par baar-baar database load na ho
+let allMatchesData = {};
+
+// 🎮 1. REALTIME MATCHES FETCHING LOOP
 database.ref('matches').on('value', (snapshot) => {
-    const matchContainer = document.getElementById('match-list-container'); // Apne container ki ID check kar lein
-    matchContainer.innerHTML = ""; // Purani list saaf karein
-
-    snapshot.forEach((childSnapshot) => {
-        let match = childSnapshot.val();
-        let matchId = childSnapshot.key;
-
-        // Sirf wahi match dikhayein jo 'Upcoming' ya 'Live' hain
-        if (match.matchStatus !== "Completed") {
-            renderMatch(match, matchId);
-        } else {
-            // Completed match ko History tab mein bhejne ke liye yahan handle karein
-            saveToHistory(match);
-        }
-    });
+    allMatchesData = snapshot.val() || {};
+    // Ek baar data aane par abhi jo active tab hai uske hisab se matches render honge
+    refreshMatchesDisplay();
 });
 
-function renderMatch(match, matchId) {
-    // Yahan apna HTML structure banayein
+// 🔄 2. MATCH DISPLAY REFRESH FUNCTION (Tabs ke hisab se filter karega)
+function refreshMatchesDisplay() {
+    const matchContainer = document.getElementById('match-list-container');
+    if (!matchContainer) return;
+    
+    matchContainer.innerHTML = ""; // Purani list ya loading clear karein
+    
+    // Check karein ki user abhi kis tab par hai (Matches ya History)
+    // Agar aapke app mein active tab check karne ka variable alag hai toh use karein, nahi toh hum class se pata karenge
+    const isHistoryTab = document.getElementById('History') && document.getElementById('History').classList.contains('active');
+    
+    let hasMatches = false;
+
+    for (let matchId in allMatchesData) {
+        let match = allMatchesData[matchId];
+
+        if (isHistoryTab) {
+            // A. HISTORY TAB: Sirf 'Completed' matches dikhayein
+            if (match.matchStatus === "Completed") {
+                hasMatches = true;
+                renderMatchCard(match, matchId, matchContainer, true);
+            }
+        } else {
+            // B. MATCHES TAB: Sirf 'Upcoming' aur 'Live' matches dikhayein
+            if (match.matchStatus !== "Completed") {
+                hasMatches = true;
+                renderMatchCard(match, matchId, matchContainer, false);
+            }
+        }
+    }
+
+    if (!hasMatches) {
+        matchContainer.innerHTML = `<p style="color:#aaa; text-align:center; padding:20px;">No matches found here!</p>`;
+    }
+}
+
+// 📐 3. DYNAMIC MATCH CARD GENERATOR
+function renderMatchCard(match, matchId, container, isHistory) {
     const matchDiv = document.createElement('div');
     matchDiv.className = "match-card";
+    // Thoda sa gap dene ke liye styling block
+    matchDiv.style.cssText = "background: #1e1e1e; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; text-align: left;";
+
+    let statusHTML = "";
+    let buttonHTML = "";
+
+    if (isHistory) {
+        // History Card Design (Winner Details ke sath)
+        statusHTML = `<div style="background:#222; color:#ffa500; padding:10px; border-radius:4px; margin-bottom:10px; font-weight:bold; border: 1px dashed #ffa500;">
+                        🏆 Winner: ${match.winnerName || 'TBD'} (Kills: ${match.winnerKills || 0})
+                      </div>`;
+        buttonHTML = `<button style="width:100%; padding:12px; background:#444; color:#aaa; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>MATCH COMPLETED</button>`;
+    } else {
+        // Active Card Design (Upcoming / Live)
+        if (match.matchStatus === "Live") {
+            statusHTML = `<div style="background:#222; color:#2ecc71; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px; font-weight:bold;">
+                            🔑 Room ID: ${match.roomId || '-'} | Pass: ${match.roomPass || '-'}
+                          </div>`;
+            buttonHTML = `<button style="width:100%; padding:12px; background:#e74c3c; color:white; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>MATCH IS LIVE</button>`;
+        } else {
+            statusHTML = `<div style="background:#222; color:#e74c3c; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px; font-size:13px;">
+                            🔒 Room ID & Pass will be visible 15 mins before match.
+                          </div>`;
+            buttonHTML = `<button style="width:100%; padding:12px; background:#27ae60; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="joinMatch('${matchId}')">JOIN TOURNAMENT</button>`;
+        }
+    }
+
     matchDiv.innerHTML = `
-        <h3>${match.title} (${match.mapType})</h3>
-        <p>Time: ${match.time} | Entry: ₹${match.fee}</p>
-        ${match.matchStatus === 'Live' ? 
-            `<p><strong>Room ID:</strong> ${match.roomId} | <strong>Pass:</strong> ${match.roomPass}</p>` : 
-            `<button onclick="joinMatch('${matchId}')">JOIN TOURNAMENT</button>`
-        }
+        <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ ${match.mapType || 'Bermuda'}</h3>
+        <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${match.title || 'Free Fire Match'}</p>
+        <p style="color:white; margin:5px 0;"><strong>Time:</strong> ${match.time || '-'}</p>
+        <p style="color:white; margin:5px 0;"><strong>Entry Fee:</strong> ₹ ${match.fee || '0'}</p>
+        <p style="color:white; margin:5px 0 15px 0;"><strong>Per Kill:</strong> ₹ ${match.kill || '0'}</p>
+        ${statusHTML}
+        ${buttonHTML}
     `;
-    document.getElementById('match-list-container').appendChild(matchDiv);
+
+    container.appendChild(matchDiv);
 }
-        function openWhatsAppChannel() { window.open(globalWhatsAppChannelLink, '_blank'); }
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabName + '-tab').classList.add('active');
-            if(event) event.currentTarget.classList.add('active');
-        }
+
+// 🔀 4. UPDATED TAB SWITCHER (Isse click karne par list automatic badal jayegi)
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    const targetTab = document.getElementById(tabName);
+    if(targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    if(event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+    
+    // Tab badalte hi screen par naye filter ke sath data refresh karein
+    refreshMatchesDisplay();
+}
 
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
         function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
