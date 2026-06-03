@@ -66,73 +66,79 @@
         <button class="btn-update" id="btn-save-settings" style="background: #007bff;" onclick="updateSocialAndGiveaway()">Save Settings Live</button>
     </div>
 
-    <div class="card">
-        <h3>🎮 Live Match Update</h3>
-        
-        <div class="sub-section" style="border-left: 5px solid #ff4e50;">
-            <h4 style="margin: 0 0 10px 0; color: #ff4e50;">📝 1. Create / Edit Match Info</h4>
-            <div class="form-group">
-                <label>Match Title:</label>
-                <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
-            </div>
-            <div class="form-group">
-                <label>Match Time:</label>
-                <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
-            </div>
-            <div class="form-group">
-                <label>Entry Fee (₹):</label>
-                <input type="number" id="match-fee" value="20">
-            </div>
-            <div class="form-group">
-                <label>Per Kill Reward (₹):</label>
-                <input type="number" id="match-kill" value="5">
-            </div>
-            <div class="form-group">
-                <label>Select Map:</label>
-                <select id="match-map">
-                    <option value="Bermuda">Bermuda</option>
-                    <option value="Purgatory">Purgatory</option>
-                    <option value="Kalahari">Kalahari</option>
-                    <option value="Alpine">Alpine</option>
-                    <option value="Nexterra">Nexterra</option>
-                </select>
-            </div>
-            <button class="btn-update" onclick="createNewMatch()">Update Match Info</button>
-        </div>
+    <div class="card" style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h2 style="margin-top: 0;">🎮 Live Match Control Panel</h2>
 
-        <div class="sub-section" style="border-left: 5px solid #2f3542; background: #f1f2f6;">
-            <h4 style="margin: 0 0 10px 0; color: #2f3542;">🔑 2. Room ID & Password Upload</h4>
-            <div class="form-group">
-                <label>Room ID:</label>
-                <input type="text" id="room-id" placeholder="Enter Room ID">
-            </div>
-            <div class="form-group">
-                <label>Room Password:</label>
-                <input type="text" id="room-pass" placeholder="Enter Room Pass">
-            </div>
-            <div class="form-group">
-                <label>Match Status:</label>
-                <select id="match-status">
-                    <option value="Upcoming">🟢 Upcoming (Registration Open)</option>
-                    <option value="Live">🔴 Live (Room Created / Match Running)</option>
-                </select>
-            </div>
-            <button class="btn-update" style="background: #2f3542;" onclick="updateRoomCredentials()">Upload Room & Go Live</button>
+    <div class="sub-section" style="border-left: 5px solid #007bff; background: #f4f7f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+        <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 All Created Tournaments (Manage / Delete)</h4>
+        <div id="admin-matches-list" style="max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+            <p style="text-align: center; color: #777; margin: 0;">Loading tournaments from database...</p>
         </div>
+    </div>
 
-        <div class="sub-section" style="border-left: 5px solid #ffa500; background: #fffaf0;">
-            <h4 style="margin: 0 0 10px 0; color: #d48a00;">🏆 3. Match Result Upload</h4>
-            <div class="form-group">
-                <label>Winner / Booyah Name:</label>
-                <input type="text" id="match-winner" placeholder="e.g., Silent Sniper 77">
-            </div>
-            <div class="form-group">
-                <label>Winner Total Kills:</label>
-                <input type="number" id="match-winner-kills" value="0">
-            </div>
-            <button class="btn-update" style="background: #ffa500; color: black;" onclick="uploadMatchResult()">Upload Result & End Match</button>
+    <div class="sub-section" style="border-left: 5px solid #ff4e50; padding-left: 15px; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 10px 0; color: #ff4e50;">📌 1. Create / Edit Match Info</h4>
+        <div class="form-group">
+            <label>Match Title</label>
+            <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
         </div>
+        <div class="form-group">
+            <label>Match Time</label>
+            <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
+        </div>
+        <div class="form-group">
+            <label>Entry Fee (₹):</label>
+            <input type="number" id="match-fee" value="20">
+        </div>
+        <div class="form-group">
+            <label>Per Kill Reward (₹):</label>
+            <input type="number" id="match-kill" value="5">
+        </div>
+        <div class="form-group">
+            <label>Select Map:</label>
+            <select id="match-map">
+                <option value="Bermuda">Bermuda</option>
+                <option value="Purgatory">Purgatory</option>
+                <option value="Kalahari">Kalahari</option>
+                <option value="Alpine">Alpine</option>
+                <option value="Nexterra">Nexterra</option>
+            </select>
+        </div>
+        <button class="btn-update" onclick="createNewMatch()">Update/Create Match Info</button>
+    </div>
 
+    <div class="sub-section" style="border-left: 5px solid #2f3542; background: #f1f2f6; padding: 15px; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 10px 0; color: #2f3542;">🔑 2. Room ID & Password Upload</h4>
+        <div class="form-group">
+            <label>Room ID:</label>
+            <input type="text" id="room-id" placeholder="Enter Room ID">
+        </div>
+        <div class="form-group">
+            <label>Room Password:</label>
+            <input type="text" id="room-pass" placeholder="Enter Room Pass">
+        </div>
+        <div class="form-group">
+            <label>Match Status:</label>
+            <select id="match-status">
+                <option value="Upcoming">🟢 Upcoming (Registration Open)</option>
+                <option value="Live">🔴 Live (Room Created / Match Running)</option>
+            </select>
+        </div>
+        <button class="btn-update" style="background: #2f3542;" onclick="updateRoomCredentials()">🔑 Update Room Credentials</button>
+    </div>
+
+    <div class="sub-section" style="border-left: 5px solid #ffa500; background: #fffaf0; padding: 15px; margin-bottom: 10px;">
+        <h4 style="margin: 0 0 10px 0; color: #d48a00;">🏆 3. Watch Result Upload</h4>
+        <div class="form-group">
+            <label>Winner / Booyah Name:</label>
+            <input type="text" id="match-winner" placeholder="e.g., Silent Sniper 77">
+        </div>
+        <div class="form-group">
+            <label>Winner Total Kills:</label>
+            <input type="number" id="match-winner-kills" value="0">
+        </div>
+        <button class="btn-update" style="background: #ffa500; color: black;" onclick="uploadMatchResult()">🏆 Upload Match Result</button>
+    </div>
     </div>
 
     <div class="card" style="background: #f9f9f9; border-color: #ddd;">
