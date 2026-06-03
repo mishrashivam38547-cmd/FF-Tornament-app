@@ -179,22 +179,20 @@
             </div>
 
             <div id="matches-tab" class="tab-content active">
-                <div class="match-card">
-                    <div class="match-title" id="display-match-title">🔥 Loading Match...</div>
-                    <div class="match-details">
-                        <p><strong>Time:</strong> <span id="display-match-time">-</span></p>
-                        <p><strong>Entry Fee:</strong> ₹ <span id="display-match-fee">0</span></p>
-                        <p><strong>Per Kill:</strong> ₹ <span id="display-match-kill">0</span></p>
-                    </div>
-                    <div class="room-info" id="room-info-box">🔒 Room ID & Pass will be visible 15 mins before match.</div>
-                    <button class="btn-join" onclick="openJoinModal()">JOIN TOURNAMENT</button>
-                </div>
-            </div>
+    <div id="active-matches-container">
+        <div class="match-card" style="text-align: center; padding: 20px;">
+            <div class="match-title" style="color: #ff4e50; font-weight: bold;">🔥 Loading Active Matches...</div>
+        </div>
+    </div>
+</div>
 
-            <div id="history-tab" class="tab-content">
-                <div class="card"><h4>Match History</h4><p style="color:#777;" id="history-match-text">No matches played yet.</p></div>
-                <div class="card"><h4>Payment History</h4><div id="history-payment-container" style="font-size:14px; color:#ccc;">No history available.</div></div>
-            </div>
+<div id="history-tab" class="tab-content">
+    <div id="history-matches-container">
+        <div class="match-card" style="text-align: center; padding: 20px;">
+            <div style="color: #aaa;">⌛ Loading Completed History...</div>
+        </div>
+    </div>
+</div> 
 
             <div id="giveaway-tab" class="tab-content">
                 <div class="card" id="giveaway-active-box">
