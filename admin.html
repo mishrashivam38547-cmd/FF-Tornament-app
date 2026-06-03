@@ -15,7 +15,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
         input[type="text"], input[type="number"], select, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-update { background: #ff4e50; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .btn-update { background: #ff4e50; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 5px; }
         .btn-update:hover { background: #e03e40; }
         .card { background: #fff9f9; border: 1px solid #ffe0e0; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
         .request-box { border-left: 5px solid #ff4e50; background: #fafafa; padding: 10px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
@@ -23,6 +23,9 @@
         .btn-approve { background: #28a745; color: white; }
         .btn-reject { background: #dc3545; color: white; }
         .screenshot-link { color: #007bff; text-decoration: none; font-weight: bold; }
+        
+        /* Chhote Alag Sections ke liye Sub-styling */
+        .sub-section { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; margin-top: 15px; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -65,31 +68,71 @@
 
     <div class="card">
         <h3>🎮 Live Match Update</h3>
-        <div class="form-group">
-            <label>Match Title:</label>
-            <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
+        
+        <div class="sub-section" style="border-left: 5px solid #ff4e50;">
+            <h4 style="margin: 0 0 10px 0; color: #ff4e50;">📝 1. Create / Edit Match Info</h4>
+            <div class="form-group">
+                <label>Match Title:</label>
+                <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
+            </div>
+            <div class="form-group">
+                <label>Match Time:</label>
+                <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
+            </div>
+            <div class="form-group">
+                <label>Entry Fee (₹):</label>
+                <input type="number" id="match-fee" value="20">
+            </div>
+            <div class="form-group">
+                <label>Per Kill Reward (₹):</label>
+                <input type="number" id="match-kill" value="5">
+            </div>
+            <div class="form-group">
+                <label>Select Map:</label>
+                <select id="match-map">
+                    <option value="Bermuda">Bermuda</option>
+                    <option value="Purgatory">Purgatory</option>
+                    <option value="Kalahari">Kalahari</option>
+                    <option value="Alpine">Alpine</option>
+                    <option value="Nexterra">Nexterra</option>
+                </select>
+            </div>
+            <button class="btn-update" onclick="createNewMatch()">Update Match Info</button>
         </div>
-        <div class="form-group">
-            <label>Match Time:</label>
-            <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
+
+        <div class="sub-section" style="border-left: 5px solid #2f3542; background: #f1f2f6;">
+            <h4 style="margin: 0 0 10px 0; color: #2f3542;">🔑 2. Room ID & Password Upload</h4>
+            <div class="form-group">
+                <label>Room ID:</label>
+                <input type="text" id="room-id" placeholder="Enter Room ID">
+            </div>
+            <div class="form-group">
+                <label>Room Password:</label>
+                <input type="text" id="room-pass" placeholder="Enter Room Pass">
+            </div>
+            <div class="form-group">
+                <label>Match Status:</label>
+                <select id="match-status">
+                    <option value="Upcoming">🟢 Upcoming (Registration Open)</option>
+                    <option value="Live">🔴 Live (Room Created / Match Running)</option>
+                </select>
+            </div>
+            <button class="btn-update" style="background: #2f3542;" onclick="updateRoomCredentials()">Upload Room & Go Live</button>
         </div>
-        <div class="form-group">
-            <label>Entry Fee (₹):</label>
-            <input type="number" id="match-fee" value="20">
+
+        <div class="sub-section" style="border-left: 5px solid #ffa500; background: #fffaf0;">
+            <h4 style="margin: 0 0 10px 0; color: #d48a00;">🏆 3. Match Result Upload</h4>
+            <div class="form-group">
+                <label>Winner / Booyah Name:</label>
+                <input type="text" id="match-winner" placeholder="e.g., Silent Sniper 77">
+            </div>
+            <div class="form-group">
+                <label>Winner Total Kills:</label>
+                <input type="number" id="match-winner-kills" value="0">
+            </div>
+            <button class="btn-update" style="background: #ffa500; color: black;" onclick="uploadMatchResult()">Upload Result & End Match</button>
         </div>
-        <div class="form-group">
-            <label>Per Kill Reward (₹):</label>
-            <input type="number" id="match-kill" value="5">
-        </div>
-        <div class="form-group">
-            <label>Room ID:</label>
-            <input type="text" id="room-id" placeholder="Enter Room ID">
-        </div>
-        <div class="form-group">
-            <label>Room Password:</label>
-            <input type="text" id="room-pass" placeholder="Enter Room Pass">
-        </div>
-        <button class="btn-update" onclick="updateMatchDetails()">Update Match Live</button>
+
     </div>
 
     <div class="card" style="background: #f9f9f9; border-color: #ddd;">
@@ -117,10 +160,12 @@
     const database = firebase.database();
     const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
+    // Auto load WhatsApp data
     database.ref('appSettings/whatsappChannel').once('value', (snapshot) => {
         if(snapshot.val()) document.getElementById('admin-channel-url').value = snapshot.val();
     });
 
+    // Auto load Giveaway data
     database.ref('appSettings/giveaway').once('value', (snapshot) => {
         let giveaway = snapshot.val();
         if(giveaway) {
@@ -131,6 +176,24 @@
         }
     });
 
+    // AUTO-FILL EVERYTHING ON LOAD (Database se values inputs mein set hongi)
+    database.ref('activeMatch').once('value', (snapshot) => {
+        let match = snapshot.val();
+        if(match) {
+            document.getElementById('match-title').value = match.title || "";
+            document.getElementById('match-time').value = match.time || "";
+            document.getElementById('match-fee').value = match.fee || "20";
+            document.getElementById('match-kill').value = match.kill || "5";
+            document.getElementById('room-id').value = match.roomId || "";
+            document.getElementById('room-pass').value = match.roomPass || "";
+            document.getElementById('match-map').value = match.mapType || "Bermuda";
+            document.getElementById('match-status').value = match.matchStatus || "Upcoming";
+            document.getElementById('match-winner').value = match.winnerName || "";
+            document.getElementById('match-winner-kills').value = match.winnerKills || "0";
+        }
+    });
+
+    // SAVE GIVEAWAY SETTINGS
     function updateSocialAndGiveaway() {
         let channelLink = document.getElementById('admin-channel-url').value.trim();
         let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
@@ -147,13 +210,13 @@
                 whatsappChannel: channelLink,
                 giveaway: { title: giveawayTitle, description: giveawayDesc, status: giveawayStatus, productImg: imageUrl }
             }).then(() => {
-                alert("🎉 Settings with Product Photo Updated Successfully!");
+                alert("🎉 Giveaway & Social Settings Updated Live!");
                 btn.innerText = "Save Settings Live"; btn.disabled = false;
             });
         }
 
         if(fileInput.files.length > 0) {
-            btn.innerText = "Uploading Product Photo..."; btn.disabled = true;
+            btn.innerText = "Uploading Photo..."; btn.disabled = true;
             let file = fileInput.files[0];
             let formData = new FormData();
             formData.append("image", file);
@@ -171,17 +234,60 @@
         } else { saveData(existingImg); }
     }
 
-    function updateMatchDetails() {
+    // BUTTON 1 CODE: Match Create / Info update (.update() use kiya hai taaki baki fields safe rahein)
+    function createNewMatch() {
         let title = document.getElementById('match-title').value;
         let time = document.getElementById('match-time').value;
         let fee = document.getElementById('match-fee').value;
         let kill = document.getElementById('match-kill').value;
-        let rId = document.getElementById('room-id').value;
-        let rPass = document.getElementById('room-pass').value;
-        database.ref('activeMatch').set({ title: title, time: time, fee: fee, kill: kill, roomId: rId, roomPass: rPass }).then(() => { alert("Match Live Updated!"); });
+        let mapType = document.getElementById('match-map').value;
+
+        database.ref('activeMatch').update({ 
+            title: title, 
+            time: time, 
+            fee: fee, 
+            kill: kill, 
+            mapType: mapType,
+            matchStatus: "Upcoming" // Naya match automatic upcoming state me jayega
+        }).then(() => { 
+            alert("📝 Match Details Created / Updated Successfully!"); 
+        });
     }
 
-    // 📥 FIXED DEPOSIT REQUEST LISTENING (Shows ONLY Pending ones)
+    // BUTTON 2 CODE: Room ID & Password Upload ONLY
+    function updateRoomCredentials() {
+        let rId = document.getElementById('room-id').value;
+        let rPass = document.getElementById('room-pass').value;
+        let matchStatus = document.getElementById('match-status').value;
+
+        if(!rId || !rPass) { alert("Room ID aur Password dono fill karein!"); return; }
+
+        database.ref('activeMatch').update({ 
+            roomId: rId, 
+            roomPass: rPass,
+            matchStatus: matchStatus
+        }).then(() => { 
+            alert("🔑 Room ID & Password Uploaded. Status is now Live!"); 
+        });
+    }
+
+    // BUTTON 3 CODE: Result Upload ONLY
+    function uploadMatchResult() {
+        let winnerName = document.getElementById('match-winner').value;
+        let winnerKills = document.getElementById('match-winner-kills').value;
+
+        if(!winnerName) { alert("Winner ka naam daalna zaroori hai!"); return; }
+
+        database.ref('activeMatch').update({ 
+            winnerName: winnerName,   
+            winnerKills: winnerKills,
+            matchStatus: "Completed" // Result aane par status automatically Completed ho jayega
+        }).then(() => { 
+            alert("🏆 Match Result Saved and Status set to Completed!"); 
+        });
+    }
+
+    // 📥 DEPOSIT LISTENER (Pending)
     database.ref('depositRequests').on('value', (snapshot) => {
         let container = document.getElementById('deposit-requests-container'); container.innerHTML = "";
         let data = snapshot.val();
@@ -200,19 +306,13 @@
     });
 
     function approveDeposit(utr, userUID, amount) {
-        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { 
-            return (currentBalance || 0) + amount; 
-        }).then(() => {
-            database.ref('depositRequests/' + utr).update({ status: "Approved" }); 
-            alert("Deposit Approved! Money Added to User Wallet.");
+        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { return (currentBalance || 0) + amount; }).then(() => {
+            database.ref('depositRequests/' + utr).update({ status: "Approved" }); alert("Deposit Approved!");
         });
     }
-    function rejectDeposit(utr) { 
-        database.ref('depositRequests/' + utr).update({ status: "Rejected" }); 
-        alert("Request Rejected!"); 
-    }
+    function rejectDeposit(utr) { database.ref('depositRequests/' + utr).update({ status: "Rejected" }); alert("Request Rejected!"); }
 
-    // Load Withdrawal Requests (Shows ONLY Pending ones)
+    // 📤 WITHDRAWAL LISTENER (Pending)
     database.ref('withdrawRequests').on('value', (snapshot) => {
         let container = document.getElementById('withdraw-requests-container'); container.innerHTML = "";
         let data = snapshot.val();
