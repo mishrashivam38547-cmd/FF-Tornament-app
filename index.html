@@ -370,21 +370,39 @@ window.addEventListener('appinstalled', () => {
             }
         });
 
-        database.ref('activeMatch').on('value', (snapshot) => {
-            let data = snapshot.val();
-            if(data) {
-                document.getElementById('display-match-title').innerText = data.title || "Daily Mega Match";
-      document.getElementById('display-match-time').innerText = data.time || "08:00 PM";
-                document.getElementById('display-match-fee').innerText = data.fee || "20";
-                document.getElementById('display-match-kill').innerText = data.kill || "5";
-                activeMatchFee = parseFloat(data.fee) || 20;
-                if(data.roomId && data.roomPass) {
-                    document.getElementById('room-info-box').innerHTML = `🔑 Room ID: ${data.roomId} | Pass: ${data.roomPass}`;
-                    document.getElementById('room-info-box').style.color = "#28a745";
-                }
-            }
-        });
+        // Matches fetch karne ka loop
+database.ref('matches').on('value', (snapshot) => {
+    const matchContainer = document.getElementById('match-list-container'); // Apne container ki ID check kar lein
+    matchContainer.innerHTML = ""; // Purani list saaf karein
 
+    snapshot.forEach((childSnapshot) => {
+        let match = childSnapshot.val();
+        let matchId = childSnapshot.key;
+
+        // Sirf wahi match dikhayein jo 'Upcoming' ya 'Live' hain
+        if (match.matchStatus !== "Completed") {
+            renderMatch(match, matchId);
+        } else {
+            // Completed match ko History tab mein bhejne ke liye yahan handle karein
+            saveToHistory(match);
+        }
+    });
+});
+
+function renderMatch(match, matchId) {
+    // Yahan apna HTML structure banayein
+    const matchDiv = document.createElement('div');
+    matchDiv.className = "match-card";
+    matchDiv.innerHTML = `
+        <h3>${match.title} (${match.mapType})</h3>
+        <p>Time: ${match.time} | Entry: ₹${match.fee}</p>
+        ${match.matchStatus === 'Live' ? 
+            `<p><strong>Room ID:</strong> ${match.roomId} | <strong>Pass:</strong> ${match.roomPass}</p>` : 
+            `<button onclick="joinMatch('${matchId}')">JOIN TOURNAMENT</button>`
+        }
+    `;
+    document.getElementById('match-list-container').appendChild(matchDiv);
+}
         function openWhatsAppChannel() { window.open(globalWhatsAppChannelLink, '_blank'); }
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
