@@ -368,49 +368,46 @@ window.addEventListener('appinstalled', () => {
             }
         });
 
-        // 🔥 GLOBALS: Saare matches store karne ke liye taaki tab switch karne par baar-baar database load na ho
+        // 🔥 GLOBALS
 let allMatchesData = {};
+let currentTabState = "matches"; // Default state
 
-// 🎮 1. REALTIME MATCHES FETCHING LOOP
+// 🎮 1. REALTIME DATABASE OBSERVER
 database.ref('matches').on('value', (snapshot) => {
     allMatchesData = snapshot.val() || {};
-    // Ek baar data aane par abhi jo active tab hai uske hisab se matches render honge
     refreshMatchesDisplay();
 });
 
-// 🔄 2. MATCH DISPLAY REFRESH FUNCTION (Tabs ke hisab se filter karega)
+// 🔄 2. MATCH DISPLAY REFRESH FUNCTION
 function refreshMatchesDisplay() {
-    const matchContainer = document.getElementById('match-list-container');
-    if (!matchContainer) return;
+    const activeContainer = document.getElementById('active-matches-container');
+    const historyContainer = document.getElementById('history-matches-container');
     
-    matchContainer.innerHTML = ""; // Purani list ya loading clear karein
+    if (!activeContainer || !historyContainer) return;
     
-    // Check karein ki user abhi kis tab par hai (Matches ya History)
-    // Agar aapke app mein active tab check karne ka variable alag hai toh use karein, nahi toh hum class se pata karenge
-    const isHistoryTab = document.getElementById('History') && document.getElementById('History').classList.contains('active');
+    activeContainer.innerHTML = "";
+    historyContainer.innerHTML = "";
     
-    let hasMatches = false;
+    let hasActive = false;
+    let hasHistory = false;
 
     for (let matchId in allMatchesData) {
         let match = allMatchesData[matchId];
-
-        if (isHistoryTab) {
-            // A. HISTORY TAB: Sirf 'Completed' matches dikhayein
-            if (match.matchStatus === "Completed") {
-                hasMatches = true;
-                renderMatchCard(match, matchId, matchContainer, true);
-            }
+        
+        if (match.matchStatus === "Completed") {
+            hasHistory = true;
+            renderMatchCard(match, matchId, historyContainer, true);
         } else {
-            // B. MATCHES TAB: Sirf 'Upcoming' aur 'Live' matches dikhayein
-            if (match.matchStatus !== "Completed") {
-                hasMatches = true;
-                renderMatchCard(match, matchId, matchContainer, false);
-            }
+            hasActive = true;
+            renderMatchCard(match, matchId, activeContainer, false);
         }
     }
 
-    if (!hasMatches) {
-        matchContainer.innerHTML = `<p style="color:#aaa; text-align:center; padding:20px;">No matches found here!</p>`;
+    if (!hasActive) {
+        activeContainer.innerHTML = `<p style="color:#aaa; text-align:center; padding:20px;">🚫 No upcoming matches available.</p>`;
+    }
+    if (!hasHistory) {
+        historyContainer.innerHTML = `<p style="color:#aaa; text-align:center; padding:20px;">🚫 No history available.</p>`;
     }
 }
 
@@ -418,20 +415,17 @@ function refreshMatchesDisplay() {
 function renderMatchCard(match, matchId, container, isHistory) {
     const matchDiv = document.createElement('div');
     matchDiv.className = "match-card";
-    // Thoda sa gap dene ke liye styling block
     matchDiv.style.cssText = "background: #1e1e1e; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; text-align: left;";
 
     let statusHTML = "";
     let buttonHTML = "";
 
     if (isHistory) {
-        // History Card Design (Winner Details ke sath)
-        statusHTML = `<div style="background:#222; color:#ffa500; padding:10px; border-radius:4px; margin-bottom:10px; font-weight:bold; border: 1px dashed #ffa500;">
+        statusHTML = `<div style="background:#222; color:#ffa500; padding:10px; border-radius:4px; margin-bottom:10px; font-weight:bold; border: 1px dashed #ffa500; text-align:center;">
                         🏆 Winner: ${match.winnerName || 'TBD'} (Kills: ${match.winnerKills || 0})
                       </div>`;
         buttonHTML = `<button style="width:100%; padding:12px; background:#444; color:#aaa; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>MATCH COMPLETED</button>`;
     } else {
-        // Active Card Design (Upcoming / Live)
         if (match.matchStatus === "Live") {
             statusHTML = `<div style="background:#222; color:#2ecc71; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px; font-weight:bold;">
                             🔑 Room ID: ${match.roomId || '-'} | Pass: ${match.roomPass || '-'}
@@ -441,30 +435,33 @@ function renderMatchCard(match, matchId, container, isHistory) {
             statusHTML = `<div style="background:#222; color:#e74c3c; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px; font-size:13px;">
                             🔒 Room ID & Pass will be visible 15 mins before match.
                           </div>`;
-            buttonHTML = `<button style="width:100%; padding:12px; background:#27ae60; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="joinMatch('${matchId}')">JOIN TOURNAMENT</button>`;
+            buttonHTML = `<button style="width:100%; padding:12px; background:#27ae60; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="openJoinModal('${matchId}', ${match.fee})">JOIN TOURNAMENT</button>`;
         }
     }
 
     matchDiv.innerHTML = `
-        <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ ${match.mapType || 'Bermuda'}</h3>
-        <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${match.title || 'Free Fire Match'}</p>
+        <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ Map: ${match.mapType || 'Bermuda'}</h3>
+        <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${match.title || 'Free Fire Tournament'}</p>
         <p style="color:white; margin:5px 0;"><strong>Time:</strong> ${match.time || '-'}</p>
         <p style="color:white; margin:5px 0;"><strong>Entry Fee:</strong> ₹ ${match.fee || '0'}</p>
         <p style="color:white; margin:5px 0 15px 0;"><strong>Per Kill:</strong> ₹ ${match.kill || '0'}</p>
         ${statusHTML}
         ${buttonHTML}
     `;
-
     container.appendChild(matchDiv);
 }
 
-// 🔀 4. UPDATED TAB SWITCHER (Isse click karne par list automatic badal jayegi)
+// 🔀 4. TAB SWITCHER FIXED LOGIC
 function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+        tab.classList.remove('active');
+    });
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     
-    const targetTab = document.getElementById(tabName);
+    const targetTab = document.getElementById(tabName + '-tab');
     if(targetTab) {
+        targetTab.style.display = 'block';
         targetTab.classList.add('active');
     }
     
@@ -472,10 +469,9 @@ function switchTab(tabName) {
         event.currentTarget.classList.add('active');
     }
     
-    // Tab badalte hi screen par naye filter ke sath data refresh karein
+    currentTabState = tabName;
     refreshMatchesDisplay();
 }
-
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
         function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
         function openJoinModal() { 
