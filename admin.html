@@ -212,6 +212,101 @@ function createNewMatch() {
         window.currentEditingMatchId = newMatchKey; // Edit ke liye active state id save rakhein
     });
 }
+    // Variable to keep track of which match is currently being edited
+window.currentEditingMatchId = null;
+
+// 🔄 1. REALTIME OBSERVER FOR ADMIN PANEL (List populate karne ke liye)
+database.ref('matches').on('value', (snapshot) => {
+    const listContainer = document.getElementById('admin-matches-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = "";
+    let data = snapshot.val();
+
+    if (!data) {
+        listContainer.innerHTML = "<p style='text-align:center; color:#777; margin:5px 0;'>🚫 No matches available in database.</p>";
+        return;
+    }
+
+    for (let matchId in data) {
+        let match = data[matchId];
+        
+        let matchRow = document.createElement('div');
+        matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; border-left:4px solid #ff4e50; display:flex; justify-content:space-between; align-items:center; border: 1px solid #eee; border-left:4px solid #ff4e50;";
+        
+        let statusBadge = match.matchStatus === "Completed" ? "<span style='color:orange; font-size:11px;'>[Completed]</span>" : `<span style='color:green; font-size:11px;'>[${match.matchStatus || 'Upcoming'}]</span>`;
+
+        // Highlight selected match
+        if (window.currentEditingMatchId === matchId) {
+            matchRow.style.borderColor = "#007bff";
+            matchRow.style.background = "#eef5ff";
+        }
+
+        matchRow.innerHTML = `
+            <div style="text-align: left;">
+                <strong style="color:#333; font-size:14px;">🗺️ ${match.mapType || 'Bermuda'}</strong> - <span style="font-size:13px;">${match.title || 'No Title'}</span> ${statusBadge}
+                <div style="font-size:12px; color:#666; margin-top:2px;">Time: ${match.time || '-'} | Fee: ₹${match.fee || '0'}</div>
+            </div>
+            <div>
+                <button onclick="selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px; font-size:11px;">✏️ Select</button>
+                <button onclick="deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">🗑️ Delete</button>
+            </div>
+        `;
+        listContainer.appendChild(matchRow);
+    }
+});
+
+// 🗑️ 2. MATCH DELETE FUNCTION
+function deleteMatchFromAdmin(matchId) {
+    if (confirm("⚠️ Kya aap sach mein is match ko hamesha ke liye delete karna chahte hain? Isse user app se bhi yeh instantly hat jayega!")) {
+        database.ref('matches/' + matchId).remove()
+        .then(() => {
+            alert("🗑️ Match Successfully Delete Ho Gaya!");
+            if (window.currentEditingMatchId === matchId) {
+                clearAdminInputs();
+            }
+        }).catch(err => alert("Error: " + err.message));
+    }
+}
+
+// ✏️ 3. SELECT MATCH FOR EDITING (Forms me values auto-fill karne ke liye)
+function selectMatchToEdit(matchId) {
+    window.currentEditingMatchId = matchId;
+    
+    database.ref('matches/' + matchId).once('value', (snapshot) => {
+        let match = snapshot.val();
+        if(!match) return;
+
+        // Form 1 fields fill karein
+        document.getElementById('match-title').value = match.title || "";
+        document.getElementById('match-time').value = match.time || "";
+        document.getElementById('match-fee').value = match.fee || "20";
+        document.getElementById('match-kill').value = match.kill || "5";
+        document.getElementById('match-map').value = match.mapType || "Bermuda";
+
+        // Form 2 fields fill karein
+        document.getElementById('room-id').value = match.roomId || "";
+        document.getElementById('room-pass').value = match.roomPass || "";
+        if(document.getElementById('match-status')) {
+            document.getElementById('match-status').value = match.matchStatus || "Upcoming";
+        }
+
+        // Form 3 fields fill karein
+        document.getElementById('match-winner').value = match.winnerName || "";
+        document.getElementById('match-winner-kills').value = match.winnerKills || "0";
+
+        alert("🎯 Match Select Ho Gaya! Ab aap neeche diye gaye kisi bhi form (Room ID, Result, Status) ko change karke update kar sakte hain.");
+    });
+}
+
+// Helper to clear forms
+function clearAdminInputs() {
+    window.currentEditingMatchId = null;
+    document.getElementById('match-title').value = "";
+    document.getElementById('match-time').value = "";
+    document.getElementById('room-id').value = "";
+    document.getElementById('room-pass').value = "";
+            }
     
     // SAVE GIVEAWAY SETTINGS
     function updateSocialAndGiveaway() {
@@ -254,35 +349,7 @@ function createNewMatch() {
         } else { saveData(existingImg); }
     }
 
-    // BUTTON 1 CODE: Match Create / Info update (.update() use kiya hai taaki baki fields safe rahein)
-    function createNewMatch() {
-    let title = document.getElementById('match-title').value;
-    let time = document.getElementById('match-time').value;
-    let fee = document.getElementById('match-fee').value;
-    let kill = document.getElementById('match-kill').value;
-    let mapType = document.getElementById('match-map').value;
-
-    // Isse har match ko ek unique ID (jaise -Nfs83hHda...) mil jayegi
-    let newMatchKey = database.ref('matches').push().key;
-
-    database.ref('matches/' + newMatchKey).set({ 
-        matchId: newMatchKey,
-        title: title, 
-        time: time, 
-        fee: fee, 
-        kill: kill, 
-        mapType: mapType,
-        matchStatus: "Upcoming",
-        roomId: "",      // Shuru me khali rahega
-        roomPass: "",    // Shuru me khali rahega
-        winnerName: "",  // Shuru me khali rahega
-        winnerKills: 0
-    }).then(() => { 
-        alert("📝 Naya Match Create Ho Gaya! Ek ke baad ek dikhne ke liye ready."); 
-        // Create hone ke baad aap chahein toh is ID ko save rakh sakte hain edit karne ke liye
-        window.currentEditingMatchId = newMatchKey; 
-    });
-    }
+    
     // BUTTON 2 CODE: Room ID & Password Upload ONLY
     function updateRoomCredentials() {
     let rId = document.getElementById('room-id').value;
