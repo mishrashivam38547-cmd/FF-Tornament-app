@@ -236,24 +236,33 @@
 
     // BUTTON 1 CODE: Match Create / Info update (.update() use kiya hai taaki baki fields safe rahein)
     function createNewMatch() {
-        let title = document.getElementById('match-title').value;
-        let time = document.getElementById('match-time').value;
-        let fee = document.getElementById('match-fee').value;
-        let kill = document.getElementById('match-kill').value;
-        let mapType = document.getElementById('match-map').value;
+    let title = document.getElementById('match-title').value;
+    let time = document.getElementById('match-time').value;
+    let fee = document.getElementById('match-fee').value;
+    let kill = document.getElementById('match-kill').value;
+    let mapType = document.getElementById('match-map').value;
 
-        database.ref('activeMatch').update({ 
-            title: title, 
-            time: time, 
-            fee: fee, 
-            kill: kill, 
-            mapType: mapType,
-            matchStatus: "Upcoming" // Naya match automatic upcoming state me jayega
-        }).then(() => { 
-            alert("📝 Match Details Created / Updated Successfully!"); 
-        });
+    // Isse har match ko ek unique ID (jaise -Nfs83hHda...) mil jayegi
+    let newMatchKey = database.ref('matches').push().key;
+
+    database.ref('matches/' + newMatchKey).set({ 
+        matchId: newMatchKey,
+        title: title, 
+        time: time, 
+        fee: fee, 
+        kill: kill, 
+        mapType: mapType,
+        matchStatus: "Upcoming",
+        roomId: "",      // Shuru me khali rahega
+        roomPass: "",    // Shuru me khali rahega
+        winnerName: "",  // Shuru me khali rahega
+        winnerKills: 0
+    }).then(() => { 
+        alert("📝 Naya Match Create Ho Gaya! Ek ke baad ek dikhne ke liye ready."); 
+        // Create hone ke baad aap chahein toh is ID ko save rakh sakte hain edit karne ke liye
+        window.currentEditingMatchId = newMatchKey; 
+    });
     }
-
     // BUTTON 2 CODE: Room ID & Password Upload ONLY
     function updateRoomCredentials() {
         let rId = document.getElementById('room-id').value;
