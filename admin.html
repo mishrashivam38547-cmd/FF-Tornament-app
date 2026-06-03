@@ -177,22 +177,35 @@
     });
 
     // AUTO-FILL EVERYTHING ON LOAD (Database se values inputs mein set hongi)
-    database.ref('activeMatch').once('value', (snapshot) => {
-        let match = snapshot.val();
-        if(match) {
-            document.getElementById('match-title').value = match.title || "";
-            document.getElementById('match-time').value = match.time || "";
-            document.getElementById('match-fee').value = match.fee || "20";
-            document.getElementById('match-kill').value = match.kill || "5";
-            document.getElementById('room-id').value = match.roomId || "";
-            document.getElementById('room-pass').value = match.roomPass || "";
-            document.getElementById('match-map').value = match.mapType || "Bermuda";
-            document.getElementById('match-status').value = match.matchStatus || "Upcoming";
-            document.getElementById('match-winner').value = match.winnerName || "";
-            document.getElementById('match-winner-kills').value = match.winnerKills || "0";
-        }
-    });
+    function createNewMatch() {
+    let title = document.getElementById('match-title').value;
+    let time = document.getElementById('match-time').value;
+    let fee = document.getElementById('match-fee').value;
+    let kill = document.getElementById('match-kill').value;
+    let mapType = document.getElementById('match-map').value;
 
+    // Isse har match ko ek unique ID (jaise -Nfs83hHda...) mil jayegi
+    let newMatchKey = database.ref('matches').push().key;
+
+    database.ref('matches/' + newMatchKey).set({ 
+        matchId: newMatchKey,
+        title: title, 
+        time: time, 
+        fee: fee, 
+        kill: kill, 
+        mapType: mapType,
+        matchStatus: "Upcoming",
+        roomId: "",      // Shuru me khali rahega
+        roomPass: "",    // Shuru me khali rahega
+        winnerName: "",  // Shuru me khali rahega
+        winnerKills: 0
+    }).then(() => { 
+        alert("📝 Naya Match Create Ho Gaya! Ek ke baad ek dikhne ke liye ready."); 
+        // Create hone ke baad aap chahein toh is ID ko save rakh sakte hain edit karne ke liye
+        window.currentEditingMatchId = newMatchKey; 
+    });
+    }
+    
     // SAVE GIVEAWAY SETTINGS
     function updateSocialAndGiveaway() {
         let channelLink = document.getElementById('admin-channel-url').value.trim();
