@@ -262,20 +262,67 @@ database.ref('matches').on('value', (snapshot) => {
             matchRow.style.background = "#eef5ff";
         }
 
-        matchRow.innerHTML = `
-            <div style="text-align: left;">
-                <strong style="color:#333; font-size:14px;">🗺️ ${match.mapType || 'Bermuda'}</strong> - <span style="font-size:13px;">${match.title || 'No Title'}</span> ${statusBadge}
-                <div style="font-size:12px; color:#666; margin-top:2px;">Time: ${match.time || '-'} | Fee: ₹${match.fee || '0'}</div>
-            </div>
-            <div>
-                <button onclick="selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px; font-size:11px;">✏️ Select</button>
-                <button onclick="deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:11px;">🗑️ Delete</button>
+                matchRow.innerHTML = `
+            <div style="text-align: left; padding: 5px;">
+                <strong style="color:#333; font-size:14px;">${match.title || 'Daily Clash Squad'}</strong> - <span style="font-size:12px; color:#666;">${match.mapType || 'Bermuda'}</span>
+                <div style="font-size:12px; color:#666; margin-top:2px;">
+                    Time: ${match.time || '--:--'} | Fee: ₹${match.fee || '0'} | Kill Reward: ₹${match.kill || '0'}
+                </div>
+                
+                <p style="color: #007bff; font-weight: bold; margin: 8px 0 4px 0; font-size: 13px;">
+                    📊 <span id="joined-count-${matchId}">Joined: Loading...</span>
+                </p>
+
+                <div style="margin-top: 10px; margin-bottom: 12px; background: #f1f3f5; padding: 10px; border-radius: 6px; border-left: 4px solid #28a745;">
+                    <h4 style="margin: 0 0 6px 0; color: #28a745; font-size: 13px;">🏆 Reward Match Winner</h4>
+                    <div style="margin-bottom: 6px;">
+                        <input type="text" id="winner-uid-${matchId}" placeholder="Paste Winner User UID" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
+                    </div>
+                    <div style="margin-bottom: 6px;">
+                        <input type="number" id="winner-prize-${matchId}" placeholder="Prize Amount (₹)" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
+                    </div>
+                    <button type="button" onclick="setMatchWinner('${matchId}')" style="width: 100%; padding: 6px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">📢 Announce & Send Money</button>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button type="button" onclick="selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Edit Match</button>
+                    <button type="button" onclick="deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:5px;">Delete</button>
+                </div>
             </div>
         `;
-        listContainer.appendChild(matchRow);
-    }
-});
+                
+                <!-- 🟢 LIVE MATCH PARTICIPANT COUNTER -->
+                <p style="color: #007bff; font-weight: bold; margin: 8px 0 4px 0; font-size: 13px;">
+                    📊 <span id="joined-count-${matchId}">Joined: Loading...</span>
+                </p>
 
+                <!-- 🏆 WINNER ANNOUNCEMENT FORM (Is card ke andar embedded) -->
+                <div style="margin-top: 10px; margin-bottom: 12px; background: #f1f3f5; padding: 10px; border-radius: 6px; border-left: 4px solid #28a745;">
+                    <h4 style="margin: 0 0 6px 0; color: #28a745; font-size: 13px;">🏆 Reward Match Winner</h4>
+                    
+                    <div style="margin-bottom: 6px;">
+                        <input type="text" id="winner-uid-${matchId}" placeholder="Paste Winner User UID" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 6px;">
+                        <input type="number" id="winner-prize-${matchId}" placeholder="Prize Amount (₹)" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
+                    </div>
+                    
+                    <button onclick="setMatchWinner('${matchId}')" style="width: 100%; padding: 6px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">📢 Announce & Send Money</button>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button onclick="selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Edit Match</button>
+                    <button onclick="deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:5px;">Delete</button>
+                </div>
+            </div>
+        `;
+
+        // 🔄 Har match card list mein add hone ke baad counter trigger karein
+        if (typeof listenToParticipants === 'function') {
+            listenToParticipants(matchId);
+        }
+    
 // 🗑️ 2. MATCH DELETE FUNCTION
 function deleteMatchFromAdmin(matchId) {
     if (confirm("⚠️ Kya aap sach mein is match ko delete karna chahte hain?")) {
