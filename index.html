@@ -95,7 +95,12 @@
 
     <div id="login-screen">
     <div class="login-card">
-        <h2>RS7_esport</h2>
+                    <!-- 🖼️ Live Dynamic Logo for Login Screen -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img class="app-live-logo-src" src="" alt="App Logo" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ff4e50; object-fit: cover; display: none; margin: 0 auto;">
+                <h2 style="margin-top: 10px; color: #fff;">RS7_esport</h2>
+            </div>
+        
         <p style="color: #aaa; font-size: 14px;">Tournaments me join karne ke liye login karein</p>
         <button class="btn-google" onclick="loginWithGoogle()">
             <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="Google Logo" width="18">
@@ -107,7 +112,11 @@
     <div id="app-container">
         <div class="header">
             <div class="header-left">
-                <h1 style="font-size: 20px; margin: 0 0 5px 0; color: #fff;">RS7_esport</h1>
+                <!-- Main Header ke andar jahan aapka welcome text hai -->
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+    <img class="app-live-logo-src" src="" alt="App Logo" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; display: none;">
+    <h1 style="font-size: 18px; margin: 0; color: #fff;">RS7_esport</h1>
+</div>
                 <h2 id="welcome-username">Loading Player...</h2>
                 <button class="btn-logout" onclick="logoutFirebase()">Logout</button>
                 <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()">📢 Join Channel</button>
