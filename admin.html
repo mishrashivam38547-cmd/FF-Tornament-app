@@ -32,39 +32,39 @@
 
 <div class="container">
     <h2>🛠️ Silent Sniper Admin Control Panel</h2>
-
-    <div class="card" style="background: #eef7ff; border-color: #ccdfff;">
-        <h3>📢 Social & Giveaway Management</h3>
-        <div class="form-group">
-            <label>WhatsApp Channel Link:</label>
-            <input type="text" id="admin-channel-url" placeholder="Paste your WhatsApp Channel full URL here">
-        </div>
-        <hr style="border:0; border-top: 1px solid #ccc; margin: 15px 0;">
-        
-        <div class="form-group">
-            <label>Giveaway Title:</label>
-            <input type="text" id="admin-giveaway-title" placeholder="e.g., Free Fire Diamond Giveaway">
-        </div>
-        <div class="form-group">
-            <label>Giveaway Item Description:</label>
-            <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds (Photo Proof Required)">
-        </div>
-        
-        <div class="form-group">
-            <label>Upload Giveaway Product Photo (Optional):</label>
-            <input type="file" id="admin-giveaway-file" accept="image/*">
-            <input type="hidden" id="admin-giveaway-existing-img">
-        </div>
-
-        <div class="form-group">
-            <label>Giveaway Status:</label>
-            <select id="admin-giveaway-status">
-                <option value="Inactive">🔒 Inactive (Hide from Users)</option>
-                <option value="Active">🔓 Active (Show Form + Upload Input)</option>
-            </select>
-        </div>
-        <button class="btn-update" id="btn-save-settings" style="background: #007bff;" onclick="updateSocialAndGiveaway()">Save Settings Live</button>
+<div class="card" style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h3 style="border-bottom: 2px solid #0087ff; padding-bottom: 8px; margin-top: 0; color: #0087ff;">📢 Global Social Settings</h3>
+    <div class="form-group">
+        <label><strong>WhatsApp Channel Link:</strong></label>
+        <input type="text" id="admin-channel-url" placeholder="https://whatsapp.com/channel/..." style="width:100%; padding:8px; margin-top:5px;">
     </div>
+    <button onclick="updateWhatsAppOnly()" style="width: 100%; padding: 10px; background: #0087ff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px;">💾 Save WhatsApp Link Only</button>
+</div>
+
+<div class="card" style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h3 style="border-bottom: 2px solid #28a745; padding-bottom: 8px; margin-top: 0; color: #28a745;">🎁 Giveaway Rewards Management</h3>
+    <div class="form-group" style="margin-bottom: 12px;">
+        <label>Giveaway Title:</label>
+        <input type="text" id="admin-giveaway-title" placeholder="e.g., Free Fire Diamond Giveaway" style="width:100%; padding:8px; margin-top:5px;">
+    </div>
+    <div class="form-group" style="margin-bottom: 12px;">
+        <label>Giveaway Item Description:</label>
+        <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds (Photo Proof Required)" style="width:100%; padding:8px; margin-top:5px;">
+    </div>
+    <div class="form-group" style="margin-bottom: 12px;">
+        <label>Upload Giveaway Product Photo (Optional):</label>
+        <input type="file" id="admin-giveaway-file" style="width:100%; margin-top:5px;">
+        <input type="hidden" id="admin-giveaway-existing-img">
+    </div>
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label>Giveaway Status:</label>
+        <select id="admin-giveaway-status" style="width:100%; padding:8px; margin-top:5px;">
+            <option value="Inactive">🔒 Inactive (Hide from Users)</option>
+            <option value="Active">🔓 Active (Show Form + Upload Input)</option>
+        </select>
+    </div>
+    <button id="btn-save-settings" onclick="updateGiveawayOnly()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">💾 Save Giveaway Settings Live</button>
+</div> 
 
     <div class="card" style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
     <h2 style="margin-top: 0;">🎮 Live Match Control Panel</h2>
