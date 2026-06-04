@@ -432,6 +432,34 @@ function uploadMatchResult() {
         alert("🏆 Match Result Uploaded Successfully!");
     }).catch(err => alert("Error: " + err.message));
 }
+    function setMatchWinner(matchId) {
+    let winnerUid = document.getElementById('winner-uid-' + matchId).value.trim(); // Winner ki Unique UID
+    let prizeAmount = Number(document.getElementById('winner-prize-' + matchId).value.trim()); // Prize Money (e.g., 500)
+
+    if (!winnerUid || !prizeAmount) {
+        alert("⚠️ Kripya Winner ki UID aur Prize Amount dono dalein!");
+        return;
+    }
+
+    // 1. Pehle Firebase se us Winner ka purana wallet balance nikalo
+    database.ref('users/' + winnerUid + '/wallet').once('value', (snapshot) => {
+        let currentBalance = snapshot.val() || 0;
+        let newBalance = currentBalance + prizeAmount;
+
+        // 2. User ka naya balance update karo aur match ko complete mark karo
+        let updates = {};
+        updates['matches/' + matchId + '/matchStatus'] = "Completed";
+        updates['matches/' + matchId + '/winnerUid'] = winnerUid;
+        updates['users/' + winnerUid + '/wallet'] = newBalance;
+
+        database.ref().update(updates)
+        .then(() => {
+            alert("🏆 Winner announced aur Prize Money wallet mein credit ho gayi!");
+        })
+        .catch(err => alert("❌ Error: " + err.message));
+    });
+    }
+    
 </script>
 </body>
 </html>
