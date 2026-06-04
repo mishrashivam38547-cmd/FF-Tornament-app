@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Settings Control Panel</title>
+    <!-- Firebase App aur Database SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body style="font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; color: #333;">
+
+    <div style="max-width: 500px; margin: 0 auto;">
+        <h2 style="text-align: center; color: #333;">⚙️ App Settings Panel</h2>
+        <p style="text-align: center;"><a href="admin.html" style="color: #007bff; text-decoration: none; font-weight: bold;">← Back to Main Admin</a></p>
+
+        <!-- 📢 WHATSAPP BOX -->
+        <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 4px solid #0087ff;">
+            <h3 style="margin-top: 0; color: #0087ff;">🔗 WhatsApp Channel Settings</h3>
+            <div style="margin-bottom: 12px;">
+                <label><strong>WhatsApp Channel Link:</strong></label>
+                <input type="text" id="admin-channel-url" placeholder="https://whatsapp.com/channel/..." style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+            </div>
+            <button onclick="updateWhatsAppOnly()" style="width: 100%; padding: 10px; background: #0087ff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Save WhatsApp Link</button>
+        </div>
+
+        <!-- 🎁 GIVEAWAY BOX -->
+        <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 4px solid #28a745;">
+            <h3 style="margin-top: 0; color: #28a745;">🎁 Live Giveaway Settings</h3>
+            <div style="margin-bottom: 12px;">
+                <label>Giveaway Title:</label>
+                <input type="text" id="admin-giveaway-title" placeholder="e.g., Free Fire Diamond Giveaway" style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label>Giveaway Item Description:</label>
+                <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds" style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label>Upload Giveaway Product Photo:</label>
+                <input type="file" id="admin-giveaway-file" style="width: 100%; margin-top: 5px;">
+                <input type="hidden" id="admin-giveaway-existing-img">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>Giveaway Status:</label>
+                <select id="admin-giveaway-status" style="width: 100%; padding: 8px; margin-top: 5px;">
+                    <option value="Inactive">🔒 Inactive (Hide from Users)</option>
+                    <option value="Active">🔓 Active (Show Form)</option>
+                </select>
+            </div>
+            <button id="btn-save-settings" onclick="updateGiveawayOnly()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Giveaway Settings Live</button>
+        </div>
+    </div>
+
+    <script>
+        // Aapka Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlZkM5dnAXSlTzybHk_43j5yQGYgui-Jo",
+            authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
+            projectId: "ff-tornament-app-9e3ae",
+            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/",
+            messagingSenderId: "595326120234",
+            appId: "1:595326120234:web:fcbf0e3f02977cadc16e53"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; //
+
+        // 🔄 LIVE DATA LOAD FOR FIELDS
+        database.ref('appSettings').on('value', (snapshot) => {
+            let settings = snapshot.val();
+            if (settings) {
+                if (settings.whatsappChannel) {
+                    document.getElementById('admin-channel-url').value = settings.whatsappChannel;
+                }
+                if (settings.giveaway) {
+                    document.getElementById('admin-giveaway-title').value = settings.giveaway.title || "";
+                    document.getElementById('admin-giveaway-desc').value = settings.giveaway.description || "";
+                    document.getElementById('admin-giveaway-status').value = settings.giveaway.status || "Inactive";
+                    document.getElementById('admin-giveaway-existing-img').value = settings.giveaway.productImg || "";
+                }
+            }
+        });
+
+        // 📢 SAVE WHATSAPP LINK
+        function updateWhatsAppOnly() {
+            let channelLink = document.getElementById('admin-channel-url').value.trim();
+            if (!channelLink) { alert("⚠️ WhatsApp URL daalna zaroori hai!"); return; }
+
+            database.ref('appSettings/whatsappChannel').set(channelLink)
+            .then(() => { alert("📢 WhatsApp Channel Link Successfully Saved!"); })
+            .catch(err => alert("Error: " + err.message));
+        }
+
+        // 🎁 SAVE GIVEAWAY
+        function updateGiveawayOnly() {
+            let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
+            let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
+            let giveawayStatus = document.getElementById('admin-giveaway-status').value;
+            let fileInput = document.getElementById('admin-giveaway-file');
+            let existingImg = document.getElementById('admin-giveaway-existing-img').value;
+            let btn = document.getElementById('btn-save-settings');
+
+            btn.innerText = "Saving Settings...";
+            btn.disabled = true;
+
+            function saveGiveawayData(imageUrl) {
+                database.ref('appSettings/giveaway').update({
+                    title: giveawayTitle,
+                    description: giveawayDesc,
+                    status: giveawayStatus,
+                    productImg: imageUrl
+                }).then(() => {
+                    alert("🎁 Giveaway Settings Updated Live!");
+                    btn.innerText = "Save Giveaway Settings Live";
+                    btn.disabled = false;
+                }).catch(err => {
+                    alert("Error: " + err.message);
+                    btn.innerText = "Save Giveaway Settings Live";
+                    btn.disabled = false;
+                });
+            }
+
+            if (fileInput.files.length > 0) {
+                let file = fileInput.files[0];
+                let formData = new FormData();
+                formData.append("image", file);
+
+                fetch('https://api.imgbb.com/1/upload?key=' + imgbbApiKey, { method: "POST", body: formData })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        document.getElementById('admin-giveaway-existing-img').value = result.data.url;
+                        saveGiveawayData(result.data.url);
+                    } else {
+                        alert("Image upload failed!");
+                        btn.disabled = false;
+                        btn.innerText = "Save Giveaway Settings Live";
+                    }
+                }).catch(() => { 
+                    btn.disabled = false; 
+                    btn.innerText = "Save Giveaway Settings Live";
+                });
+            } else {
+                saveGiveawayData(existingImg);
+            }
+        }
+    </script>
+</body>
+</html>
