@@ -368,8 +368,12 @@ function updateGiveawayOnly() {
             } else {
                 alert("Image upload failed!");
                 btn.disabled = false;
+                btn.innerText = "Save Giveaway Settings Live";
             }
-        }).catch(() => { btn.disabled = false; });
+        }).catch(() => { 
+            btn.disabled = false; 
+            btn.innerText = "Save Giveaway Settings Live";
+        });
     } else {
         saveGiveawayData(existingImg);
     }
