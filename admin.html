@@ -310,8 +310,7 @@ function clearAdminInputs() {
     document.getElementById('room-pass').value = "";
             }
     
-    // SAVE GIVEAWAY SETTINGS
-    // 🟢 1. WHATSAPP LINK UPDATE FUNCTION (AB ALAG SE KAAM KAREGA)
+    // 📢 1. SAVE WHATSAPP LINK ONLY
 function updateWhatsAppOnly() {
     let channelLink = document.getElementById('admin-channel-url').value.trim();
     
@@ -327,7 +326,7 @@ function updateWhatsAppOnly() {
     .catch(err => alert("Error: " + err.message));
 }
 
-// 🟢 2. GIVEAWAY UPDATE FUNCTION (AB WHATSAPP LINK SE ISKA KOI LENADENA NAHI)
+// 🎁 2. SAVE GIVEAWAY SETTINGS ONLY
 function updateGiveawayOnly() {
     let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
     let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
@@ -351,6 +350,7 @@ function updateGiveawayOnly() {
             btn.disabled = false;
         }).catch(err => {
             alert("Error: " + err.message);
+            btn.innerText = "Save Giveaway Settings Live";
             btn.disabled = false;
         });
     }
@@ -360,7 +360,6 @@ function updateGiveawayOnly() {
         let formData = new FormData();
         formData.append("image", file);
 
-        // ImgBB upload API
         fetch('https://api.imgbb.com/1/upload?key=819777dfb8f0ca4eb547d21c32ee35b0', { method: "POST", body: formData })
         .then(res => res.json())
         .then(result => {
@@ -379,7 +378,7 @@ function updateGiveawayOnly() {
     } else {
         saveGiveawayData(existingImg);
     }
-}
+} 
     
     // BUTTON 2 CODE: Room ID & Password Upload ONLY
     function updateRoomCredentials() {
