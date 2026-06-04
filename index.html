@@ -352,7 +352,32 @@ window.addEventListener('appinstalled', () => {
         database.ref('appSettings/whatsappChannel').on('value', (snapshot) => {
             let link = snapshot.val(); if(link) globalWhatsAppChannelLink = link;
         });
+        // 📢 WHATSAPP CHANNEL OPEN FUNCTION (Yeh copy karke line 355 par dalein)
+        function openWhatsAppChannel() {
+            let targetLink = globalWhatsAppChannelLink;
 
+            if (!targetLink) {
+                alert("⚠️ Channel link load nahi ho payi, kripya thoda rukiye!");
+                return;
+            }
+
+            // Safe Check: Agar link me http ya https na ho toh jod dega
+            if (!targetLink.startsWith("http://") && !targetLink.startsWith("https://")) {
+                targetLink = "https://" + targetLink;
+            }
+
+            console.log("Opening Channel Link: ", targetLink);
+
+            // Naye tab me open karne ka safe tarika
+            let newTab = window.open(targetLink, '_blank');
+            if (newTab) {
+                newTab.focus();
+            } else {
+                // Agar mobile browser popup block kare toh redirect karein
+                window.location.href = targetLink;
+            }
+        }
+        
         database.ref('appSettings/giveaway').on('value', (snapshot) => {
             let giveaway = snapshot.val();
             if(giveaway && giveaway.status === "Active") {
