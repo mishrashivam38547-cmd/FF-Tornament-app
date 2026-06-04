@@ -214,8 +214,7 @@ function createNewMatch() {
         window.currentEditingMatchId = newMatchKey; // Edit ke liye active state id save rakhein
     });
 }
-    // Variable to keep track of which match is currently being edited
-window.currentEditingMatchId = null;
+    window.currentEditingMatchId = null;
 
 // 🔄 1. REALTIME OBSERVER FOR ADMIN PANEL (List populate karne ke liye)
 database.ref('matches').on('value', (snapshot) => {
@@ -234,11 +233,10 @@ database.ref('matches').on('value', (snapshot) => {
         let match = data[matchId];
         
         let matchRow = document.createElement('div');
-        matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; border-left:4px solid #ff4e50; display:flex; justify-content:space-between; align-items:center; border: 1px solid #eee; border-left:4px solid #ff4e50;";
+        matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #eee; border-left:4px solid #ff4e50;";
         
         let statusBadge = match.matchStatus === "Completed" ? "<span style='color:orange; font-size:11px;'>[Completed]</span>" : `<span style='color:green; font-size:11px;'>[${match.matchStatus || 'Upcoming'}]</span>`;
 
-        // Highlight selected match
         if (window.currentEditingMatchId === matchId) {
             matchRow.style.borderColor = "#007bff";
             matchRow.style.background = "#eef5ff";
@@ -260,7 +258,7 @@ database.ref('matches').on('value', (snapshot) => {
 
 // 🗑️ 2. MATCH DELETE FUNCTION
 function deleteMatchFromAdmin(matchId) {
-    if (confirm("⚠️ Kya aap sach mein is match ko hamesha ke liye delete karna chahte hain? Isse user app se bhi yeh instantly hat jayega!")) {
+    if (confirm("⚠️ Kya aap sach mein is match ko delete karna chahte hain?")) {
         database.ref('matches/' + matchId).remove()
         .then(() => {
             alert("🗑️ Match Successfully Delete Ho Gaya!");
@@ -271,7 +269,7 @@ function deleteMatchFromAdmin(matchId) {
     }
 }
 
-// ✏️ 3. SELECT MATCH FOR EDITING (Forms me values auto-fill karne ke liye)
+// ✏️ 3. SELECT MATCH FOR EDITING
 function selectMatchToEdit(matchId) {
     window.currentEditingMatchId = matchId;
     
@@ -279,25 +277,22 @@ function selectMatchToEdit(matchId) {
         let match = snapshot.val();
         if(!match) return;
 
-        // Form 1 fields fill karein
         document.getElementById('match-title').value = match.title || "";
         document.getElementById('match-time').value = match.time || "";
         document.getElementById('match-fee').value = match.fee || "20";
         document.getElementById('match-kill').value = match.kill || "5";
         document.getElementById('match-map').value = match.mapType || "Bermuda";
 
-        // Form 2 fields fill karein
         document.getElementById('room-id').value = match.roomId || "";
         document.getElementById('room-pass').value = match.roomPass || "";
         if(document.getElementById('match-status')) {
             document.getElementById('match-status').value = match.matchStatus || "Upcoming";
         }
 
-        // Form 3 fields fill karein
         document.getElementById('match-winner').value = match.winnerName || "";
         document.getElementById('match-winner-kills').value = match.winnerKills || "0";
 
-        alert("🎯 Match Select Ho Gaya! Ab aap neeche diye gaye kisi bhi form (Room ID, Result, Status) ko change karke update kar sakte hain.");
+        alert("🎯 Match Select Ho Gaya!");
     });
 }
 
@@ -308,9 +303,9 @@ function clearAdminInputs() {
     document.getElementById('match-time').value = "";
     document.getElementById('room-id').value = "";
     document.getElementById('room-pass').value = "";
-            }
-    
-    // 📢 1. SAVE WHATSAPP LINK ONLY
+}
+
+// 📢 4. SAVE WHATSAPP LINK ONLY
 function updateWhatsAppOnly() {
     let channelLink = document.getElementById('admin-channel-url').value.trim();
     
@@ -326,7 +321,7 @@ function updateWhatsAppOnly() {
     .catch(err => alert("Error: " + err.message));
 }
 
-// 🎁 2. SAVE GIVEAWAY SETTINGS ONLY
+// 🎁 5. SAVE GIVEAWAY SETTINGS ONLY
 function updateGiveawayOnly() {
     let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
     let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
@@ -360,7 +355,8 @@ function updateGiveawayOnly() {
         let formData = new FormData();
         formData.append("image", file);
 
-        fetch('https://api.imgbb.com/1/upload?key=819777dfb8f0ca4eb547d21c32ee35b0', { method: "POST", body: formData })
+        // Auto uses the imgbbApiKey from line 167
+        fetch('https://api.imgbb.com/1/upload?key=' + imgbbApiKey, { method: "POST", body: formData })
         .then(res => res.json())
         .then(result => {
             if (result.success) {
@@ -378,94 +374,44 @@ function updateGiveawayOnly() {
     } else {
         saveGiveawayData(existingImg);
     }
-} 
-    
-    // BUTTON 2 CODE: Room ID & Password Upload ONLY
-    function updateRoomCredentials() {
+}
+
+// 🔑 6. ROOM ID & PASSWORD UPLOAD ONLY
+function updateRoomCredentials() {
     let rId = document.getElementById('room-id').value;
     let rPass = document.getElementById('room-pass').value;
     let matchStatus = document.getElementById('match-status').value;
-    
-    // Agar aapke paas koi select kiya hua match ID hai
-    let matchId = window.currentEditingMatchId; 
+    let matchId = window.currentEditingMatchId;
 
-    if(!matchId) { alert("Pehle upar se naya match create karein ya purana select karein!"); return; }
+    if(!matchId) { alert("Pehle upar se purana match select karein!"); return; }
     if(!rId || !rPass) { alert("Room ID aur Password dono fill karein!"); return; }
 
-    database.ref('matches/' + matchId).update({ 
-        roomId: rId, 
+    database.ref('matches/' + matchId).update({
+        roomId: rId,
         roomPass: rPass,
         matchStatus: matchStatus
-    }).then(() => { 
-        alert("🔑 Room ID & Password Updated for this match!"); 
-    });
-    }
-    // BUTTON 3 CODE: Result Upload ONLY
-    function uploadMatchResult() {
-    let winnerName = document.getElementById('match-winner').value;
+    }).then(() => {
+        alert("🔑 Room ID & Password Updated!");
+    }).catch(err => alert("Error: " + err.message));
+}
+
+// 🏆 7. WATCH RESULT UPLOAD ONLY
+function uploadMatchResult() {
+    let winner = document.getElementById('match-winner').value.trim();
     let winnerKills = document.getElementById('match-winner-kills').value;
     let matchId = window.currentEditingMatchId;
 
-    if(!matchId) { alert("Match ID nahi mili!"); return; }
-    if(!winnerName) { alert("Winner ka naam daalna zaroori hai!"); return; }
+    if(!matchId) { alert("Pehle upar se koi match select karein!"); return; }
+    if(!winner) { alert("Winner Name fill karna zaroori hai!"); return; }
 
-    database.ref('matches/' + matchId).update({ 
-        winnerName: winnerName,   
-        winnerKills: winnerKills,
+    database.ref('matches/' + matchId).update({
+        winnerName: winner,
+        winnerKills: parseInt(winnerKills) || 0,
         matchStatus: "Completed"
-    }).then(() => { 
-        alert("🏆 Result Uploaded and Match moved to History!"); 
-    });
-    }
-    // 📥 DEPOSIT LISTENER (Pending)
-    database.ref('depositRequests').on('value', (snapshot) => {
-        let container = document.getElementById('deposit-requests-container'); container.innerHTML = "";
-        let data = snapshot.val();
-        let hasPending = false;
-        if(!data) { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; return; }
-        for(let utr in data) {
-            if(data[utr].status === "Pending") {
-                hasPending = true;
-                let req = data[utr]; let box = document.createElement('div'); box.className = "request-box";
-                box.innerHTML = `<div><strong>UTR:</strong> ${utr}<br><strong>User:</strong> ${req.userUID}<br><strong>Amount:</strong> ₹${req.amount}<br><a class="screenshot-link" href="${req.screenshotUrl}" target="_blank">🖼️ View Screenshot</a></div>
-                    <div><button class="btn-action btn-approve" onclick="approveDeposit('${utr}', '${req.userUID}', ${req.amount})">Approve</button><button class="btn-action btn-reject" onclick="rejectDeposit('${utr}')">Reject</button></div>`;
-                container.appendChild(box);
-            }
-        }
-        if(!hasPending) { container.innerHTML = "<p style='color:green;'>No pending deposit requests.</p>"; }
-    });
-
-    function approveDeposit(utr, userUID, amount) {
-        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { return (currentBalance || 0) + amount; }).then(() => {
-            database.ref('depositRequests/' + utr).update({ status: "Approved" }); alert("Deposit Approved!");
-        });
-    }
-    function rejectDeposit(utr) { database.ref('depositRequests/' + utr).update({ status: "Rejected" }); alert("Request Rejected!"); }
-
-    // 📤 WITHDRAWAL LISTENER (Pending)
-    database.ref('withdrawRequests').on('value', (snapshot) => {
-        let container = document.getElementById('withdraw-requests-container'); container.innerHTML = "";
-        let data = snapshot.val();
-        let hasPending = false;
-        if(!data) { container.innerHTML = "<p style='color:green;'>No pending withdrawal requests.</p>"; return; }
-        for(let reqId in data) {
-            if(data[reqId].status === "Pending") {
-                hasPending = true;
-                let req = data[reqId]; let box = document.createElement('div'); box.className = "request-box"; box.style.borderLeftColor = "#d63031";
-                box.innerHTML = `<div><strong>User ID:</strong> ${req.userUID} <br><strong>UPI ID:</strong> <span style="color:#d63031; font-weight:bold;">${req.upiId}</span> <br><strong>Amount to Pay:</strong> ₹${req.amount}</div>
-                    <div><button class="btn-action btn-approve" style="background:#28a745;" onclick="approveWithdrawal('${reqId}', '${req.userUID}', ${req.amount})">Paid (Approve)</button><button class="btn-action btn-reject" style="background:#dc3545;" onclick="rejectWithdrawal('${reqId}')">Reject</button></div>`;
-                container.appendChild(box);
-            }
-        }
-        if(!hasPending) { container.innerHTML = "<p style='color:green;'>No pending withdrawal requests.</p>"; }
-    });
-
-    function approveWithdrawal(reqId, userUID, amount) {
-        database.ref('users/' + userUID + '/balance').transaction((currentBalance) => { if (currentBalance >= amount) { return currentBalance - amount; } else { return currentBalance; } }).then(() => {
-            database.ref('withdrawRequests/' + reqId).update({ status: "Approved" }); alert("🎉 Payout Approved!");
-        });
-    }
-    function rejectWithdrawal(reqId) { database.ref('withdrawRequests/' + reqId).update({ status: "Rejected" }); alert("Withdrawal request rejected!"); }
+    }).then(() => {
+        alert("🏆 Match Result Uploaded Successfully!");
+    }).catch(err => alert("Error: " + err.message));
+}
 </script>
 </body>
 </html>
