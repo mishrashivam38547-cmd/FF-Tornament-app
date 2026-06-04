@@ -237,7 +237,7 @@ function createNewMatch() {
     window.currentEditingMatchId = null;
 
 // 🔄 1. REALTIME OBSERVER FOR ADMIN PANEL (List populate karne ke liye)
-database.ref('matches').on('value', (snapshot) => {
+  database.ref('matches').on('value', (snapshot) => {
     const listContainer = document.getElementById('admin-matches-list');
     if (!listContainer) return;
 
@@ -245,26 +245,24 @@ database.ref('matches').on('value', (snapshot) => {
     let data = snapshot.val();
 
     if (!data) {
-        listContainer.innerHTML = "<p style='text-align:center; color:#777; margin:5px 0;'>🚫 No matches available in database.</p>";
+        listContainer.innerHTML = "<p style='text-align:center; color:#777; margin:5px 0;'>⚠️ No matches found.</p>";
         return;
     }
 
     for (let matchId in data) {
         let match = data[matchId];
-        
+
         let matchRow = document.createElement('div');
-        matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #eee; border-left:4px solid #ff4e50;";
-        
-        let statusBadge = match.matchStatus === "Completed" ? "<span style='color:orange; font-size:11px;'>[Completed]</span>" : `<span style='color:green; font-size:11px;'>[${match.matchStatus || 'Upcoming'}]</span>`;
+        matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; border:1px solid #ddd;";
 
         if (window.currentEditingMatchId === matchId) {
             matchRow.style.borderColor = "#007bff";
             matchRow.style.background = "#eef5ff";
         }
 
-        matchRow.innerHTML = ``
+        matchRow.innerHTML = `
             <div style="text-align: left; padding: 5px;">
-                <strong style="color:#333; font-size:14px;">${match.title || 'Daily Clash Squad'}</strong> - <span style="font-size:12px; color:#666;">${match.mapType || 'Bermuda'}</span>
+                <strong style="color:#333; font-size:14px;">${match.title || 'Daily Clash Squad'}</strong>
                 <div style="font-size:12px; color:#666; margin-top:2px;">
                     Time: ${match.time || '--:--'} | Fee: ₹${match.fee || '0'} | Kill Reward: ₹${match.kill || '0'}
                 </div>
@@ -281,179 +279,54 @@ database.ref('matches').on('value', (snapshot) => {
                     <div style="margin-bottom: 6px;">
                         <input type="number" id="winner-prize-${matchId}" placeholder="Prize Amount (₹)" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
                     </div>
-                    <button type="button" onclick="setMatchWinner('${matchId}')" style="width: 100%; padding: 6px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">📢 Announce & Send Money</button>
+                    <button type="button" onclick="window.setMatchWinner('${matchId}')" style="width: 100%; padding: 6px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">📢 Announce & Send Money</button>
                 </div>
 
                 <div style="margin-top: 10px;">
-                    <button type="button" onclick="selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Edit Match</button>
-                    <button type="button" onclick="deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:5px;">Delete</button>
+                    <button type="button" onclick="window.selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Edit Match</button>
+                    <button type="button" onclick="window.deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:5px;">Delete</button>
                 </div>
             </div>
-        \;`
-        
+        `;
 
-        // 🔄 Har match card list mein add hone ke baad counter trigger karein
-        if (typeof listenToParticipants === 'function') {
-            listenToParticipants(matchId);
+        listContainer.appendChild(matchRow);
+
+        // Counter Trigger
+        if (typeof window.listenToParticipants === 'function') {
+            window.listenToParticipants(matchId);
         }
-    
-// 🗑️ 2. MATCH DELETE FUNCTION
-function deleteMatchFromAdmin(matchId) {
+    }
+});
+
+// 🗑️ 2. WATCH DELETE FUNCTION
+window.deleteMatchFromAdmin = function(matchId) {
     if (confirm("⚠️ Kya aap sach mein is match ko delete karna chahte hain?")) {
         database.ref('matches/' + matchId).remove()
         .then(() => {
             alert("🗑️ Match Successfully Delete Ho Gaya!");
             if (window.currentEditingMatchId === matchId) {
-                clearAdminInputs();
+                if (typeof clearAdminInputs === 'function') clearAdminInputs();
             }
         }).catch(err => alert("Error: " + err.message));
     }
-}
+};
 
 // ✏️ 3. SELECT MATCH FOR EDITING
-function selectMatchToEdit(matchId) {
+window.selectMatchToEdit = function(matchId) {
     window.currentEditingMatchId = matchId;
-    
     database.ref('matches/' + matchId).once('value', (snapshot) => {
         let match = snapshot.val();
-        if(!match) return;
+        if (!match) return;
 
-        document.getElementById('match-title').value = match.title || "";
-        document.getElementById('match-time').value = match.time || "";
-        document.getElementById('match-fee').value = match.fee || "20";
-        document.getElementById('match-kill').value = match.kill || "5";
-        document.getElementById('match-map').value = match.mapType || "Bermuda";
-
-        document.getElementById('room-id').value = match.roomId || "";
-        document.getElementById('room-pass').value = match.roomPass || "";
-        if(document.getElementById('match-status')) {
-            document.getElementById('match-status').value = match.matchStatus || "Upcoming";
-        }
-
-        document.getElementById('match-winner').value = match.winnerName || "";
-        document.getElementById('match-winner-kills').value = match.winnerKills || "0";
-
-        alert("🎯 Match Select Ho Gaya!");
+        if (document.getElementById('match-title')) document.getElementById('match-title').value = match.title || "";
+        if (document.getElementById('match-time')) document.getElementById('match-time').value = match.time || "";
+        if (document.getElementById('match-fee')) document.getElementById('match-fee').value = match.fee || "20";
+        if (document.getElementById('match-kill')) document.getElementById('match-kill').value = match.kill || "5";
+        if (document.getElementById('match-map')) document.getElementById('match-map').value = match.mapType || "Bermuda";
     });
-}
+};
 
-// Helper to clear forms
-function clearAdminInputs() {
-    window.currentEditingMatchId = null;
-    document.getElementById('match-title').value = "";
-    document.getElementById('match-time').value = "";
-    document.getElementById('room-id').value = "";
-    document.getElementById('room-pass').value = "";
-}
-
-// 📢 4. SAVE WHATSAPP LINK ONLY
-function updateWhatsAppOnly() {
-    let channelLink = document.getElementById('admin-channel-url').value.trim();
-    
-    if (!channelLink) { 
-        alert("⚠️ WhatsApp Channel URL daalna zaroori hai!"); 
-        return; 
-    }
-
-    database.ref('appSettings/whatsappChannel').set(channelLink)
-    .then(() => {
-        alert("📢 WhatsApp Channel Link Successfully Save Ho Gaya!");
-    })
-    .catch(err => alert("Error: " + err.message));
-}
-
-// 🎁 5. SAVE GIVEAWAY SETTINGS ONLY
-function updateGiveawayOnly() {
-    let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
-    let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
-    let giveawayStatus = document.getElementById('admin-giveaway-status').value;
-    let fileInput = document.getElementById('admin-giveaway-file');
-    let existingImg = document.getElementById('admin-giveaway-existing-img').value;
-    let btn = document.getElementById('btn-save-settings');
-
-    btn.innerText = "Saving Settings...";
-    btn.disabled = true;
-
-    function saveGiveawayData(imageUrl) {
-        database.ref('appSettings/giveaway').update({
-            title: giveawayTitle,
-            description: giveawayDesc,
-            status: giveawayStatus,
-            productImg: imageUrl
-        }).then(() => {
-            alert("🎁 Giveaway Settings Updated Live!");
-            btn.innerText = "Save Giveaway Settings Live";
-            btn.disabled = false;
-        }).catch(err => {
-            alert("Error: " + err.message);
-            btn.innerText = "Save Giveaway Settings Live";
-            btn.disabled = false;
-        });
-    }
-
-    if (fileInput.files.length > 0) {
-        let file = fileInput.files[0];
-        let formData = new FormData();
-        formData.append("image", file);
-
-        // Auto uses the imgbbApiKey from line 167
-        fetch('https://api.imgbb.com/1/upload?key=' + imgbbApiKey, { method: "POST", body: formData })
-        .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                document.getElementById('admin-giveaway-existing-img').value = result.data.url;
-                saveGiveawayData(result.data.url);
-            } else {
-                alert("Image upload failed!");
-                btn.disabled = false;
-                btn.innerText = "Save Giveaway Settings Live";
-            }
-        }).catch(() => { 
-            btn.disabled = false; 
-            btn.innerText = "Save Giveaway Settings Live";
-        });
-    } else {
-        saveGiveawayData(existingImg);
-    }
-}
-
-// 🔑 6. ROOM ID & PASSWORD UPLOAD ONLY
-function updateRoomCredentials() {
-    let rId = document.getElementById('room-id').value;
-    let rPass = document.getElementById('room-pass').value;
-    let matchStatus = document.getElementById('match-status').value;
-    let matchId = window.currentEditingMatchId;
-
-    if(!matchId) { alert("Pehle upar se purana match select karein!"); return; }
-    if(!rId || !rPass) { alert("Room ID aur Password dono fill karein!"); return; }
-
-    database.ref('matches/' + matchId).update({
-        roomId: rId,
-        roomPass: rPass,
-        matchStatus: matchStatus
-    }).then(() => {
-        alert("🔑 Room ID & Password Updated!");
-    }).catch(err => alert("Error: " + err.message));
-}
-
-// 🏆 7. WATCH RESULT UPLOAD ONLY
-function uploadMatchResult() {
-    let winner = document.getElementById('match-winner').value.trim();
-    let winnerKills = document.getElementById('match-winner-kills').value;
-    let matchId = window.currentEditingMatchId;
-
-    if(!matchId) { alert("Pehle upar se koi match select karein!"); return; }
-    if(!winner) { alert("Winner Name fill karna zaroori hai!"); return; }
-
-    database.ref('matches/' + matchId).update({
-        winnerName: winner,
-        winnerKills: parseInt(winnerKills) || 0,
-        matchStatus: "Completed"
-    }).then(() => {
-        alert("🏆 Match Result Uploaded Successfully!");
-    }).catch(err => alert("Error: " + err.message));
-}
-    // 🏆 7. GLOBAL WINNER ANNOUNCEMENT FUNCTION
+// 🏆 7. GLOBAL WINNER ANNOUNCEMENT FUNCTION
 window.setMatchWinner = function(matchId) {
     let winnerUid = document.getElementById('winner-uid-' + matchId).value.trim();
     let prizeAmount = Number(document.getElementById('winner-prize-' + matchId).value.trim());
@@ -463,12 +336,10 @@ window.setMatchWinner = function(matchId) {
         return;
     }
 
-    // 1. Firebase se Winner ka purana wallet balance nikalo
     database.ref('users/' + winnerUid + '/wallet').once('value', (snapshot) => {
         let currentBalance = snapshot.val() || 0;
         let newBalance = currentBalance + prizeAmount;
 
-        // 2. User ka balance update aur match ko complete mark karo
         let updates = {};
         updates['matches/' + matchId + '/matchStatus'] = "Completed";
         updates['matches/' + matchId + '/winnerUid'] = winnerUid;
@@ -494,64 +365,7 @@ window.listenToParticipants = function(matchId) {
         }
     });
 };
-
-// 🏦 PENDING WITHDRAWAL REQUESTS OBSERVER
-database.ref('withdrawRequests').orderByChild('status').equalTo('Pending').on('value', (snapshot) => {
-    let listDiv = document.getElementById('withdraw-requests-list');
-    if (!listDiv) return;
-    listDiv.innerHTML = "";
-    let data = snapshot.val();
-
-    if (!data) {
-        listDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
-        return;
-    }
-
-    Object.keys(data).forEach(key => {
-        let req = data[key];
-        let card = document.createElement('div');
-        card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #dc3545; border-radius:4px; font-family: Arial, sans-serif; font-size: 14px; text-align: left;";
         
-        card.innerHTML = `
-            <p style="margin: 3px 0;"><b>User Email:</b> ${req.email}</p>
-            <p style="margin: 3px 0; color:#dc3545; font-size:15px;"><b>Amount:</b> ₹${req.amount}</p>
-            <p style="margin: 3px 0; color:#007bff; font-weight: bold;"><b>UPI ID:</b> ${req.upiId}</p>
-            <div style="margin-top: 8px;">
-                <button type="button" onclick="approveWithdraw('${key}')" style="background:#28a745; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Paid (Complete)</button>
-                <button type="button" onclick="rejectWithdraw('${key}', '${req.uid}', ${req.amount})" style="background:#dc3545; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject (Refund)</button>
-            </div>
-        `;
-        listDiv.appendChild(card);
-    });
-});
-
-// 💸 WITHDRAWAL ACTIONS
-window.approveWithdraw = function(reqKey) {
-    database.ref('withdrawRequests/' + reqKey).update({
-        status: "Approved",
-        processedTime: Date.now()
-    }).then(() => {
-        alert("✅ Request approved successfully!");
-    }).catch(err => alert("Error: " + err.message));
-};
-
-window.rejectWithdraw = function(reqKey, userUid, amount) {
-    if (confirm("Kya aap is request ko reject karke paise refund karna chahte hain?")) {
-        database.ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
-            let currentBalance = snapshot.val() || 0;
-            let refundedBalance = currentBalance + amount;
-
-            let updates = {};
-            updates['users/' + userUid + '/wallet'] = refundedBalance;
-            updates['withdrawRequests/' + reqKey + '/status'] = "Rejected";
-
-            database.ref().update(updates).then(() => {
-                alert("💸 Request reject ho gayi hai aur paise user ko wapas mil gaye hain.");
-            }).catch(err => alert("Error: " + err.message));
-        });
-    }
-};
-            
 </script>
 </body>
 </html>
