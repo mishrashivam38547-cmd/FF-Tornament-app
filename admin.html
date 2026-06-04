@@ -453,21 +453,22 @@ function uploadMatchResult() {
         alert("🏆 Match Result Uploaded Successfully!");
     }).catch(err => alert("Error: " + err.message));
 }
-    function setMatchWinner(matchId) {
-    let winnerUid = document.getElementById('winner-uid-' + matchId).value.trim(); // Winner ki Unique UID
-    let prizeAmount = Number(document.getElementById('winner-prize-' + matchId).value.trim()); // Prize Money (e.g., 500)
+    // 🏆 7. GLOBAL WINNER ANNOUNCEMENT FUNCTION
+window.setMatchWinner = function(matchId) {
+    let winnerUid = document.getElementById('winner-uid-' + matchId).value.trim();
+    let prizeAmount = Number(document.getElementById('winner-prize-' + matchId).value.trim());
 
     if (!winnerUid || !prizeAmount) {
         alert("⚠️ Kripya Winner ki UID aur Prize Amount dono dalein!");
         return;
     }
 
-    // 1. Pehle Firebase se us Winner ka purana wallet balance nikalo
+    // 1. Firebase se Winner ka purana wallet balance nikalo
     database.ref('users/' + winnerUid + '/wallet').once('value', (snapshot) => {
         let currentBalance = snapshot.val() || 0;
         let newBalance = currentBalance + prizeAmount;
 
-        // 2. User ka naya balance update karo aur match ko complete mark karo
+        // 2. User ka balance update aur match ko complete mark karo
         let updates = {};
         updates['matches/' + matchId + '/matchStatus'] = "Completed";
         updates['matches/' + matchId + '/winnerUid'] = winnerUid;
@@ -479,8 +480,78 @@ function uploadMatchResult() {
         })
         .catch(err => alert("❌ Error: " + err.message));
     });
+};
+
+// 🔄 LIVE MATCH PARTICIPANTS COUNTER OBSERVER
+window.listenToParticipants = function(matchId) {
+    database.ref('matchParticipants/' + matchId).on('value', (snapshot) => {
+        let participants = snapshot.val();
+        let totalJoined = participants ? Object.keys(participants).length : 0;
+        
+        let countElement = document.getElementById('joined-count-' + matchId);
+        if (countElement) {
+            countElement.innerText = "Joined: " + totalJoined + " Players";
+        }
+    });
+};
+
+// 🏦 PENDING WITHDRAWAL REQUESTS OBSERVER
+database.ref('withdrawRequests').orderByChild('status').equalTo('Pending').on('value', (snapshot) => {
+    let listDiv = document.getElementById('withdraw-requests-list');
+    if (!listDiv) return;
+    listDiv.innerHTML = "";
+    let data = snapshot.val();
+
+    if (!data) {
+        listDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
+        return;
     }
-    
+
+    Object.keys(data).forEach(key => {
+        let req = data[key];
+        let card = document.createElement('div');
+        card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #dc3545; border-radius:4px; font-family: Arial, sans-serif; font-size: 14px; text-align: left;";
+        
+        card.innerHTML = `
+            <p style="margin: 3px 0;"><b>User Email:</b> ${req.email}</p>
+            <p style="margin: 3px 0; color:#dc3545; font-size:15px;"><b>Amount:</b> ₹${req.amount}</p>
+            <p style="margin: 3px 0; color:#007bff; font-weight: bold;"><b>UPI ID:</b> ${req.upiId}</p>
+            <div style="margin-top: 8px;">
+                <button type="button" onclick="approveWithdraw('${key}')" style="background:#28a745; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Paid (Complete)</button>
+                <button type="button" onclick="rejectWithdraw('${key}', '${req.uid}', ${req.amount})" style="background:#dc3545; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject (Refund)</button>
+            </div>
+        `;
+        listDiv.appendChild(card);
+    });
+});
+
+// 💸 WITHDRAWAL ACTIONS
+window.approveWithdraw = function(reqKey) {
+    database.ref('withdrawRequests/' + reqKey).update({
+        status: "Approved",
+        processedTime: Date.now()
+    }).then(() => {
+        alert("✅ Request approved successfully!");
+    }).catch(err => alert("Error: " + err.message));
+};
+
+window.rejectWithdraw = function(reqKey, userUid, amount) {
+    if (confirm("Kya aap is request ko reject karke paise refund karna chahte hain?")) {
+        database.ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
+            let currentBalance = snapshot.val() || 0;
+            let refundedBalance = currentBalance + amount;
+
+            let updates = {};
+            updates['users/' + userUid + '/wallet'] = refundedBalance;
+            updates['withdrawRequests/' + reqKey + '/status'] = "Rejected";
+
+            database.ref().update(updates).then(() => {
+                alert("💸 Request reject ho gayi hai aur paise user ko wapas mil gaye hain.");
+            }).catch(err => alert("Error: " + err.message));
+        });
+    }
+};
+            
 </script>
 </body>
 </html>
