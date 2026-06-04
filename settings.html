@@ -150,7 +150,55 @@
                     btn.disabled = false;
                 });
             }
+        // 🔄 LIVE LOGO URL LOAD
+        database.ref('appSettings/logoUrl').on('value', (snapshot) => {
+            let logo = snapshot.val();
+            if (logo) {
+                document.getElementById('admin-logo-existing-url').value = logo;
+            }
+        });
 
+        // 🖼️ SAVE LOGO FUNCTION
+        function updateLogoOnly() {
+            let fileInput = document.getElementById('admin-logo-file');
+            let existingLogo = document.getElementById('admin-logo-existing-url').value;
+            let btn = document.getElementById('btn-save-logo');
+
+            if (fileInput.files.length === 0) {
+                alert("⚠️ Kripya pehle ek logo photo select karein!");
+                return;
+            }
+
+            btn.innerText = "⏳ Uploading Logo...";
+            btn.disabled = true;
+
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append("image", file);
+
+            fetch('https://api.imgbb.com/1/upload?key=' + imgbbApiKey, { method: "POST", body: formData })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    let newLogoUrl = result.data.url;
+                    
+                    database.ref('appSettings/logoUrl').set(newLogoUrl)
+                    .then(() => {
+                        alert("🖼️ Success: Naya Logo Live Update Ho Gaya!");
+                        btn.innerText = "Update Logo Live";
+                        btn.disabled = false;
+                    });
+                } else {
+                    alert("❌ Logo upload failed!");
+                    btn.disabled = false;
+                    btn.innerText = "Update Logo Live";
+                }
+            }).catch(() => {
+                btn.disabled = false;
+                btn.innerText = "Update Logo Live";
+            });
+        }
+            
             if (fileInput.files.length > 0) {
                 let file = fileInput.files[0];
                 let formData = new FormData();
