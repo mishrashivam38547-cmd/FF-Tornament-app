@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Settings Control Panel</title>
-    <!-- Firebase App aur Database SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- 🔄 Firebase Core App aur Database CDNs (Production Ready) -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 </head>
 <body style="font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; color: #333;">
 
@@ -52,6 +53,9 @@
     </div>
 
     <script>
+        // 🧪 Verification Alert: Jaise hi script sahi se load hogi, console par message aayega
+        console.log("Silent Sniper Settings Script Initialized!");
+
         // Aapka Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBlZkM5dnAXSlTzybHk_43j5yQGYgui-Jo",
@@ -62,9 +66,13 @@
             appId: "1:595326120234:web:fcbf0e3f02977cadc16e53"
         };
         
-        firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase safely
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
         const database = firebase.database();
-        const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; //
+        const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
         // 🔄 LIVE DATA LOAD FOR FIELDS
         database.ref('appSettings').on('value', (snapshot) => {
@@ -85,11 +93,18 @@
         // 📢 SAVE WHATSAPP LINK
         function updateWhatsAppOnly() {
             let channelLink = document.getElementById('admin-channel-url').value.trim();
-            if (!channelLink) { alert("⚠️ WhatsApp URL daalna zaroori hai!"); return; }
+            if (!channelLink) { 
+                alert("⚠️ WhatsApp URL daalna zaroori hai!"); 
+                return; 
+            }
 
             database.ref('appSettings/whatsappChannel').set(channelLink)
-            .then(() => { alert("📢 WhatsApp Channel Link Successfully Saved!"); })
-            .catch(err => alert("Error: " + err.message));
+            .then(() => { 
+                alert("📢 WhatsApp Channel Link Successfully Saved!"); 
+            })
+            .catch(err => { 
+                alert("Firebase Error: " + err.message); 
+            });
         }
 
         // 🎁 SAVE GIVEAWAY
@@ -100,6 +115,11 @@
             let fileInput = document.getElementById('admin-giveaway-file');
             let existingImg = document.getElementById('admin-giveaway-existing-img').value;
             let btn = document.getElementById('btn-save-settings');
+
+            if (!giveawayTitle) {
+                alert("⚠️ Giveaway Title daalna zaroori hai!");
+                return;
+            }
 
             btn.innerText = "Saving Settings...";
             btn.disabled = true;
@@ -115,7 +135,7 @@
                     btn.innerText = "Save Giveaway Settings Live";
                     btn.disabled = false;
                 }).catch(err => {
-                    alert("Error: " + err.message);
+                    alert("Database Error: " + err.message);
                     btn.innerText = "Save Giveaway Settings Live";
                     btn.disabled = false;
                 });
@@ -133,11 +153,12 @@
                         document.getElementById('admin-giveaway-existing-img').value = result.data.url;
                         saveGiveawayData(result.data.url);
                     } else {
-                        alert("Image upload failed!");
+                        alert("Image upload failed! Check ImgBB key.");
                         btn.disabled = false;
                         btn.innerText = "Save Giveaway Settings Live";
                     }
-                }).catch(() => { 
+                }).catch((err) => { 
+                    alert("ImgBB Network Error: " + err.message);
                     btn.disabled = false; 
                     btn.innerText = "Save Giveaway Settings Live";
                 });
