@@ -7,26 +7,21 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-        // 🔒 ADMIN PANEL PASSWORD PROTECTION SYSTEM
+            // 🔒 ADMIN PANEL PASSWORD PROTECTION SYSTEM
         (function checkAdminPassword() {
-            let correctPassword = "Shivam_ji07";
-            let userAttempt = prompt("🔐 Security Verification:\nEnter Admin Password to Access Control Panel:");
+            var correctPassword = "Shivam_ji07";
+            var userAttempt = prompt("🔐 Security Verification:\n\nEnter Admin Password to Access Control Panel:");
 
             if (userAttempt === correctPassword) {
                 // Sahi password hone par container ko show karo
                 document.getElementById('admin-secure-content').style.display = "block";
                 console.log("Access Granted. Welcome Shivam!");
             } else {
-                // Galat password par access block aur error screen
+                // Galat password par access block aur error screen render karo
                 alert("❌ Wrong Password! Access Denied.");
-                document.body.innerHTML = `
-                    <div style="text-align: center; margin-top: 100px; font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px;">
-                        <h1 style="color: #dc3545; font-size: 35px;">🔒 Access Denied</h1>
-                        <p style="font-size: 18px; color: #666;">Aapke paas is admin panel ko access karne ki anumati nahi hai.</p>
-                        <button onclick="location.reload()" style="padding: 12px 25px; background: #ff4e50; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Retry Login</button>
-                    </div>
-                ```javascript
-})();
+                document.body.innerHTML = '<div style="text-align: center; margin-top: 100px; font-family: Arial, sans-serif;"><h1 style="color: #dc3545; font-size: 35px; font-weight: bold;">🔒 Access Denied</h1><p style="font-size: 18px; color: #666;">Aapke paas is admin panel ko access karne ki anumati nahi hai.</p><button onclick="location.reload()" style="padding: 12px 25px; background: #ff4e50; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px;">Retry Login</button></div>';
+            }
+        })();
     
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
