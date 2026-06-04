@@ -309,46 +309,71 @@ function clearAdminInputs() {
             }
     
     // SAVE GIVEAWAY SETTINGS
-    function updateSocialAndGiveaway() {
-        let channelLink = document.getElementById('admin-channel-url').value.trim();
-        let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
-        let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
-        let giveawayStatus = document.getElementById('admin-giveaway-status').value;
-        let fileInput = document.getElementById('admin-giveaway-file');
-        let existingImg = document.getElementById('admin-giveaway-existing-img').value;
-        let btn = document.getElementById('btn-save-settings');
-
-        if(!channelLink) { alert("WhatsApp Channel URL daalna zaroori hai!"); return; }
-
-        function saveData(imageUrl) {
-            database.ref('appSettings').update({
-                whatsappChannel: channelLink,
-                giveaway: { title: giveawayTitle, description: giveawayDesc, status: giveawayStatus, productImg: imageUrl }
-            }).then(() => {
-                alert("🎉 Giveaway & Social Settings Updated Live!");
-                btn.innerText = "Save Settings Live"; btn.disabled = false;
-            });
-        }
-
-        if(fileInput.files.length > 0) {
-            btn.innerText = "Uploading Photo..."; btn.disabled = true;
-            let file = fileInput.files[0];
-            let formData = new FormData();
-            formData.append("image", file);
-
-            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
-            .then(res => res.json())
-            .then(result => {
-                if(result.success) {
-                    document.getElementById('admin-giveaway-existing-img').value = result.data.url;
-                    saveData(result.data.url);
-                } else {
-                    alert("Image upload failed!"); btn.disabled = false; btn.innerText = "Save Settings Live";
-                }
-            }).catch(() => { btn.disabled = false; });
-        } else { saveData(existingImg); }
+    // 🟢 1. WHATSAPP LINK UPDATE FUNCTION (AB ALAG SE KAAM KAREGA)
+function updateWhatsAppOnly() {
+    let channelLink = document.getElementById('admin-channel-url').value.trim();
+    
+    if (!channelLink) { 
+        alert("⚠️ WhatsApp Channel URL daalna zaroori hai!"); 
+        return; 
     }
 
+    database.ref('appSettings/whatsappChannel').set(channelLink)
+    .then(() => {
+        alert("📢 WhatsApp Channel Link Successfully Save Ho Gaya!");
+    })
+    .catch(err => alert("Error: " + err.message));
+}
+
+// 🟢 2. GIVEAWAY UPDATE FUNCTION (AB WHATSAPP LINK SE ISKA KOI LENADENA NAHI)
+function updateGiveawayOnly() {
+    let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
+    let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
+    let giveawayStatus = document.getElementById('admin-giveaway-status').value;
+    let fileInput = document.getElementById('admin-giveaway-file');
+    let existingImg = document.getElementById('admin-giveaway-existing-img').value;
+    let btn = document.getElementById('btn-save-settings');
+
+    btn.innerText = "Saving Settings...";
+    btn.disabled = true;
+
+    function saveGiveawayData(imageUrl) {
+        database.ref('appSettings/giveaway').update({
+            title: giveawayTitle,
+            description: giveawayDesc,
+            status: giveawayStatus,
+            productImg: imageUrl
+        }).then(() => {
+            alert("🎁 Giveaway Settings Updated Live!");
+            btn.innerText = "Save Giveaway Settings Live";
+            btn.disabled = false;
+        }).catch(err => {
+            alert("Error: " + err.message);
+            btn.disabled = false;
+        });
+    }
+
+    if (fileInput.files.length > 0) {
+        let file = fileInput.files[0];
+        let formData = new FormData();
+        formData.append("image", file);
+
+        // ImgBB upload API
+        fetch('https://api.imgbb.com/1/upload?key=819777dfb8f0ca4eb547d21c32ee35b0', { method: "POST", body: formData })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                document.getElementById('admin-giveaway-existing-img').value = result.data.url;
+                saveGiveawayData(result.data.url);
+            } else {
+                alert("Image upload failed!");
+                btn.disabled = false;
+            }
+        }).catch(() => { btn.disabled = false; });
+    } else {
+        saveGiveawayData(existingImg);
+    }
+}
     
     // BUTTON 2 CODE: Room ID & Password Upload ONLY
     function updateRoomCredentials() {
