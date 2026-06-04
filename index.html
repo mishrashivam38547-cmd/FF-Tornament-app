@@ -631,6 +631,20 @@ function switchTab(tabName) {
                 } else { alert("❌ Photo Upload Failed!"); btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false; }
             }).catch(() => { btn.disabled = false; });
         }
+                // 🖼️ LIVE LOGO SYNC FOR BOTH LOGIN & MAIN SCREEN
+        database.ref('appSettings/logoUrl').on('value', (snapshot) => {
+            let url = snapshot.val();
+            // Class name se dono screens (Login aur Main Header) ke image elements ko target karenge
+            let logoImages = document.getElementsByClassName('app-live-logo-src');
+            
+            if (url && logoImages.length > 0) {
+                for (let i = 0; i < logoImages.length; i++) {
+                    logoImages[i].src = url;
+                    logoImages[i].style.display = "block"; // Image URL load hote hi dono jagah logo dikhne lagega
+                }
+            }
+        });
+        
     </script>
 </body>
 </html>
