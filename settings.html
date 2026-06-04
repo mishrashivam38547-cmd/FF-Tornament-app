@@ -50,23 +50,23 @@
             </div>
             <button id="btn-save-settings" onclick="updateGiveawayOnly()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Save Giveaway Settings Live</button>
         </div>
+
+        <!-- 🖼️ APP LOGO SETTINGS BOX -->
+        <div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 4px solid #f9d423;">
+            <h3 style="margin-top: 0; color: #f9d423;">🖼️ Change App Logo</h3>
+            <div style="margin-bottom: 12px;">
+                <label>Upload New Logo Photo:</label>
+                <input type="file" id="admin-logo-file" style="width: 100%; margin-top: 5px;">
+                <input type="hidden" id="admin-logo-existing-url">
+            </div>
+            <button id="btn-save-logo" onclick="updateLogoOnly()" style="width: 100%; padding: 12px; background: #f9d423; color: #333; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Update Logo Live</button>
+        </div>
     </div>
-<!-- 🖼️ APP LOGO SETTINGS BOX -->
-<div style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 4px solid #f9d423;">
-    <h3 style="margin-top: 0; color: #f9d423;">🖼️ Change App Logo</h3>
-    <div style="margin-bottom: 12px;">
-        <label>Upload New Logo Photo:</label>
-        <input type="file" id="admin-logo-file" style="width: 100%; margin-top: 5px;">
-        <input type="hidden" id="admin-logo-existing-url">
-    </div>
-    <button id="btn-save-logo" onclick="updateLogoOnly()" style="width: 100%; padding: 12px; background: #f9d423; color: #333; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Update Logo Live</button>
-</div>
     
     <script>
-        // 🧪 Verification Alert: Jaise hi script sahi se load hogi, console par message aayega
         console.log("Silent Sniper Settings Script Initialized!");
 
-        // Aapka Firebase Configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBlZkM5dnAXSlTzybHk_43j5yQGYgui-Jo",
             authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
@@ -76,7 +76,6 @@
             appId: "1:595326120234:web:fcbf0e3f02977cadc16e53"
         };
         
-        // Initialize Firebase safely
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -84,7 +83,7 @@
         const database = firebase.database();
         const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
-        // 🔄 LIVE DATA LOAD FOR FIELDS
+        // 🔄 1. LIVE DATA LOAD FROM FIREBASE
         database.ref('appSettings').on('value', (snapshot) => {
             let settings = snapshot.val();
             if (settings) {
@@ -97,10 +96,13 @@
                     document.getElementById('admin-giveaway-status').value = settings.giveaway.status || "Inactive";
                     document.getElementById('admin-giveaway-existing-img').value = settings.giveaway.productImg || "";
                 }
+                if (settings.logoUrl) {
+                    document.getElementById('admin-logo-existing-url').value = settings.logoUrl;
+                }
             }
         });
 
-        // 📢 SAVE WHATSAPP LINK
+        // 📢 2. SAVE WHATSAPP LINK
         function updateWhatsAppOnly() {
             let channelLink = document.getElementById('admin-channel-url').value.trim();
             if (!channelLink) { 
@@ -117,7 +119,7 @@
             });
         }
 
-        // 🎁 SAVE GIVEAWAY
+        // 🎁 3. SAVE GIVEAWAY SETTINGS
         function updateGiveawayOnly() {
             let giveawayTitle = document.getElementById('admin-giveaway-title').value.trim();
             let giveawayDesc = document.getElementById('admin-giveaway-desc').value.trim();
@@ -150,54 +152,6 @@
                     btn.disabled = false;
                 });
             }
-        // 🔄 LIVE LOGO URL LOAD
-        database.ref('appSettings/logoUrl').on('value', (snapshot) => {
-            let logo = snapshot.val();
-            if (logo) {
-                document.getElementById('admin-logo-existing-url').value = logo;
-            }
-        });
-
-        // 🖼️ SAVE LOGO FUNCTION
-        function updateLogoOnly() {
-            let fileInput = document.getElementById('admin-logo-file');
-            let existingLogo = document.getElementById('admin-logo-existing-url').value;
-            let btn = document.getElementById('btn-save-logo');
-
-            if (fileInput.files.length === 0) {
-                alert("⚠️ Kripya pehle ek logo photo select karein!");
-                return;
-            }
-
-            btn.innerText = "⏳ Uploading Logo...";
-            btn.disabled = true;
-
-            let file = fileInput.files[0];
-            let formData = new FormData();
-            formData.append("image", file);
-
-            fetch('https://api.imgbb.com/1/upload?key=' + imgbbApiKey, { method: "POST", body: formData })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    let newLogoUrl = result.data.url;
-                    
-                    database.ref('appSettings/logoUrl').set(newLogoUrl)
-                    .then(() => {
-                        alert("🖼️ Success: Naya Logo Live Update Ho Gaya!");
-                        btn.innerText = "Update Logo Live";
-                        btn.disabled = false;
-                    });
-                } else {
-                    alert("❌ Logo upload failed!");
-                    btn.disabled = false;
-                    btn.innerText = "Update Logo Live";
-                }
-            }).catch(() => {
-                btn.disabled = false;
-                btn.innerText = "Update Logo Live";
-            });
-        }
             
             if (fileInput.files.length > 0) {
                 let file = fileInput.files[0];
@@ -223,6 +177,53 @@
             } else {
                 saveGiveawayData(existingImg);
             }
+        }
+
+        // 🖼️ 4. SAVE APP LOGO FUNCTION (Ab Poori Tarah Alag Aur Fixed Hai!)
+        function updateLogoOnly() {
+            let fileInput = document.getElementById('admin-logo-file');
+            let btn = document.getElementById('btn-save-logo');
+
+            if (!fileInput || fileInput.files.length === 0) {
+                alert("⚠️ Kripya pehle ek logo photo select karein!");
+                return;
+            }
+
+            btn.innerText = "⏳ Uploading Logo...";
+            btn.disabled = true;
+
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append("image", file);
+
+            fetch('https://api.imgbb.com/1/upload?key=' + imgbbApiKey, { method: "POST", body: formData })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    let newLogoUrl = result.data.url;
+                    
+                    database.ref('appSettings/logoUrl').set(newLogoUrl)
+                    .then(() => {
+                        alert("🖼️ Success: Naya Logo Live Update Ho Gaya!");
+                        btn.innerText = "Update Logo Live";
+                        btn.disabled = false;
+                        fileInput.value = ""; // Clear file field
+                    })
+                    .catch((fbErr) => {
+                        alert("Firebase Error: " + fbErr.message);
+                        btn.disabled = false;
+                        btn.innerText = "Update Logo Live";
+                    });
+                } else {
+                    alert("❌ Logo upload failed!");
+                    btn.disabled = false;
+                    btn.innerText = "Update Logo Live";
+                }
+            }).catch((err) => {
+                alert("Network Error: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Update Logo Live";
+            });
         }
     </script>
 </body>
