@@ -166,21 +166,23 @@
     const database = firebase.database();
     const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
-    // Auto load WhatsApp data
-    database.ref('appSettings/whatsappChannel').once('value', (snapshot) => {
-        if(snapshot.val()) document.getElementById('admin-channel-url').value = snapshot.val();
-    });
-
-    // Auto load Giveaway data
-    database.ref('appSettings/giveaway').once('value', (snapshot) => {
-        let giveaway = snapshot.val();
-        if(giveaway) {
-            document.getElementById('admin-giveaway-title').value = giveaway.title || "";
-            document.getElementById('admin-giveaway-desc').value = giveaway.description || "";
-            document.getElementById('admin-giveaway-status').value = giveaway.status || "Inactive";
-            document.getElementById('admin-giveaway-existing-img').value = giveaway.productImg || "";
+    // 🔄 LIVE DATA LOAD FOR SOCIAL & GIVEAWAY SETTINGS
+database.ref('appSettings').on('value', (snapshot) => {
+    let settings = snapshot.val();
+    if (settings) {
+        // WhatsApp Link Auto-fill
+        if (settings.whatsappChannel) {
+            document.getElementById('admin-channel-url').value = settings.whatsappChannel;
         }
-    });
+        // Giveaway Fields Auto-fill
+        if (settings.giveaway) {
+            document.getElementById('admin-giveaway-title').value = settings.giveaway.title || "";
+            document.getElementById('admin-giveaway-desc').value = settings.giveaway.description || "";
+            document.getElementById('admin-giveaway-status').value = settings.giveaway.status || "Inactive";
+            document.getElementById('admin-giveaway-existing-img').value = settings.giveaway.productImg || "";
+        }
+    }
+});
 
     // Admin Panel Create Match Function
 function createNewMatch() {
