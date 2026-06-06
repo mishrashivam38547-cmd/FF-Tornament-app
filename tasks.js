@@ -1,9 +1,11 @@
-// 🎁 USER SIDE: SOCIAL TASK LOGIC
+// 🎁 USER SIDE: HAR TASK KA ALAG PROOF SUBMIT SYSTEM
 window.submitTaskProof = function() {
     let user = firebase.auth().currentUser;
     if (!user) { return alert("⚠️ Kripya pehle login karein!"); }
 
+    let taskType = document.getElementById('task-type-select').value;
     let fileInput = document.getElementById('task-screenshot');
+
     if (!fileInput.files || fileInput.files.length === 0) {
         return alert("⚠️ Kripya join karne ka screenshot upload karein!");
     }
@@ -18,28 +20,18 @@ window.submitTaskProof = function() {
             uid: user.uid,
             email: user.email || "No Email",
             screenshot: base64Image,
+            taskType: taskType, // WhatsApp ya Instagram
             status: "Pending",
             time: Date.now()
         };
 
-        database.ref('socialBonusRequests/' + user.uid).set(taskData)
+        // Unique key bana rahe hain taaki dono task alag-alag dikhein (e.g., USERID_WhatsApp)
+        let uniqueTaskKey = user.uid + "_" + taskType;
+
+        database.ref('socialBonusRequests/' + uniqueTaskKey).set(taskData)
         .then(() => {
-            alert("🎉 Aapka proof submit ho gaya hai! Admin verify karke 10-15 minute mein aapka bonus wallet mein credit kar dega.");
-            let zone = document.getElementById('free-entry-zone');
-            if (zone) zone.style.display = 'none';
+            alert("🎉 Aapka " + taskType + " proof submit ho gaya hai! Admin verify karke paise credit kar dega.");
         }).catch(err => alert("Error: " + err.message));
     };
     reader.readAsDataURL(file);
 };
-
-// User login state check karke box hide karna (Optional but Good)
-firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        database.ref('users/' + user.uid + '/freeBonusClaimed').once('value', (snapshot) => {
-            if (snapshot.val() === true) {
-                let zone = document.getElementById('free-entry-zone');
-                if (zone) zone.style.display = 'none';
-            }
-        });
-    }
-});
