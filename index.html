@@ -325,28 +325,43 @@ window.addEventListener('appinstalled', () => {
             });
         }
 
-        // 🔄 FIREBASE AUTH STATE OBSERVER (Hamesha check karega banda login hai ya nahi)
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User login hai -> Main App dikhao, Login Screen chupao
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
+        // 🔄 Firebase Auth State Listener
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // Current user ki unique ID nikalien
+        let currentUid = user.uid; 
+        
+        // Screen par user ki UID show karein
+        let uidElement = document.getElementById('user-display-uid');
+        if (uidElement) {
+            uidElement.innerText = currentUid;
+        }
 
-                userSessionUID = user.uid; // Unique Google ID
-                playerIGN = user.displayName; // Google Name
-
-                document.getElementById('welcome-username').innerText = "🎮 " + playerIGN;
-
-                // Realtime me user ka account balance sync aur create karein
-                setupUserDatabase();
-                startLiveListeners();
-            } else {
-                // User login nahi hai -> Login Screen dikhao, App chupao
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('app-container').style.display = 'none';
-            }
+        // 💾 Backup ke liye database mein user block update/sync zaroor karein
+        firebase.database().ref('users/' + currentUid).update({
+            uid: currentUid,
+            name: user.displayName || "Gamer",
+            email: user.email
         });
+        
+    } else {
+        // Agar user login nahi hai toh login page par bheinjein
+        console.log("User logged out");
+    }
+});
 
+// 📋 Copy Button Logic
+function copyAppUid() {
+    let uidText = document.getElementById('user-display-uid').innerText;
+    if (uidText && !uidText.includes("Loading")) {
+        navigator.clipboard.writeText(uidText).then(() => {
+            alert("📋 UID Copy ho gayi hai: " + uidText);
+        }).catch(err => {
+            alert("Kuch dikkat aayi, kripya manual copy karein.");
+        });
+    }
+}
+        
  function setupUserDatabase() {
     if (!userSessionUID) return;
     database.ref('users/' + userSessionUID).once('value', (snapshot) => {
