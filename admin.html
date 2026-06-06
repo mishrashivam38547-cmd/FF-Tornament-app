@@ -373,7 +373,7 @@ window.listenToParticipants = function(matchId) {
     });
 };
     // ==========================================
-// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC
+// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC (WITH SCREENSHOT + BALANCE FIX)
 // ==========================================
 if (typeof firebase !== 'undefined') {
     firebase.database().ref('depositRequests').on('value', (snapshot) => {
@@ -392,12 +392,26 @@ if (typeof firebase !== 'undefined') {
             let req = data[key];
             if (req.status === "Pending" || !req.status) {
                 hasPendingDeposit = true;
+                
+                // 📸 Screenshot path mapping (Alag-alag namon se dhoondhne ke liye backup checks)
+                let proofImg = req.screenshot || req.proofUrl || req.imageUrl || req.img || "";
+
                 let card = document.createElement('div');
-                card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333;";
+                card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333; font-family: 'Segoe UI', sans-serif;";
+                
                 card.innerHTML = `
                     <p style="margin: 3px 0;"><b>User UID:</b> ${req.uid || 'N/A'}</p>
                     <p style="margin: 3px 0; color:#28a745; font-weight:bold;"><b>Amount:</b> ₹${req.amount}</p>
                     <p style="margin: 3px 0;"><b>TXN ID / Ref:</b> ${req.txnId || req.refNo || 'N/A'}</p>
+                    
+                    <div style="margin: 8px 0;">
+                        <b>Payment Proof Screenshot:</b><br>
+                        ${proofImg ? 
+                            `<img src="${proofImg}" style="max-width: 100%; max-height: 250px; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px;">` : 
+                            `<span style="color:#dc3545; font-size:12px;">⚠️ User ne screenshot upload nahi kiya ya path galat hai!</span>`
+                        }
+                    </div>
+
                     <div style="margin-top: 8px;">
                         <button type="button" onclick="window.approveDepositMoney('${key}', '${req.uid}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Approve (Add Money)</button>
                         <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject</button>
@@ -412,30 +426,28 @@ if (typeof firebase !== 'undefined') {
 
 window.approveDepositMoney = function(requestKey, userUid, amount) {
     let addAmount = Number(amount);
-    firebase.database().ref('users/' + userUid).once('value', (snapshot) => {
-        let userData = snapshot.val();
-        let currentBalance = 0;
-        if (userData) { currentBalance = Number(userData.wallet) || Number(userData.balance) || 0; }
+    if (!userUid || !addAmount) {
+        alert("❌ Error: User UID ya Amount missing hai!");
+        return;
+    }
+
+    // Direct strict user reference update bina kisi extra check ke fail hue data add karega
+    firebase.database().ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
+        let currentBalance = Number(snapshot.val()) || 0;
         let newBalance = currentBalance + addAmount;
 
         let updates = {};
+        // Dono fields me numeric value push karein taaki user app crash na ho
         updates['users/' + userUid + '/wallet'] = newBalance;
-        updates['users/' + userUid + '/balance'] = newBalance;
+        updates['users/' + userUid + '/balance'] = newBalance; 
         updates['depositRequests/' + requestKey + '/status'] = "Approved";
 
         firebase.database().ref().update(updates).then(() => {
-            alert("✅ Deposit Approved! Wallet mein ₹" + addAmount + " add ho gaye hain.");
-        }).catch(err => alert("Error: " + err.message));
+            alert("✅ Deposit Approved! User ke wallet mein direct ₹" + addAmount + " add ho gaye hain. Naya balance: ₹" + newBalance);
+        }).catch(err => alert("❌ Database Error: " + err.message));
     });
 };
-
-window.rejectDepositMoney = function(requestKey) {
-    if (confirm("Kya aap is deposit ko reject karna chahte hain?")) {
-        firebase.database().ref('depositRequests/' + requestKey).update({ status: "Rejected" })
-        .then(() => alert("❌ Deposit request reject kar di gayi."))
-        .catch(err => alert("Error: " + err.message));
-    }
-};
+            
 
 // ==========================================
 // 💸 2. WITHDRAWAL (PAYOUT) REQUESTS LOGIC
