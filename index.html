@@ -186,48 +186,48 @@
                 </div>
             </div>
         </div>
-
-        <div class="main-content">
-            <div class="action-buttons-bottom">
-                <button class="btn btn-withdraw" onclick="openWithdrawModal()">📤 Withdraw Balance</button>
-            </div>
-            <div class="card" id="free-entry-zone" style="background: #1e1e1e; padding: 15px; margin: 15px; border-radius: 12px; border: 2px dashed #ff4e50; text-align: center; color: #fff; font-family: 'Segoe UI', sans-serif;">
-    <h3 style="margin: 0 0 5px 0; color: #ff4e50; font-size: 16px;">🎁 Per Channel Joining Bonus!</h3>
-    <p style="font-size: 11px; color: #ccc; margin: 0 0 12px 0;">Har ek channel join karne par alag-alag cash paayein!</p>
+<div class="main-content">
     
-    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-        <a href="whatsapp://channel/0029VbC6n6NBfxoESrPsba18" onclick="window.location.href='https://whatsapp.com/channel/0029VbC6n6NBfxoESrPsba18'; return false;" style="background: #25D366; color: white; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: block; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            🟢 Join WhatsApp (Get ₹5)
-        </a>
+    <div class="action-buttons-bottom">
+        <button class="btn btn-withdraw" onclick="openWithdrawModal()">📥 Withdraw Balance</button>
+    </div>
+
+    <div class="card" id="free-entry-zone" style="background: #1e1e1e; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #333;">
+        <h3 style="margin: 0 0 5px 0; color: #ff4e50; font-size: 14px;">🎁 Per Channel Joining Bonus!</h3>
+        <p style="font-size: 11px; color: #ccc; margin: 0 0 12px 0;">Har ek channel join karne par alag-alag reward milega.</p>
         
-        <a href="instagram://user?username=pramod_admin" onclick="window.location.href='https://www.instagram.com/pramod_admin?igsh=djZ1YTQydHEwZGkw'; return false;" style="background: linear-gradient(45deg, #f09433, #bc1888); color: white; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: block; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            📸 Follow Instagram (Get ₹5)
-        </a>
-    </div>
-            </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <a href="#" onclick="window.location.href=globalWhatsAppChannelLink" style="text-decoration: none; color: #28a745; font-size: 13px; font-weight: bold;">🟢 Join WhatsApp (Get ₹5)</a>
+            <a href="#" style="text-decoration: none; color: #ff9f43; font-size: 13px; font-weight: bold;">📸 Follow Instagram (Get ₹5)</a>
+        </div>
+
+        <div style="margin-bottom: 12px; text-align: left;">
+            <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px;">Kiska proof upload kar rahe hain?</label>
+            <select id="task-type-select" style="width: 100%; padding: 8px; background: #333; color: #fff; border: 1px solid #444; border-radius: 5px;">
+                <option value="WhatsApp">WhatsApp Channel (₹5)</option>
+                <option value="Instagram">Instagram Profile (₹5)</option>
+            </select>
             
-
-    <div style="margin-bottom: 12px; text-align: left;">
-        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px;">Kiska proof upload kar rahe hain?:</label>
-        <select id="task-type-select" style="width: 100%; padding: 8px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; font-size:12px; margin-bottom:10px;">
-            <option value="WhatsApp">WhatsApp Channel (₹5)</option>
-            <option value="Instagram">Instagram Profile (₹5)</option>
-        </select>
-
-        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px;">Upload Screenshot:</label>
-        <input type="file" id="task-screenshot" accept="image/*" style="width: 100%; color: #fff; font-size: 12px;">
+            <label style="font-size: 12px; color: #aaa; display: block; margin-top: 10px; margin-bottom: 4px;">Upload Screenshot:</label>
+            <input type="file" id="task-screenshot" accept="image/*" style="width: 100%; color: #fff; font-size: 12px;">
+        </div>
+        <button id="btn-submit-task" onclick="window.submitTaskProof()" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">🚀 Submit This Proof</button>
     </div>
 
-    <button id="btn-submit-task" onclick="window.submitTaskProof()" style="width: 100%; padding: 10px; background: #ff4e50; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
-        🚀 Submit This Proof
-    </button>
-            </div>
+    <div id="matches-tab-content">
+        <div id="dynamic-matches-container">
+            <p style="color: #aaa; text-align: center; font-size: 13px; padding: 20px;">🔄 Firebase se matches load ho rahe hain...</p>
+        </div>
+    </div>
+
+    <div class="tabs" style="display: flex; justify-content: space-around; margin-top: 20px; background: #1a1a1a; padding: 10px; border-radius: 8px;">
+        <button class="tab-btn active" onclick="switchTab('matches')" style="background: #ff4e50; color: white; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Matches</button>
+        <button class="tab-btn" onclick="switchTab('history')" style="background: #333; color: #ccc; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">History</button>
+        <button class="tab-btn" onclick="switchTab('giveaway')" style="background: #333; color: #ccc; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Giveaway Claim</button>
+    </div>
+
+</div>
             
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('matches')">Matches</button>
-                <button class="tab-btn" onclick="switchTab('history')">History</button>
-                <button class="tab-btn" onclick="switchTab('giveaway')">Giveaway Claim</button>
-            </div>
 
             <div id="matches-tab" class="tab-content active">
     <div id="active-matches-container">
@@ -671,52 +671,77 @@ function joinMatch(matchId, entryFee) {
         alert("❌ Transaction failed: " + err.message);
     });
 }
-// 🔄 LIVE STATUS MONITOR: ROOM ID & PASSWORD WAITING SYSTEM
-function checkMatchStatus(matchId) {
+// 🔄 LIVE AUTOMATIC MATCH INJECTOR LOOP
+function checkMatchStatus() {
     if (!userSessionUID) return;
 
-    // Firebase database se 'matches/match_01' ka data live listen karein
-    firebase.database().ref('matches/' + matchId).on('value', (snapshot) => {
-        const matchData = snapshot.val();
-        const statusArea = document.getElementById('match-status-area');
-        if (!statusArea) return;
+    // Firebase database se matches data continuously read karein
+    firebase.database().ref('matches').on('value', (snapshot) => {
+        const matchesData = snapshot.val();
+        const container = document.getElementById('dynamic-matches-container');
+        
+        if (!container) return;
+        container.innerHTML = ""; // Container clear karein
 
-        // 1. Check karein kya player is match me already joined hai?
-        if (matchData && matchData.participants && matchData.participants[userSessionUID]) {
-            
-            // Modal khula ho toh use automatic band kar do kyunki player already join hai
-            if(typeof closeJoinModal === "function") { closeJoinModal(); }
+        if (!matchesData) {
+            container.innerHTML = `<p style="color: #aaa; text-align: center; font-size: 13px; padding: 20px;">🚫 No upcoming matches available currently.</p>`;
+            return;
+        }
 
-            // 2. Joined hai, toh check karo kya Admin ne Room ID & Pass daal diya hai?
-            if (matchData.roomId && matchData.roomPassword) {
-                statusArea.innerHTML = `
-                    <div style="background: #141414; padding: 12px; border-radius: 8px; border: 2px solid #28a745; text-align: center; margin: 10px 0;">
-                        <span style="color: #28a745; font-weight: bold; font-size: 14px;">✅ ROOM ID & PASS READY</span>
-                        <div style="margin-top: 8px; font-size: 13px; color: #fff; text-align: left; padding-left: 10px;">
-                            <p style="margin: 4px 0;"><strong>Room ID:</strong> <span style="color: #ff9f43; user-select: all;">${matchData.roomId}</span></p>
-                            <p style="margin: 4px 0;"><strong>Password:</strong> <span style="color: #ff9f43; user-select: all;">${matchData.roomPassword}</span></p>
+        // Firebase ke saare matches loop ke jariye display karein
+        Object.keys(matchesData).forEach((matchId) => {
+            const match = matchesData[matchId];
+            const entryFee = parseFloat(match.entryFee) || 10;
+            const prizePool = match.prizePool || "100";
+            const matchName = match.matchName || "🔥 Free Fire Solo Match";
+
+            // Card structure build karein
+            let cardHtml = `
+                <div class="match-card" style="background: #1e1e1e; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: left;">
+                    <h3 style="margin: 0 0 6px 0; color: #ff9f43; font-size: 15px;">${matchName}</h3>
+                    <p style="margin: 5px 0 12px 0; font-size: 12px; color: #ccc;">
+                        Entry Fee: <span style="color: #ff4e50; font-weight: bold;">₹${entryFee}</span> | 
+                        Prize Pool: <span style="color: #28a745; font-weight: bold;">₹${prizePool}</span>
+                    </p>
+                    <div id="status-area-${matchId}">
+            `;
+
+            // Condition 1: Check if this logged-in user is already a participant
+            if (match.participants && match.participants[userSessionUID]) {
+                if (match.roomId && match.roomPassword) {
+                    // Room details unlocked screen
+                    cardHtml += `
+                        <div style="background: #141414; padding: 10px; border-radius: 6px; border: 2px solid #28a745; text-align: center;">
+                            <span style="color: #28a745; font-weight: bold; font-size: 13px;">✅ ROOM ID & PASS READY</span>
+                            <div style="margin-top: 6px; font-size: 12px; color: #fff; text-align: left;">
+                                <p style="margin: 3px 0;"><strong>Room ID:</strong> <span style="color: #ff9f43; user-select: all;">${match.roomId}</span></p>
+                                <p style="margin: 3px 0;"><strong>Password:</strong> <span style="color: #ff9f43; user-select: all;">${match.roomPassword}</span></p>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    // Registered but waiting screen
+                    cardHtml += `
+                        <div style="background: #141414; padding: 10px; border-radius: 6px; border: 1px dashed #ff9f43; text-align: center;">
+                            <span style="color: #ff9f43; font-weight: bold; font-size: 12px;">🎮 Status: Joined (Registered)</span>
+                            <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;">Room ID aur Password ka wait karein, match shuru hone se 15 minute pehle yahan dikhega.</p>
+                        </div>
+                    `;
+                }
             } else {
-                // 3. User joined hai par abhi admin ne details upload nahi ki (Waiting State)
-                statusArea.innerHTML = `
-                    <div style="background: #141414; padding: 12px; border-radius: 8px; border: 2px dashed #ff9f43; text-align: center; margin: 10px 0;">
-                        <span style="color: #ff9f43; font-weight: bold; font-size: 13px;">🎮 Status: Joined (Registered)</span>
-                        <p style="color: #aaa; font-size: 11px; margin: 5px 0 0 0;">Room ID aur Password ka wait karein, match shuru hone se 15 minute pehle yahan dikhega.</p>
-                    </div>
+                // Not registered yet -> Normal functional button to open info or join directly
+                cardHtml += `
+                    <button class="btn-submit" style="background: #28a745; width: 100%; padding: 10px; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px;" onclick="joinMatch('${matchId}', ${entryFee})">
+                        Confirm & Join Match
+                    </button>
                 `;
             }
-        } else {
-            // 4. Agar user ne join nahi kiya hai, toh normal Button dikhao
-            statusArea.innerHTML = `
-                <button class="btn-submit" style="background: #28a745; width: 100%; padding: 10px; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="joinMatch('${matchId}', 10)">
-                    Confirm & Join Match
-                </button>
-            `;
-        }
+
+            cardHtml += `</div></div>`;
+            container.innerHTML += cardHtml; // UI update
+        });
     });
-}
+        }
         
         function uploadGiveawayPhotoAndSend() {
             let name = document.getElementById('winner-name').value.trim();
