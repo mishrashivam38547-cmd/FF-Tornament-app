@@ -358,7 +358,8 @@ firebase.auth().onAuthStateChanged((user) => {
         // ⚡ 3. Live Listeners aur Database setup ko trigger karein
         setupUserDatabase();
         startLiveListeners();
-
+checkMatchStatus('match_01');
+        
     } else {
         // Global variables clear karein
         userSessionUID = "";
