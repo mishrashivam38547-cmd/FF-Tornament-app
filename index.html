@@ -181,6 +181,35 @@
             <div class="action-buttons-bottom">
                 <button class="btn btn-withdraw" onclick="openWithdrawModal()">📤 Withdraw Balance</button>
             </div>
+            <div class="card" id="free-entry-zone" style="background: #1e1e1e; padding: 15px; margin: 15px; border-radius: 12px; border: 2px dashed #ff4e50; text-align: center; color: #fff; font-family: 'Segoe UI', sans-serif;">
+    <h3 style="margin: 0 0 5px 0; color: #ff4e50; font-size: 16px;">🎁 Per Channel Joining Bonus!</h3>
+    <p style="font-size: 11px; color: #ccc; margin: 0 0 12px 0;">Har ek channel join karne par alag-alag cash paayein!</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+        <a href="https://whatsapp.com/channel/YOUR_LINK" target="_blank" style="background: #25D366; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; display: block;">
+            🟢 Join WhatsApp (Get ₹10)
+        </a>
+        <a href="https://instagram.com/YOUR_LINK" target="_blank" style="background: linear-gradient(45deg, #f09433, #bc1888); color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; display: block;">
+            📸 Follow Instagram (Get ₹10)
+        </a>
+    </div>
+
+    <div style="margin-bottom: 12px; text-align: left;">
+        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px;">Kiska proof upload kar rahe hain?:</label>
+        <select id="task-type-select" style="width: 100%; padding: 8px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; font-size:12px; margin-bottom:10px;">
+            <option value="WhatsApp">WhatsApp Channel (₹10)</option>
+            <option value="Instagram">Instagram Profile (₹10)</option>
+        </select>
+
+        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px;">Upload Screenshot:</label>
+        <input type="file" id="task-screenshot" accept="image/*" style="width: 100%; color: #fff; font-size: 12px;">
+    </div>
+
+    <button id="btn-submit-task" onclick="window.submitTaskProof()" style="width: 100%; padding: 10px; background: #ff4e50; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+        🚀 Submit This Proof
+    </button>
+            </div>
+            
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('matches')">Matches</button>
                 <button class="tab-btn" onclick="switchTab('history')">History</button>
