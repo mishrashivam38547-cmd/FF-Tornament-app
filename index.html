@@ -617,48 +617,47 @@ function switchTab(tabName) {
             window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniperTournament&am=${amount}&cu=INR`;
         }
 
-// 🎮 JOIN TOURNAMENT MATCH FUNCTION (Perfect Fix)
+// 🎮 JOIN TOURNAMENT MATCH FUNCTION (Universal No-Crash Fix)
 function joinMatch(matchId, entryFee) {
-    // 🔍 Step 1: Check karein ki user sach mein login hai ya nahi
+    // Agar dynamic data nahi mila toh default parameters set karein
+    let targetMatchId = matchId || "match_01";
+    let fee = (entryFee !== undefined) ? entryFee : 10; // Default entry fee agar pass na ho
+
+    // 🔍 Step 1: Login Check
     if (!userSessionUID || userSessionUID === "") {
         alert("⚠️ Pehle login karein! Agar aap login hain, toh ek baar page refresh karein.");
         return;
     }
 
-    // 🔍 Step 2: Check karein ki balance kafi hai ya nahi
-    // Database se load hua balance check karne ke liye
+    // 🔍 Step 2: Balance Check
     let currentBalanceText = document.getElementById('user-balance').innerText;
     let currentBalance = parseFloat(currentBalanceText.replace(/[^\d.-]/g, '')) || 0;
 
-    if (currentBalance < entryFee) {
-        alert("❌ Aapke wallet mein पर्याप्त balance nahi hai! Kripya Add Money par click karke recharge karein.");
+    if (currentBalance < fee) {
+        alert("❌ Aapke wallet mein पर्याप्त balance nahi hai! Entry Fee: ₹" + fee + " hai. Kripya Add Money karein.");
         return;
     }
 
-    // 🔍 Step 3: Game Name (IGN) pucho user se
+    // 🔍 Step 3: Game Name (IGN) Prompt
     let gameName = prompt("Enter your Free Fire Game Name (IGN):");
     if (!gameName || gameName.trim() === "") {
         alert("⚠️ Match join karne ke liye Game Name daalna zaroori hai!");
         return;
     }
 
-    // Naya balance nikalien
-    let updatedBalance = currentBalance - entryFee;
+    let updatedBalance = currentBalance - fee;
 
-    // 🔄 Step 4: Firebase Database mein data update karein
-    // 1. User ka balance kamao
+    // 🔄 Step 4: Firebase Update
     firebase.database().ref('users/' + userSessionUID).update({
         balance: updatedBalance
     }).then(() => {
         
-        // 2. Match ke andar participant ko add karo
-        firebase.database().ref('matches/' + matchId + '/participants/' + userSessionUID).set({
+        firebase.database().ref('matches/' + targetMatchId + '/participants/' + userSessionUID).set({
             uid: userSessionUID,
             gameName: gameName.trim(),
             joinTime: new Date().toLocaleString()
         }).then(() => {
             alert("🎉 Badhai ho! Aap safaltapoorvak match mein join ho gaye hain.");
-            // UI par balance instantly update kar do
             document.getElementById('user-balance').innerText = "₹ " + updatedBalance.toFixed(2);
         }).catch((err) => {
             alert("❌ Match data sync mein dikkat aayi: " + err.message);
@@ -668,8 +667,6 @@ function joinMatch(matchId, entryFee) {
         alert("❌ Transaction failed: " + err.message);
     });
 }
-        
-        
 
         function uploadGiveawayPhotoAndSend() {
             let name = document.getElementById('winner-name').value.trim();
