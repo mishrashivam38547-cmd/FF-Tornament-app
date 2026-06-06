@@ -320,42 +320,60 @@ window.addEventListener('appinstalled', () => {
             });
         }
 
-        // 🔄 Firebase Auth State Listener
+  // 🔐 FIREBASE AUTH STATE LISTENER (Hamesha check karega banda login hai ya nahi)
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-        // Current user ki unique ID nikalien
-        let currentUid = user.uid; 
-        
-        // Screen par user ki UID show karein
-        let uidElement = document.getElementById('user-display-uid');
-        if (uidElement) {
-            uidElement.innerText = currentUid;
-        }
+        // 🚀 1. Global variables ko instantly fill karein (Sabse Zaroori Fix)
+        userSessionUID = user.uid;
+        playerIGN = user.displayName || "Gamer";
 
-        // 💾 Backup ke liye database mein user block update/sync zaroor karein
-        firebase.database().ref('users/' + currentUid).update({
-            uid: currentUid,
-            name: user.displayName || "Gamer",
-            email: user.email
+        // Screen par user ki unique details show karein
+        let uidElement = document.getElementById('user-display-uid');
+        if (uidElement) uidElement.innerText = userSessionUID;
+
+        let welcomeElement = document.getElementById('welcome-username');
+        if (welcomeElement) welcomeElement.innerText = "🎮 " + playerIGN;
+
+        // User login hai -> Main App dikhao, Login Screen chupao
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+
+        // 🔄 2. Backup aur Sync ke liye Realtime Database mein block update karein
+        firebase.database().ref('users/' + userSessionUID).update({
+            uid: userSessionUID,
+            name: playerIGN,
+            email: user.email || ""
         });
-        
+
+        // ⚡ 3. Live Listeners aur Database setup ko trigger karein
+        setupUserDatabase();
+        startLiveListeners();
+
     } else {
+        // Global variables clear karein
+        userSessionUID = "";
+        playerIGN = "";
+        
         // Agar user login nahi hai toh login page par bheinjein
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app-container').style.display = 'none';
         console.log("User logged out");
     }
 });
 
-// 📋 Copy Button Logic
+// 📋 Sahi Copy Button Logic (Global Variable Se)
 function copyAppUid() {
-    let uidText = document.getElementById('user-display-uid').innerText;
-    if (uidText && !uidText.includes("Loading")) {
-        navigator.clipboard.writeText(uidText).then(() => {
-            alert("📋 UID Copy ho gayi hai: " + uidText);
+    if (userSessionUID) {
+        navigator.clipboard.writeText(userSessionUID).then(() => {
+            alert("📋 UID Copy ho gayi hai: " + userSessionUID);
         }).catch(err => {
             alert("Kuch dikkat aayi, kripya manual copy karein.");
         });
+    } else {
+        alert("⚠️ Pehle login hone ka intezar karein!");
     }
 }
+        
         
  function setupUserDatabase() {
     if (!userSessionUID) return;
