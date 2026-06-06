@@ -48,28 +48,40 @@ firebase.database().ref('socialBonusRequests').on('value', (snapshot) => {
 });
 
 window.approveSocialBonus = function(requestKey, userUid, taskType, prize) {
-    // User ka purana wallet balance fetch karo
-    firebase.database().ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
-        let currentBalance = snapshot.val() || 0;
-        let newBalance = currentBalance + prize; // ₹5 add ho jayega
+    // Math checks lagaye hain taaki number sahi se plus ho
+    let prizeAmount = Number(prize) || 5; 
 
+    // 1. Pehle user ka wallet path confirm karke read karte hain
+    firebase.database().ref('users/' + userUid).once('value', (snapshot) => {
+        let userData = snapshot.val();
+        
+        if (!userData) {
+            alert("❌ Error: User database mein nahi mila! UID check karein.");
+            return;
+        }
+
+        // 2. Agar wallet key nahi milti, toh balance check karo (Dono me se jo bhi ho)
+        let currentBalance = 0;
+        if (userData.wallet !== undefined) {
+            currentBalance = Number(userData.wallet) || 0;
+        } else if (userData.balance !== undefined) {
+            currentBalance = Number(userData.balance) || 0;
+        }
+
+        let newBalance = currentBalance + prizeAmount; 
+
+        // 3. Ek sath dono paths par balance update bhej rahe hain taaki kisi bhi naam se save ho, kaam kar jaye!
         let updates = {};
         updates['users/' + userUid + '/wallet'] = newBalance;
+        updates['users/' + userUid + '/balance'] = newBalance; // Backup path
         updates['users/' + userUid + '/claimed_' + taskType] = true; 
         updates['socialBonusRequests/' + requestKey + '/status'] = "Approved";
 
+        // 4. Firebase mein direct write execute karo
         firebase.database().ref().update(updates).then(() => {
-            alert("✅ Approved! User ke wallet mein " + taskType + " ke liye direct ₹" + prize + " add ho gaye hain.");
-        }).catch(err => alert("Error: " + err.message));
+            alert("✅ Success! User ko ₹" + prizeAmount + " credit ho gaye hain. Naya balance: ₹" + newBalance);
+        }).catch(err => {
+            alert("❌ Database Error: " + err.message);
+        });
     });
-};
-
-window.rejectSocialBonus = function(requestKey) {
-    if (confirm("Kya aap is proof ko reject karna chahte hain?")) {
-        firebase.database().ref('socialBonusRequests/' + requestKey).update({
-            status: "Rejected"
-        }).then(() => {
-            alert("❌ Request reject kar di gayi.");
-        }).catch(err => alert("Error: " + err.message));
-    }
 };
