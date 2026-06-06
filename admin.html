@@ -118,6 +118,14 @@
 
             <div class="sub-section" style="border-left: 5px solid #2f3542; background: #f1f2f6;">
                 <h4 style="margin: 0 0 10px 0; color: #2f3542;">🔑 2. Room ID & Password Upload</h4>
+                
+                <div class="form-group">
+                    <label style="color: #e31e24;">🎯 Select Match First:</label>
+                    <select id="room-match-select">
+                        <option value="">-- Choose Target Match --</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label>Room ID:</label>
                     <input type="text" id="room-id" placeholder="Enter Room ID">
@@ -138,6 +146,14 @@
 
             <div class="sub-section" style="border-left: 5px solid #ffa500; background: #fffaf0;">
                 <h4 style="margin: 0 0 10px 0; color: #d48a00;">🏆 3. Watch Result Upload</h4>
+                
+                <div class="form-group">
+                    <label style="color: #e31e24;">🎯 Select Match for Result:</label>
+                    <select id="result-match-select">
+                        <option value="">-- Choose Target Match --</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label>Winner / Booyah Name:</label>
                     <input type="text" id="match-winner" placeholder="e.g., Silent Sniper 77">
@@ -220,11 +236,19 @@
             });
         }
 
-        // Realtime Tournament Fetcher
+        // Realtime Tournament Fetcher & Dropdown Populator
         database.ref('matches').on('value', (snapshot) => {
             const listContainer = document.getElementById('admin-matches-list');
+            const roomSelect = document.getElementById('room-match-select');
+            const resultSelect = document.getElementById('result-match-select');
+            
             if (!listContainer) return;
             listContainer.innerHTML = "";
+            
+            // Clear existing dropdown items except first
+            if(roomSelect) roomSelect.innerHTML = '<option value="">-- Choose Target Match --</option>';
+            if(resultSelect) resultSelect.innerHTML = '<option value="">-- Choose Target Match --</option>';
+            
             let data = snapshot.val();
 
             if (!data) {
@@ -234,13 +258,15 @@
 
             Object.keys(data).forEach(matchId => {
                 let match = data[matchId];
+                let displayTitle = (match.title || 'Solo Match') + " (" + (match.time || '') + ")";
+                
+                // Add to List
                 let matchRow = document.createElement('div');
                 matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; border:1px solid #ddd; text-align:left;";
-
                 matchRow.innerHTML = `
                     <div>
                         <strong>${match.title || 'Daily Clash Squad'}</strong>
-                        <div style="font-size:12px; color:#666;">Time: ${match.time} | Fee: ₹${match.fee}</div>
+                        <div style="font-size:12px; color:#666;">Time: ${match.time} | Fee: ₹${match.fee} | Status: <span style="color:red; font-weight:bold;">${match.matchStatus || 'Upcoming'}</span></div>
                         <p style="color: #007bff; font-weight: bold; font-size: 13px; margin: 5px 0;">📊 <span id="joined-count-${matchId}">Joined: Loading...</span></p>
                         <div style="margin-top: 5px;">
                             <button type="button" onclick="window.selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">Edit</button>
@@ -250,8 +276,80 @@
                 `;
                 listContainer.appendChild(matchRow);
                 window.listenToParticipants(matchId);
+
+                // Add options to drop-down list
+                if(roomSelect) {
+                    let opt = document.createElement('option');
+                    opt.value = matchId;
+                    opt.innerText = displayTitle;
+                    roomSelect.appendChild(opt);
+                }
+                if(resultSelect) {
+                    let opt = document.createElement('option');
+                    opt.value = matchId;
+                    opt.innerText = displayTitle;
+                    resultSelect.appendChild(opt);
+                }
             });
         });
+
+        // 🔑 FIXED ROOM CREDENTIALS UPLOADER FUNCTION
+        function updateRoomCredentials() {
+            let selectedMatchId = document.getElementById('room-match-select').value;
+            let roomId = document.getElementById('room-id').value;
+            let roomPass = document.getElementById('room-pass').value;
+            let status = document.getElementById('match-status').value;
+
+            if (!selectedMatchId) {
+                alert("❌ Please select a match from the dropdown menu first!");
+                return;
+            }
+            if (!roomId || !roomPass) {
+                alert("❌ Room ID aur Password fill karein!");
+                return;
+            }
+
+            // Updating exact sub-node parameters inside selected match index
+            database.ref('matches/' + selectedMatchId).update({
+                roomId: roomId,
+                roomPass: roomPass,
+                matchStatus: status
+            }).then(() => {
+                alert("🚀 Room ID & Password live sync hogye hain match mein!");
+                document.getElementById('room-id').value = "";
+                document.getElementById('room-pass').value = "";
+            }).catch((err) => {
+                alert("Database Error: " + err.message);
+            });
+        }
+
+        // 🏆 FIXED MATCH RESULT UPLOADER FUNCTION
+        function uploadMatchResult() {
+            let selectedMatchId = document.getElementById('result-match-select').value;
+            let winner = document.getElementById('match-winner').value;
+            let kills = document.getElementById('match-winner-kills').value;
+
+            if (!selectedMatchId) {
+                alert("❌ Match select karein jiska result upload karna hai!");
+                return;
+            }
+            if (!winner) {
+                alert("❌ Winner ka naam enter karein!");
+                return;
+            }
+
+            database.ref('matches/' + selectedMatchId).update({
+                winnerName: winner,
+                winnerKills: parseInt(kills) || 0,
+                matchStatus: "Completed"
+            }).then(() => {
+                alert("🏆 Match Ka Result Successfully Save Ho Gaya!");
+                document.getElementById('match-winner').value = "";
+                document.getElementById('match-winner-kills').value = "0";
+            }).catch((err) => {
+                alert("Error: " + err.message);
+            });
+        }
 
         window.listenToParticipants = function(matchId) {
             database.ref('matchParticipants/' + matchId).on('value', (snapshot) => {
@@ -280,7 +378,7 @@
         };
 
         // ==========================================================
-        // 💰 DEPOSIT (ADD MONEY) REQUESTS ENGINE (WITH SCREENSHOT FIX)
+        // 💰 DEPOSIT (ADD MONEY) REQUESTS ENGINE
         // ==========================================================
         database.ref('depositRequests').on('value', (snapshot) => {
             let depositDiv = document.getElementById('user-deposit-list');
