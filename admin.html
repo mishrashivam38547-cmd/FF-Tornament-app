@@ -372,6 +372,137 @@ window.listenToParticipants = function(matchId) {
         }
     });
 };
+    // ==========================================
+// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC
+// ==========================================
+if (typeof firebase !== 'undefined') {
+    firebase.database().ref('depositRequests').on('value', (snapshot) => {
+        let depositDiv = document.getElementById('user-deposit-list');
+        if (!depositDiv) return;
+        depositDiv.innerHTML = "";
+        let data = snapshot.val();
+
+        if (!data) {
+            depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
+            return;
+        }
+
+        let hasPendingDeposit = false;
+        Object.keys(data).forEach(key => {
+            let req = data[key];
+            if (req.status === "Pending" || !req.status) {
+                hasPendingDeposit = true;
+                let card = document.createElement('div');
+                card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333;";
+                card.innerHTML = `
+                    <p style="margin: 3px 0;"><b>User UID:</b> ${req.uid || 'N/A'}</p>
+                    <p style="margin: 3px 0; color:#28a745; font-weight:bold;"><b>Amount:</b> ₹${req.amount}</p>
+                    <p style="margin: 3px 0;"><b>TXN ID / Ref:</b> ${req.txnId || req.refNo || 'N/A'}</p>
+                    <div style="margin-top: 8px;">
+                        <button type="button" onclick="window.approveDepositMoney('${key}', '${req.uid}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Approve (Add Money)</button>
+                        <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject</button>
+                    </div>
+                `;
+                depositDiv.appendChild(card);
+            }
+        });
+        if (!hasPendingDeposit) depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
+    });
+}
+
+window.approveDepositMoney = function(requestKey, userUid, amount) {
+    let addAmount = Number(amount);
+    firebase.database().ref('users/' + userUid).once('value', (snapshot) => {
+        let userData = snapshot.val();
+        let currentBalance = 0;
+        if (userData) { currentBalance = Number(userData.wallet) || Number(userData.balance) || 0; }
+        let newBalance = currentBalance + addAmount;
+
+        let updates = {};
+        updates['users/' + userUid + '/wallet'] = newBalance;
+        updates['users/' + userUid + '/balance'] = newBalance;
+        updates['depositRequests/' + requestKey + '/status'] = "Approved";
+
+        firebase.database().ref().update(updates).then(() => {
+            alert("✅ Deposit Approved! Wallet mein ₹" + addAmount + " add ho gaye hain.");
+        }).catch(err => alert("Error: " + err.message));
+    });
+};
+
+window.rejectDepositMoney = function(requestKey) {
+    if (confirm("Kya aap is deposit ko reject karna chahte hain?")) {
+        firebase.database().ref('depositRequests/' + requestKey).update({ status: "Rejected" })
+        .then(() => alert("❌ Deposit request reject kar di gayi."))
+        .catch(err => alert("Error: " + err.message));
+    }
+};
+
+// ==========================================
+// 💸 2. WITHDRAWAL (PAYOUT) REQUESTS LOGIC
+// ==========================================
+if (typeof firebase !== 'undefined') {
+    firebase.database().ref('withdrawalRequests').on('value', (snapshot) => {
+        let withdrawDiv = document.getElementById('user-withdrawal-list');
+        if (!withdrawDiv) return;
+        withdrawDiv.innerHTML = "";
+        let data = snapshot.val();
+
+        if (!data) {
+            withdrawDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
+            return;
+        }
+
+        let hasPendingWithdraw = false;
+        Object.keys(data).forEach(key => {
+            let req = data[key];
+            if (req.status === "Pending" || !req.status) {
+                hasPendingWithdraw = true;
+                let card = document.createElement('div');
+                card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #dc3545; border-radius:4px; text-align: left; color:#333;";
+                card.innerHTML = `
+                    <p style="margin: 3px 0;"><b>User UID:</b> ${req.uid || 'N/A'}</p>
+                    <p style="margin: 3px 0; color:#dc3545; font-weight:bold;"><b>Withdraw Amount:</b> ₹${req.amount}</p>
+                    <p style="margin: 3px 0;"><b>UPI ID / Details:</b> ${req.upiId || req.upi || 'N/A'}</p>
+                    <div style="margin-top: 8px;">
+                        <button type="button" onclick="window.approveWithdrawal('${key}')" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Paid (Approve)</button>
+                        <button type="button" onclick="window.rejectWithdrawal('${key}', '${req.uid}', ${req.amount})" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject & Refund</button>
+                    </div>
+                `;
+                withdrawDiv.appendChild(card);
+            }
+        });
+        if (!hasPendingWithdraw) withdrawDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
+    });
+}
+
+window.approveWithdrawal = function(requestKey) {
+    firebase.database().ref('withdrawalRequests/' + requestKey).update({ status: "Approved" })
+    .then(() => alert("✅ Withdrawal status marked as Approved/Paid!"))
+    .catch(err => alert("Error: " + err.message));
+};
+
+window.rejectWithdrawal = function(requestKey, userUid, amount) {
+    if (confirm("Kya aap ise reject karke user ko paise refund karna chahte hain?")) {
+        let refundAmount = Number(amount);
+        
+        firebase.database().ref('users/' + userUid).once('value', (snapshot) => {
+            let userData = snapshot.val();
+            let currentBalance = 0;
+            if (userData) { currentBalance = Number(userData.wallet) || Number(userData.balance) || 0; }
+            let newBalance = currentBalance + refundAmount;
+
+            let updates = {};
+            updates['users/' + userUid + '/wallet'] = newBalance;
+            updates['users/' + userUid + '/balance'] = newBalance;
+            updates['withdrawalRequests/' + requestKey + '/status'] = "Rejected";
+
+            firebase.database().ref().update(updates).then(() => {
+                alert("❌ Withdrawal Rejected! ₹" + refundAmount + " user ke wallet mein wapas refund ho gaye hain.");
+            }).catch(err => alert("Error: " + err.message));
+        });
+    }
+};
+
     </script> 
     <div class="card" style="background: #fff; padding: 20px; margin: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; clear: both;">
         <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; text-align: left;">
