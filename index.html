@@ -109,31 +109,33 @@
     </div>
     </div>
 
-    <div id="app-container">
-        <div class="header">
-            <div class="header-left">
-                <!-- Main Header ke andar jahan aapka welcome text hai -->
-<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-    <img class="app-live-logo-src" src="" alt="App Logo" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; display: none;">
-    <h1 style="font-size: 18px; margin: 0; color: #fff;">RS7_esport</h1>
-</div>
-                <h2 id="welcome-username">Loading Player...</h2>
-                <button class="btn-logout" onclick="logoutFirebase()">Logout</button>
-                <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()">📢 Join Channel</button>
-                <button class="btn-channel" id="install-pwa-btn" style="background-color: #28a745; margin-top: 5px; display: block;">📥 Install App (RS7)</button>
-            </div>
+ <div id="app-container">
+        <div class="header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background-color: #1e1e1e; border-bottom: 1px solid #333; width: 100%; box-sizing: border-box; flex-wrap: nowrap;">
             
-            </div>
-            
-                        <div style="display: flex; align-items: center; gap: 15px; margin-left: auto; text-align: right; padding-right: 10px;">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: -2px;">Wallet Balance</span>
-                    <h3 id="user-balance" style="font-size: 20px; font-weight: bold; color: #28a745; margin: 0;">₹ 0.00</h3>
+            <div class="header-left" style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <img class="app-live-logo-src" src="" alt="App Logo" style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid #ff9f43; object-fit: cover; display: none;">
+                    <h1 style="font-size: 16px; margin: 0; color: #fff; font-weight: bold;">RS7_esport</h1>
                 </div>
-                <button onclick="openPaymentModal()" style="background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); flex-shrink: 0;">
+                <h2 id="welcome-username" style="font-size: 13px; margin: 2px 0 4px 0; color: #aaa;">Loading Player...</h2>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button class="btn-logout" onclick="logoutFirebase()" style="padding: 4px 8px; font-size: 11px;">Logout</button>
+                    <button class="btn-channel" id="whatsapp-channel-btn" onclick="openWhatsAppChannel()" style="padding: 4px 8px; font-size: 11px; margin: 0;">📢 Channel</button>
+                </div>
+                <button class="btn-channel" id="install-pwa-btn" style="background-color: #28a745; margin-top: 4px; display: block; padding: 4px 8px; font-size: 11px; width: fit-content;">📥 Install App (RS7)</button>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; text-align: right; flex-shrink: 0;">
+                <div style="display: flex; flex-direction: column; justify-content: center;">
+                    <span style="font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; margin-bottom: -2px;">Wallet Balance</span>
+                    <h3 id="user-balance" style="font-size: 16px; font-weight: bold; color: #28a745; margin: 0; padding: 0;">₹ 0.00</h3>
+                </div>
+                <button onclick="openPaymentModal()" style="background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: white; border: none; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.3); flex-shrink: 0; display: flex; align-items: center; gap: 3px;">
                     ➕ Add Money
                 </button>
-                        </div>
+            </div>
+
+        </div> ```
         
 
         <div id="payment-modal" class="modal">
