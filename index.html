@@ -166,9 +166,12 @@
                     <input type="text" id="player-name" placeholder="e.g., RRQ_JACK">
                     <label>Free Fire Game UID:</label>
                     <input type="text" id="player-uid" placeholder="e.g., 1234567890">
-                    <div id="uid-error" class="error-msg">❌ Invalid UID!</div>
-                    <button class="btn-submit" style="background: #28a745;" onclick="joinMatch('match_01', 10)">Confirm & Join Match</button>
-                </div>
+                    <div id="match-status-area" style="width: 100%; margin-top: 10px;">
+    <button class="btn-submit" style="background: #28a745; width: 100%; padding: 12px; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;" onclick="joinMatch('match_01', 10)">
+        Confirm & Join Match
+    </button>
+                    </div>
+                    
             </div>
         </div>
 
