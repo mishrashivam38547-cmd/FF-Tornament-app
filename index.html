@@ -347,52 +347,74 @@ window.addEventListener('appinstalled', () => {
             }
         });
 
-        function setupUserDatabase() {
-            database.ref('users/' + userSessionUID).once('value', (snapshot) => {
-                if (!snapshot.exists()) {
-                    database.ref('users/' + userSessionUID).set({
-                        uid: userSessionUID,
-                        name: playerIGN,
-                        balance: 0.00
-                    });
-                }
+ function setupUserDatabase() {
+    if (!userSessionUID) return;
+    database.ref('users/' + userSessionUID).once('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            database.ref('users/' + userSessionUID).set({
+                uid: userSessionUID,
+                name: playerIGN || "Gamer",
+                balance: 0.00,
+                wallet: 0.00 // Backup double syncing ke liye
             });
+        } else {
+            // Agar pehle se account hai toh bas check karlo uid available hai ya nahi
+            database.ref('users/' + userSessionUID).update({ uid: userSessionUID });
+        }
+    });
+}
+
+function startLiveListeners() {
+    if (!userSessionUID) return;
+
+    // 💰 Live Balance Sync
+    database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
+        let val = snapshot.val();
+        currentWalletBalance = val !== null ? parseFloat(val) : 0.00;
+        let balElement = document.getElementById('user-balance');
+        if (balElement) balElement.innerText = "₹ " + currentWalletBalance.toFixed(2);
+    });
+
+    // 📥 User Side Live Deposit History Listener (Sahi Mapping Fix)
+    database.ref('depositRequests').on('value', (snapshot) => {
+        let container = document.getElementById('history-payment-container');
+        if (!container) return;
+        container.innerHTML = "";
+        let data = snapshot.val();
+        let count = 0;
+
+        if (!data) { 
+            container.innerHTML = "<p style='color:#777; font-size:13px;'>No history available.</p>"; 
+            return; 
         }
 
-        function startLiveListeners() {
-            // 💰 Live Balance Sync
-            database.ref('users/' + userSessionUID + '/balance').on('value', (snapshot) => {
-                let val = snapshot.val();
-                currentWalletBalance = val !== null ? parseFloat(val) : 0.00;
-                document.getElementById('user-balance').innerText = "₹ " + currentWalletBalance.toFixed(2);
-            });
+        for (let utr in data) {
+            let req = data[utr];
+            // Match with both backups (uid or userUID)
+            let reqUid = req.uid || req.userUID || "";
+            
+            if (reqUid === userSessionUID) {
+                count++;
+                let color = "#f39c12";
+                let statusText = "⏳ Pending Review";
+                if (req.status === "Approved") { color = "#28a745"; statusText = "✅ Approved & Added"; }
+                if (req.status === "Rejected") { color = "#dc3545"; statusText = "❌ Rejected"; }
 
-            // 📥 User Side Live Deposit History Listener
-            database.ref('depositRequests').on('value', (snapshot) => {
-                let container = document.getElementById('history-payment-container');
-                container.innerHTML = "";
-                let data = snapshot.val();
-                let count = 0;
-                if(!data) { container.innerHTML = "No history available."; return; }
-                
-                for(let utr in data) {
-                    let req = data[utr];
-                    if(req.userUID === userSessionUID) {
-                        count++;
-                        let color = "#f39c12"; 
-                        let statusText = "⏳ Pending Review";
-                        if(req.status === "Approved") { color = "#28a745"; statusText = "🎉 Approved & Added"; }
-                        if(req.status === "Rejected") { color = "#dc3545"; statusText = "❌ Rejected"; }
-                        
-                        container.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #333;">
-                            <strong>UTR:</strong> ${utr} | <strong>Amount:</strong> ₹${req.amount.toFixed(2)}<br>
-                            <span style="color:${color}; font-weight:bold;">${statusText}</span>
-                        </div>`;
-                    }
-                }
-                if(count === 0) { container.innerHTML = "No history available."; }
-            });
+                container.innerHTML += `
+                    <div style="padding:10px 0; border-bottom:1px solid #333; text-align:left; font-size:13px; color:#ddd;">
+                        <strong>UTR/TXN:</strong> ${req.txnId || req.refNo || utr} <br>
+                        <strong>Amount:</strong> ₹${parseFloat(req.amount).toFixed(2)} <br>
+                        <strong>Status:</strong> <span style="color:${color}; font-weight:bold;">${statusText}</span>
+                    </div>
+                `;
+            }
         }
+        if (count === 0) {
+            container.innerHTML = "<p style='color:#777; font-size:13px;'>No history available.</p>";
+        }
+    });
+                }
+     
 
         // --- Other Live Global Observers ---
         database.ref('appSettings/whatsappChannel').on('value', (snapshot) => {
@@ -561,31 +583,47 @@ function switchTab(tabName) {
         }
 
         function submitPaymentRequest() {
-            let amt = document.getElementById('pay-amount').value;
-            let utr = document.getElementById('pay-utr').value.trim();
-            let fileInput = document.getElementById('pay-screenshot');
-            let submitBtn = document.getElementById('btn-submit-req');
-            if(!amt || !utr) { alert("Kripya Amount aur UTR ID dono dalein!"); return; }
-            if(!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! 12 digits ka number hota hai."); return; }
-            if(fileInput.files.length === 0) { alert("❌ Kripya Screenshot select karein!"); return; }
+    let amt = document.getElementById('pay-amount').value;
+    let utr = document.getElementById('pay-utr').value.trim();
+    let fileInput = document.getElementById('pay-screenshot');
+    let submitBtn = document.getElementById('btn-submit-req');
 
-            submitBtn.innerText = "Uploading Screenshot..."; submitBtn.disabled = true;
-            let file = fileInput.files[0]; let formData = new FormData(); formData.append("image", file);
+    if (!amt || !utr) { alert("Kripya Amount aur UTR ID dono dalein!"); return; }
+    if (!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! 12 digits ka number hota hai."); return; }
+    if (fileInput.files.length === 0) { alert("❌ Kripya Screenshot select karein!"); return; }
 
-            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
-            .then(response => response.json())
-            .then(result => {
-                if(result.success) {
-                    let downloadURL = result.data.url; 
-                    database.ref('depositRequests/' + utr).set({
-                        userUID: userSessionUID, playerName: playerIGN, amount: parseFloat(amt), utrId: utr, screenshotUrl: downloadURL, status: "Pending"
-                    }).then(() => {
-                        alert("🎉 Request Submitted Successfully!");
-                        submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false; closePaymentModal();
-                    });
-                } else { alert("Upload Failed!"); submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false; }
-            }).catch(() => { submitBtn.disabled = false; });
+    submitBtn.innerText = "Uploading Screenshot..."; submitBtn.disabled = true;
+    let file = fileInput.files[0]; let formData = new FormData(); formData.append("image", file);
+
+    fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            let downloadURL = result.data.url;
+            
+            // 🚀 Generates a unique request key so it lists properly in admin panel
+            let newRequestKey = database.ref('depositRequests').push().key;
+
+            database.ref('depositRequests/' + newRequestKey).set({
+                requestId: newRequestKey,
+                uid: userSessionUID,         // 🔥 Admin panel maps this uid
+                userUID: userSessionUID,     // User side history matching
+                playerName: playerIGN || "Gamer",
+                amount: parseFloat(amt),
+                txnId: utr,                  // 🔥 Maps to Admin Txn ID
+                screenshot: downloadURL,     // 🔥 Direct match for image loader
+                status: "Pending"
+            }).then(() => {
+                alert("🎉 Request Submitted Successfully!");
+                submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false;
+                closePaymentModal(); // Modal close automatic
+            });
+        } else {
+            alert("Upload Failed!"); submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false;
         }
+    }).catch(() => { alert("❌ Upload Error!"); submitBtn.disabled = false; });
+        }
+        
 
         function submitWithdrawRequest() {
     let upi = document.getElementById('withdraw-upi').value.trim();
