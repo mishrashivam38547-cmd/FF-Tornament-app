@@ -412,9 +412,55 @@ if (typeof firebase !== 'undefined') {
                         }
                     </div>
 
-                    <div style="margin-top: 8px;">
-                        <button type="button" onclick="window.approveDepositMoney('${key}', '${req.uid}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Approve (Add Money)</button>
-                        <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject</button>
+// ==========================================
+// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC (FULL-PROOF FIX)
+// ==========================================
+if (typeof firebase !== 'undefined') {
+    firebase.database().ref('depositRequests').on('value', (snapshot) => {
+        let depositDiv = document.getElementById('user-deposit-list');
+        if (!depositDiv) return;
+        depositDiv.innerHTML = "";
+        let data = snapshot.val();
+
+        if (!data) {
+            depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
+            return;
+        }
+
+        let hasPendingDeposit = false;
+        Object.keys(data).forEach(key => {
+            let req = data[key];
+            if (req.status === "Pending" || !req.status) {
+                hasPendingDeposit = true;
+                
+                // 📸 Har sambhav key check karo screenshot ke liye
+                let proofImg = req.screenshot || req.screenshotUrl || req.proofUrl || req.imageUrl || req.img || req.proof || "";
+                
+                // 🔑 User identification backup ke saath
+                let dynamicUid = req.uid || req.userId || req.userUid || "N/A";
+                let userEmail = req.email || req.userEmail || "";
+
+                let card = document.createElement('div');
+                card.style = "background:#f9f9f9; padding:15px; margin-bottom:12px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+                
+                card.innerHTML = `
+                    <p style="margin: 4px 0;"><b>User UID:</b> <span style="color:#007bff;">${dynamicUid}</span></p>
+                    ${userEmail ? `<p style="margin: 4px 0;"><b>Email:</b> ${userEmail}</p>` : ''}
+                    <p style="margin: 4px 0; color:#28a745; font-weight:bold; font-size: 15px;"><b>Amount:</b> ₹${req.amount}</p>
+                    <p style="margin: 4px 0;"><b>TXN ID / Ref:</b> ${req.txnId || req.refNo || req.transactionId || 'N/A'}</p>
+                    
+                    <div style="margin: 10px 0;">
+                        <b>Payment Proof Screenshot:</b><br>
+                        ${proofImg ? 
+                            `<a href="${proofImg}" target="_blank"><img src="${proofImg}" style="max-width: 100%; max-height: 280px; border: 1px solid #ccc; margin-top: 5px; border-radius: 6px; display: block; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></a>
+                             <span style="font-size:11px; color:#666;">ℹ️ Photo par click karke badi screen par dekhein</span>` : 
+                            `<span style="color:#dc3545; font-size:12px; font-weight:bold; display:block; margin-top:5px;">⚠️ Screenshot nahi mila! (Check user app code keys)</span>`
+                        }
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <button type="button" onclick="window.approveDepositMoney('${key}', '${dynamicUid}', '${userEmail}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✅ Approve (Add Money)</button>
+                        <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">❌ Reject</button>
                     </div>
                 `;
                 depositDiv.appendChild(card);
@@ -424,31 +470,71 @@ if (typeof firebase !== 'undefined') {
     });
 }
 
-window.approveDepositMoney = function(requestKey, userUid, amount) {
+// 💰 SMART MONEY CREDITING FUNCTION
+window.approveDepositMoney = function(requestKey, userUid, userEmail, amount) {
     let addAmount = Number(amount);
-    if (!userUid || !addAmount) {
-        alert("❌ Error: User UID ya Amount missing hai!");
-        return;
+    if (!addAmount || isNaN(addAmount)) {
+        return alert("❌ Error: Amount valid nahi hai!");
     }
 
-    // Direct strict user reference update bina kisi extra check ke fail hue data add karega
-    firebase.database().ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
+    // 🚀 STAGE 1: Agar UID valid hai, toh direct root update chalao
+    if (userUid && userUid !== "N/A" && userUid !== "undefined") {
+        executeWalletAddition(userUid, addAmount, requestKey);
+    } 
+    // 🚀 STAGE 2: Agar UID "N/A" hai par Email available hai, toh users database scan karo
+    else if (userEmail && userEmail.trim() !== "") {
+        firebase.database().ref('users').once('value', (snapshot) => {
+            let usersData = snapshot.val();
+            let foundUid = null;
+            
+            if (usersData) {
+                Object.keys(usersData).forEach(uid => {
+                    if (usersData[uid].email && usersData[uid].email.toLowerCase() === userEmail.toLowerCase()) {
+                        foundUid = uid;
+                    }
+                });
+            }
+            
+            if (foundUid) {
+                executeWalletAddition(foundUid, addAmount, requestKey);
+            } else {
+                fallbackUidPrompt(addAmount, requestKey);
+            }
+        });
+    } 
+    // 🚀 STAGE 3: Bilkul aakhiri rasta - Admin se khud UID maango taaki paisa safe rahe
+    else {
+        fallbackUidPrompt(addAmount, requestKey);
+    }
+};
+
+// WALLET UPDATE LOGIC
+function executeWalletAddition(targetUid, amount, requestKey) {
+    firebase.database().ref('users/' + targetUid + '/wallet').once('value', (snapshot) => {
         let currentBalance = Number(snapshot.val()) || 0;
-        let newBalance = currentBalance + addAmount;
+        let newBalance = currentBalance + amount;
 
         let updates = {};
-        // Dono fields me numeric value push karein taaki user app crash na ho
-        updates['users/' + userUid + '/wallet'] = newBalance;
-        updates['users/' + userUid + '/balance'] = newBalance; 
+        updates['users/' + targetUid + '/wallet'] = newBalance;
+        updates['users/' + targetUid + '/balance'] = newBalance; // Backup syncing
         updates['depositRequests/' + requestKey + '/status'] = "Approved";
 
         firebase.database().ref().update(updates).then(() => {
-            alert("✅ Deposit Approved! User ke wallet mein direct ₹" + addAmount + " add ho gaye hain. Naya balance: ₹" + newBalance);
+            alert("✅ Success! Wallet mein ₹" + amount + " jod diye gaye hain.\nNaya Balance: ₹" + newBalance);
         }).catch(err => alert("❌ Database Error: " + err.message));
     });
-};
-            
+}
 
+// MANUAL UID PICKER PROMPT
+function fallbackUidPrompt(amount, requestKey) {
+    let manualUid = prompt("⚠️ Data adhoora hone ke karan user ki UID nahi mili.\n\nKripya user ki UID yahan sahi se paste karein taaki ₹" + amount + " uske account mein bheje ja sakein:");
+    if (manualUid && manualUid.trim() !== "") {
+        executeWalletAddition(manualUid.trim(), amount, requestKey);
+    } else {
+        alert("❌ Operation cancelled! Bina UID ke balance add nahi kiya ja sakta.");
+    }
+  }
+                        
 // ==========================================
 // 💸 2. WITHDRAWAL (PAYOUT) REQUESTS LOGIC
 // ==========================================
