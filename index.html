@@ -597,92 +597,7 @@ function switchTab(tabName) {
             window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniperTournament&am=${amount}&cu=INR`;
         }
 
-        function submitPaymentRequest() {
-    let amt = document.getElementById('pay-amount').value;
-    let utr = document.getElementById('pay-utr').value.trim();
-    let fileInput = document.getElementById('pay-screenshot');
-    let submitBtn = document.getElementById('btn-submit-req');
 
-    if (!amt || !utr) { alert("Kripya Amount aur UTR ID dono dalein!"); return; }
-    if (!/^[0-9]{12}$/.test(utr)) { alert("❌ Invalid UTR! 12 digits ka number hota hai."); return; }
-    if (fileInput.files.length === 0) { alert("❌ Kripya Screenshot select karein!"); return; }
-
-    submitBtn.innerText = "Uploading Screenshot..."; submitBtn.disabled = true;
-    let file = fileInput.files[0]; let formData = new FormData(); formData.append("image", file);
-
-    fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            let downloadURL = result.data.url;
-            
-            // 🚀 Generates a unique request key so it lists properly in admin panel
-            let newRequestKey = database.ref('depositRequests').push().key;
-
-            database.ref('depositRequests/' + newRequestKey).set({
-                requestId: newRequestKey,
-                uid: userSessionUID,         // 🔥 Admin panel maps this uid
-                userUID: userSessionUID,     // User side history matching
-                playerName: playerIGN || "Gamer",
-                amount: parseFloat(amt),
-                txnId: utr,                  // 🔥 Maps to Admin Txn ID
-                screenshot: downloadURL,     // 🔥 Direct match for image loader
-                status: "Pending"
-            }).then(() => {
-                alert("🎉 Request Submitted Successfully!");
-                submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false;
-                closePaymentModal(); // Modal close automatic
-            });
-        } else {
-            alert("Upload Failed!"); submitBtn.innerText = "2. Submit Payment Request"; submitBtn.disabled = false;
-        }
-    }).catch(() => { alert("❌ Upload Error!"); submitBtn.disabled = false; });
-        }
-        
-
-        function submitWithdrawRequest() {
-    let upi = document.getElementById('withdraw-upi').value.trim();
-    
-    // 🔴 FIX: parseFloat lagana zaroori hai taaki input "100" text se badal kar number 100 ban jaye
-    let amt = parseFloat(document.getElementById('withdraw-amount').value);
-    let btn = document.getElementById('btn-withdraw-req');
-
-    // Input Validations
-    if (!upi || isNaN(amt) || amt <= 0) { 
-        alert("❌ Kripya sahi UPI ID aur Amount bharein!"); 
-        return; 
-    }
-    
-    // 🛑 LOGIC FIX: Ab dono numbers hain, toh comparison 100% sahi hoga
-    if (amt > currentWalletBalance) { 
-        alert(`❌ Insufficient Balance!\nAapka balance ₹${currentWalletBalance.toFixed(2)} hai.`); 
-        return; 
-    }
-
-    // Request Processing
-    btn.innerText = "Sending Request..."; 
-    btn.disabled = true;
-    
-    let requestId = "WITHDRAW_" + Date.now();
-    database.ref('withdrawRequests/' + requestId).set({
-        requestId: requestId, 
-        userUID: userSessionUID, 
-        playerName: playerIGN, 
-        upiId: upi, 
-        amount: amt, 
-        status: "Pending"
-    }).then(() => {
-        alert("🎉 Withdrawal Request Submitted!");
-        btn.innerText = "Submit Withdrawal Request"; 
-        btn.disabled = false; 
-        closeWithdrawModal();
-    }).catch((error) => {
-        alert("❌ Error: " + error.message);
-        btn.innerText = "Submit Withdrawal Request"; 
-        btn.disabled = false;
-    });
-        }
-        
         function processJoinTournament() {
             let name = document.getElementById('player-name').value.trim();
             let uid = document.getElementById('player-uid').value.trim();
@@ -734,8 +649,11 @@ function switchTab(tabName) {
                 }
             }
         });
-    </script> 
-
-    <script src="tasks.js"></script>
+        <script>
+        <script src="tasks.js"></script>
+    
+    <script src="deposit.js"></script>
+    <script src="withdraw.js"></script>
 </body>
 </html>
+
