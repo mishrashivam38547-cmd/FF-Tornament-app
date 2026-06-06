@@ -7,14 +7,12 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-             <!-- 🔒 ONLY IN admin.html: PASSWORD PROTECTION -->
     <script>
         (function checkAdminPassword() {
             var correctPassword = "Shivam_ji07";
             var userAttempt = prompt("🔐 Security Verification:\n\nEnter Admin Password to Access Control Panel:");
 
             if (userAttempt === correctPassword) {
-                // Sahi password hone par admin content dikhao jab DOM load ho jaye
                 window.addEventListener('DOMContentLoaded', () => {
                     var container = document.getElementById('admin-secure-content');
                     if (container) {
@@ -23,7 +21,6 @@
                 });
                 console.log("Access Granted. Welcome Shivam!");
             } else {
-                // Galat password hone par alert do aur access block karo
                 alert("❌ Wrong Password! Access Denied.");
                 document.body.innerHTML = '<div style="text-align: center; margin-top: 100px; font-family: Arial, sans-serif;"><h1 style="color: #dc3545; font-size: 35px; font-weight: bold;">🔒 Access Denied</h1><p style="font-size: 18px; color: #666;">Aapke paas is admin panel ko access karne ki anumati nahi hai.</p><button onclick="location.reload()" style="padding: 12px 25px; background: #ff4e50; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px;">Retry Login</button></div>';
             }
@@ -38,619 +35,374 @@
         input[type="text"], input[type="number"], select, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .btn-update { background: #ff4e50; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 5px; }
         .btn-update:hover { background: #e03e40; }
-        .card { background: #fff9f9; border: 1px solid #ffe0e0; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
-        .request-box { border-left: 5px solid #ff4e50; background: #fafafa; padding: 10px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-action { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px; }
-        .btn-approve { background: #28a745; color: white; }
-        .btn-reject { background: #dc3545; color: white; }
-        .screenshot-link { color: #007bff; text-decoration: none; font-weight: bold; }
-        
-        /* Chhote Alag Sections ke liye Sub-styling */
+        .card { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .sub-section { background: #fafafa; border: 1px solid #e0e0e0; padding: 15px; margin-top: 15px; border-radius: 6px; }
     </style>
 </head>
 <body>
 
-    <!-- 🔒 Container ko shuru me hidden kiya security ke liye -->
     <div class="container" id="admin-secure-content" style="display: none;">
-    <h2>🛠️ Silent Sniper Admin Control Panel</h2>
-<!-- ⚙️ NEW BUTTON TO GO TO SETTINGS FILE -->
-<div style="margin-bottom: 20px; text-align: center;">
-    <a href="settings.html" style="display: inline-block; width: 100%; padding: 12px; background: #e31e24; color: white; border: none; border-radius: 6px; font-weight: bold; text-decoration: none; box-sizing: border-box; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        ⚙️ Open App Settings (WhatsApp & Giveaway Control)
-    </a>
-</div>
+        <h2>🛠️ Silent Sniper Admin Control Panel</h2>
 
-<div class="card" style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <h3 style="border-bottom: 2px solid #28a745; padding-bottom: 8px; margin-top: 0; color: #28a745;">🎁 Giveaway Rewards Management</h3>
-    <div class="form-group" style="margin-bottom: 12px;">
-        <label>Giveaway Title:</label>
-        <input type="text" id="admin-giveaway-title" placeholder="e.g., Free Fire Diamond Giveaway" style="width:100%; padding:8px; margin-top:5px;">
-    </div>
-    <div class="form-group" style="margin-bottom: 12px;">
-        <label>Giveaway Item Description:</label>
-        <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds (Photo Proof Required)" style="width:100%; padding:8px; margin-top:5px;">
-    </div>
-    <div class="form-group" style="margin-bottom: 12px;">
-        <label>Upload Giveaway Product Photo (Optional):</label>
-        <input type="file" id="admin-giveaway-file" style="width:100%; margin-top:5px;">
-        <input type="hidden" id="admin-giveaway-existing-img">
-    </div>
-    <div class="form-group" style="margin-bottom: 15px;">
-        <label>Giveaway Status:</label>
-        <select id="admin-giveaway-status" style="width:100%; padding:8px; margin-top:5px;">
-            <option value="Inactive">🔒 Inactive (Hide from Users)</option>
-            <option value="Active">🔓 Active (Show Form + Upload Input)</option>
-        </select>
-    </div>
-    <button id="btn-save-settings" onclick="updateGiveawayOnly()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">💾 Save Giveaway Settings Live</button>
-</div> 
-
-    <div class="card" style="background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <h2 style="margin-top: 0;">🎮 Live Match Control Panel</h2>
-
-    <div class="sub-section" style="border-left: 5px solid #007bff; background: #f4f7f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-        <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 All Created Tournaments (Manage / Delete)</h4>
-        <div id="admin-matches-list" style="max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
-            <p style="text-align: center; color: #777; margin: 0;">Loading tournaments from database...</p>
+        <div style="margin-bottom: 20px; text-align: center;">
+            <a href="settings.html" style="display: inline-block; width: 100%; padding: 12px; background: #e31e24; color: white; border: none; border-radius: 6px; font-weight: bold; text-decoration: none; box-sizing: border-box; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                ⚙️ Open App Settings (WhatsApp & Giveaway Control)
+            </a>
         </div>
-    </div>
 
-    <div class="sub-section" style="border-left: 5px solid #ff4e50; padding-left: 15px; margin-bottom: 20px;">
-        <h4 style="margin: 0 0 10px 0; color: #ff4e50;">📌 1. Create / Edit Match Info</h4>
-        <div class="form-group">
-            <label>Match Title</label>
-            <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
-        </div>
-        <div class="form-group">
-            <label>Match Time</label>
-            <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
-        </div>
-        <div class="form-group">
-            <label>Entry Fee (₹):</label>
-            <input type="number" id="match-fee" value="20">
-        </div>
-        <div class="form-group">
-            <label>Per Kill Reward (₹):</label>
-            <input type="number" id="match-kill" value="5">
-        </div>
-        <div class="form-group">
-            <label>Select Map:</label>
-            <select id="match-map">
-                <option value="Bermuda">Bermuda</option>
-                <option value="Purgatory">Purgatory</option>
-                <option value="Kalahari">Kalahari</option>
-                <option value="Alpine">Alpine</option>
-                <option value="Nexterra">Nexterra</option>
-            </select>
-        </div>
-        <button class="btn-update" onclick="createNewMatch()">Update/Create Match Info</button>
-    </div>
+        <div class="card">
+            <h3 style="border-bottom: 2px solid #28a745; padding-bottom: 8px; margin-top: 0; color: #28a745;">🎁 Giveaway Rewards Management</h3>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Giveaway Title:</label>
+                <input type="text" id="admin-giveaway-title" placeholder="e.g., Free Fire Diamond Giveaway">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Giveaway Item Description:</label>
+                <input type="text" id="admin-giveaway-desc" placeholder="e.g., 500 Diamonds (Photo Proof Required)">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Upload Giveaway Product Photo (Optional):</label>
+                <input type="file" id="admin-giveaway-file">
+                <input type="hidden" id="admin-giveaway-existing-img">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Giveaway Status:</label>
+                <select id="admin-giveaway-status">
+                    <option value="Inactive">🔒 Inactive (Hide from Users)</option>
+                    <option value="Active">🔓 Active (Show Form + Upload Input)</option>
+                </select>
+            </div>
+            <button id="btn-save-settings" onclick="alert('Giveaway functionality utilizes core settings.html panel!')" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">💾 Save Giveaway Settings</button>
+        </div> 
 
-    <div class="sub-section" style="border-left: 5px solid #2f3542; background: #f1f2f6; padding: 15px; margin-bottom: 20px;">
-        <h4 style="margin: 0 0 10px 0; color: #2f3542;">🔑 2. Room ID & Password Upload</h4>
-        <div class="form-group">
-            <label>Room ID:</label>
-            <input type="text" id="room-id" placeholder="Enter Room ID">
-        </div>
-        <div class="form-group">
-            <label>Room Password:</label>
-            <input type="text" id="room-pass" placeholder="Enter Room Pass">
-        </div>
-        <div class="form-group">
-            <label>Match Status:</label>
-            <select id="match-status">
-                <option value="Upcoming">🟢 Upcoming (Registration Open)</option>
-                <option value="Live">🔴 Live (Room Created / Match Running)</option>
-            </select>
-        </div>
-        <button class="btn-update" style="background: #2f3542;" onclick="updateRoomCredentials()">🔑 Update Room Credentials</button>
-    </div>
+        <div class="card">
+            <h2 style="margin-top: 0;">🎮 Live Match Control Panel</h2>
 
-    <div class="sub-section" style="border-left: 5px solid #ffa500; background: #fffaf0; padding: 15px; margin-bottom: 10px;">
-        <h4 style="margin: 0 0 10px 0; color: #d48a00;">🏆 3. Watch Result Upload</h4>
-        <div class="form-group">
-            <label>Winner / Booyah Name:</label>
-            <input type="text" id="match-winner" placeholder="e.g., Silent Sniper 77">
-        </div>
-        <div class="form-group">
-            <label>Winner Total Kills:</label>
-            <input type="number" id="match-winner-kills" value="0">
-        </div>
-        <button class="btn-update" style="background: #ffa500; color: black;" onclick="uploadMatchResult()">🏆 Upload Match Result</button>
-    </div>
-    </div>
-
-    <div class="card" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
-    <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; text-align: left;">
-        📥 User Deposit Requests (Money Approvals)
-    </h2>
-    <div id="user-deposit-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 40px;">
-        🔄 Deposit requests ki checking ho rahi hai...
-    </div>
-</div>
-
-<div class="card" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
-    <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; text-align: left;">
-        📥 User Withdrawal Requests (Payouts)
-    </h2>
-    <div id="user-withdrawal-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 40px;">
-        🔄 Withdrawal requests ki checking ho rahi hai...
-    </div>
-</div> 
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
-        authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
-        projectId: "ff-tornament-app-9e3ae",
-        databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
-        messagingSenderId: "595326120234",
-        appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
-
-    // 🔄 LIVE DATA LOAD FOR SOCIAL & GIVEAWAY SETTINGS
-database.ref('appSettings').on('value', (snapshot) => {
-    let settings = snapshot.val();
-    if (settings) {
-        // WhatsApp Link Auto-fill
-        if (settings.whatsappChannel) {
-            document.getElementById('admin-channel-url').value = settings.whatsappChannel;
-        }
-        // Giveaway Fields Auto-fill
-        if (settings.giveaway) {
-            document.getElementById('admin-giveaway-title').value = settings.giveaway.title || "";
-            document.getElementById('admin-giveaway-desc').value = settings.giveaway.description || "";
-            document.getElementById('admin-giveaway-status').value = settings.giveaway.status || "Inactive";
-            document.getElementById('admin-giveaway-existing-img').value = settings.giveaway.productImg || "";
-        }
-    }
-});
-
-    // Admin Panel Create Match Function
-function createNewMatch() {
-    let title = document.getElementById('match-title').value;
-    let time = document.getElementById('match-time').value;
-    let fee = document.getElementById('match-fee').value;
-    let kill = document.getElementById('match-kill').value;
-    let mapType = document.getElementById('match-map').value || "Bermuda";
-
-    if(!title || !time) { alert("Match Title aur Time fill karein!"); return; }
-
-    // Push use karne se har match line se store hoga
-    let newMatchKey = database.ref('matches').push().key;
-
-    database.ref('matches/' + newMatchKey).set({ 
-        matchId: newMatchKey,
-        title: title, 
-        time: time, 
-        fee: fee, 
-        kill: kill, 
-        mapType: mapType,
-        matchStatus: "Upcoming",
-        roomId: "",
-        roomPass: "",
-        winnerName: "",
-        winnerKills: 0
-    }).then(() => { 
-        alert("🎉 Naya Match Successfully Create Ho Gaya!");
-        window.currentEditingMatchId = newMatchKey; // Edit ke liye active state id save rakhein
-    });
-}
-    window.currentEditingMatchId = null;
-
-// 🔄 1. REALTIME OBSERVER FOR ADMIN PANEL (List populate karne ke liye)
-  database.ref('matches').on('value', (snapshot) => {
-    const listContainer = document.getElementById('admin-matches-list');
-    if (!listContainer) return;
-
-    listContainer.innerHTML = "";
-    let data = snapshot.val();
-
-    if (!data) {
-        listContainer.innerHTML = "<p style='text-align:center; color:#777; margin:5px 0;'>⚠️ No matches found.</p>";
-        return;
-    }
-
-    for (let matchId in data) {
-        let match = data[matchId];
-
-        let matchRow = document.createElement('div');
-        matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; border:1px solid #ddd;";
-
-        if (window.currentEditingMatchId === matchId) {
-            matchRow.style.borderColor = "#007bff";
-            matchRow.style.background = "#eef5ff";
-        }
-
-        matchRow.innerHTML = `
-            <div style="text-align: left; padding: 5px;">
-                <strong style="color:#333; font-size:14px;">${match.title || 'Daily Clash Squad'}</strong>
-                <div style="font-size:12px; color:#666; margin-top:2px;">
-                    Time: ${match.time || '--:--'} | Fee: ₹${match.fee || '0'} | Kill Reward: ₹${match.kill || '0'}
-                </div>
-                
-                <p style="color: #007bff; font-weight: bold; margin: 8px 0 4px 0; font-size: 13px;">
-                    📊 <span id="joined-count-${matchId}">Joined: Loading...</span>
-                </p>
-
-                <div style="margin-top: 10px; margin-bottom: 12px; background: #f1f3f5; padding: 10px; border-radius: 6px; border-left: 4px solid #28a745;">
-                    <h4 style="margin: 0 0 6px 0; color: #28a745; font-size: 13px;">🏆 Reward Match Winner</h4>
-                    <div style="margin-bottom: 6px;">
-                        <input type="text" id="winner-uid-${matchId}" placeholder="Paste Winner User UID" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <input type="number" id="winner-prize-${matchId}" placeholder="Prize Amount (₹)" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px;">
-                    </div>
-                    <button type="button" onclick="window.setMatchWinner('${matchId}')" style="width: 100%; padding: 6px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;">📢 Announce & Send Money</button>
-                </div>
-
-                <div style="margin-top: 10px;">
-                    <button type="button" onclick="window.selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Edit Match</button>
-                    <button type="button" onclick="window.deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:5px;">Delete</button>
+            <div class="sub-section" style="border-left: 5px solid #007bff; background: #f4f7f6;">
+                <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 All Created Tournaments (Manage / Delete)</h4>
+                <div id="admin-matches-list" style="max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                    <p style="text-align: center; color: #777; margin: 0;">Loading tournaments from database...</p>
                 </div>
             </div>
-        `;
 
-        listContainer.appendChild(matchRow);
+            <div class="sub-section" style="border-left: 5px solid #ff4e50;">
+                <h4 style="margin: 0 0 10px 0; color: #ff4e50;">📌 1. Create / Edit Match Info</h4>
+                <div class="form-group">
+                    <label>Match Title</label>
+                    <input type="text" id="match-title" placeholder="e.g., Daily Clash Squad">
+                </div>
+                <div class="form-group">
+                    <label>Match Time</label>
+                    <input type="text" id="match-time" placeholder="e.g., 08:00 PM">
+                </div>
+                <div class="form-group">
+                    <label>Entry Fee (₹):</label>
+                    <input type="number" id="match-fee" value="20">
+                </div>
+                <div class="form-group">
+                    <label>Per Kill Reward (₹):</label>
+                    <input type="number" id="match-kill" value="5">
+                </div>
+                <div class="form-group">
+                    <label>Select Map:</label>
+                    <select id="match-map">
+                        <option value="Bermuda">Bermuda</option>
+                        <option value="Purgatory">Purgatory</option>
+                        <option value="Kalahari">Kalahari</option>
+                        <option value="Alpine">Alpine</option>
+                        <option value="Nexterra">Nexterra</option>
+                    </select>
+                </div>
+                <button class="btn-update" onclick="createNewMatch()">Update/Create Match Info</button>
+            </div>
 
-        // Counter Trigger
-        if (typeof window.listenToParticipants === 'function') {
-            window.listenToParticipants(matchId);
-        }
-    }
-});
+            <div class="sub-section" style="border-left: 5px solid #2f3542; background: #f1f2f6;">
+                <h4 style="margin: 0 0 10px 0; color: #2f3542;">🔑 2. Room ID & Password Upload</h4>
+                <div class="form-group">
+                    <label>Room ID:</label>
+                    <input type="text" id="room-id" placeholder="Enter Room ID">
+                </div>
+                <div class="form-group">
+                    <label>Room Password:</label>
+                    <input type="text" id="room-pass" placeholder="Enter Room Pass">
+                </div>
+                <div class="form-group">
+                    <label>Match Status:</label>
+                    <select id="match-status">
+                        <option value="Upcoming">🟢 Upcoming (Registration Open)</option>
+                        <option value="Live">🔴 Live (Room Created / Match Running)</option>
+                    </select>
+                </div>
+                <button class="btn-update" style="background: #2f3542;" onclick="updateRoomCredentials()">🔑 Update Room Credentials</button>
+            </div>
 
-// 🗑️ 2. WATCH DELETE FUNCTION
-window.deleteMatchFromAdmin = function(matchId) {
-    if (confirm("⚠️ Kya aap sach mein is match ko delete karna chahte hain?")) {
-        database.ref('matches/' + matchId).remove()
-        .then(() => {
-            alert("🗑️ Match Successfully Delete Ho Gaya!");
-            if (window.currentEditingMatchId === matchId) {
-                if (typeof clearAdminInputs === 'function') clearAdminInputs();
-            }
-        }).catch(err => alert("Error: " + err.message));
-    }
-};
+            <div class="sub-section" style="border-left: 5px solid #ffa500; background: #fffaf0;">
+                <h4 style="margin: 0 0 10px 0; color: #d48a00;">🏆 3. Watch Result Upload</h4>
+                <div class="form-group">
+                    <label>Winner / Booyah Name:</label>
+                    <input type="text" id="match-winner" placeholder="e.g., Silent Sniper 77">
+                </div>
+                <div class="form-group">
+                    <label>Winner Total Kills:</label>
+                    <input type="number" id="match-winner-kills" value="0">
+                </div>
+                <button class="btn-update" style="background: #ffa500; color: black;" onclick="uploadMatchResult()">🏆 Upload Match Result</button>
+            </div>
+        </div>
 
-// ✏️ 3. SELECT MATCH FOR EDITING
-window.selectMatchToEdit = function(matchId) {
-    window.currentEditingMatchId = matchId;
-    database.ref('matches/' + matchId).once('value', (snapshot) => {
-        let match = snapshot.val();
-        if (!match) return;
+        <div class="card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px;">
+                📥 User Deposit Requests (Money Approvals)
+            </h2>
+            <div id="user-deposit-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 40px;">
+                🔄 Deposit requests ki checking ho rahi hai...
+            </div>
+        </div>
 
-        if (document.getElementById('match-title')) document.getElementById('match-title').value = match.title || "";
-        if (document.getElementById('match-time')) document.getElementById('match-time').value = match.time || "";
-        if (document.getElementById('match-fee')) document.getElementById('match-fee').value = match.fee || "20";
-        if (document.getElementById('match-kill')) document.getElementById('match-kill').value = match.kill || "5";
-        if (document.getElementById('match-map')) document.getElementById('match-map').value = match.mapType || "Bermuda";
-    });
-};
+        <div class="card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px;">
+                📤 User Withdrawal Requests (Payouts)
+            </h2>
+            <div id="user-withdrawal-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 40px;">
+                🔄 Withdrawal requests ki checking ho rahi hai...
+            </div>
+        </div> 
 
-// 🏆 7. GLOBAL WINNER ANNOUNCEMENT FUNCTION
-window.setMatchWinner = function(matchId) {
-    let winnerUid = document.getElementById('winner-uid-' + matchId).value.trim();
-    let prizeAmount = Number(document.getElementById('winner-prize-' + matchId).value.trim());
+        <div class="card" style="box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px;">
+                📋 Channel Joining Tasks Approval (₹5)
+            </h2>
+            <div id="social-tasks-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 50px;">
+                🔄 Pending requests ki checking ho rahi hai...
+            </div>
+        </div>
 
-    if (!winnerUid || !prizeAmount) {
-        alert("⚠️ Kripya Winner ki UID aur Prize Amount dono dalein!");
-        return;
-    }
+    </div>
 
-    database.ref('users/' + winnerUid + '/wallet').once('value', (snapshot) => {
-        let currentBalance = snapshot.val() || 0;
-        let newBalance = currentBalance + prizeAmount;
-
-        let updates = {};
-        updates['matches/' + matchId + '/matchStatus'] = "Completed";
-        updates['matches/' + matchId + '/winnerUid'] = winnerUid;
-        updates['users/' + winnerUid + '/wallet'] = newBalance;
-
-        database.ref().update(updates)
-        .then(() => {
-            alert("🏆 Winner announced aur Prize Money wallet mein credit ho gayi!");
-        })
-        .catch(err => alert("❌ Error: " + err.message));
-    });
-};
-
-// 🔄 LIVE MATCH PARTICIPANTS COUNTER OBSERVER
-window.listenToParticipants = function(matchId) {
-    database.ref('matchParticipants/' + matchId).on('value', (snapshot) => {
-        let participants = snapshot.val();
-        let totalJoined = participants ? Object.keys(participants).length : 0;
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
+            authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
+            projectId: "ff-tornament-app-9e3ae",
+            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
+            messagingSenderId: "595326120234",
+            appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
+        };
         
-        let countElement = document.getElementById('joined-count-' + matchId);
-        if (countElement) {
-            countElement.innerText = "Joined: " + totalJoined + " Players";
-        }
-    });
-};
-    // ==========================================
-// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC (WITH SCREENSHOT + BALANCE FIX)
-// ==========================================
-if (typeof firebase !== 'undefined') {
-    firebase.database().ref('depositRequests').on('value', (snapshot) => {
-        let depositDiv = document.getElementById('user-deposit-list');
-        if (!depositDiv) return;
-        depositDiv.innerHTML = "";
-        let data = snapshot.val();
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        if (!data) {
-            depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
-            return;
-        }
+        // 🔄 LIVE MATCH INITIALIZER
+        function createNewMatch() {
+            let title = document.getElementById('match-title').value;
+            let time = document.getElementById('match-time').value;
+            let fee = document.getElementById('match-fee').value;
+            let kill = document.getElementById('match-kill').value;
+            let mapType = document.getElementById('match-map').value || "Bermuda";
 
-        let hasPendingDeposit = false;
-        Object.keys(data).forEach(key => {
-            let req = data[key];
-            if (req.status === "Pending" || !req.status) {
-                hasPendingDeposit = true;
-                
-                // 📸 Screenshot path mapping (Alag-alag namon se dhoondhne ke liye backup checks)
-                let proofImg = req.screenshot || req.proofUrl || req.imageUrl || req.img || "";
+            if(!title || !time) { alert("Match Title aur Time fill karein!"); return; }
 
-                let card = document.createElement('div');
-                card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333; font-family: 'Segoe UI', sans-serif;";
-                
-                card.innerHTML = `
-                    <p style="margin: 3px 0;"><b>User UID:</b> ${req.uid || 'N/A'}</p>
-                    <p style="margin: 3px 0; color:#28a745; font-weight:bold;"><b>Amount:</b> ₹${req.amount}</p>
-                    <p style="margin: 3px 0;"><b>TXN ID / Ref:</b> ${req.txnId || req.refNo || 'N/A'}</p>
-                    
-                    <div style="margin: 8px 0;">
-                        <b>Payment Proof Screenshot:</b><br>
-                        ${proofImg ? 
-                            `<img src="${proofImg}" style="max-width: 100%; max-height: 250px; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px;">` : 
-                            `<span style="color:#dc3545; font-size:12px;">⚠️ User ne screenshot upload nahi kiya ya path galat hai!</span>`
-                        }
-                    </div>
-
-// ==========================================
-// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC (FULL-PROOF FIX)
-// ==========================================
-if (typeof firebase !== 'undefined') {
-    firebase.database().ref('depositRequests').on('value', (snapshot) => {
-        let depositDiv = document.getElementById('user-deposit-list');
-        if (!depositDiv) return;
-        depositDiv.innerHTML = "";
-        let data = snapshot.val();
-
-        if (!data) {
-            depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
-            return;
+            let newMatchKey = database.ref('matches').push().key;
+            database.ref('matches/' + newMatchKey).set({ 
+                matchId: newMatchKey,
+                title: title, 
+                time: time, 
+                fee: fee, 
+                kill: kill, 
+                mapType: mapType,
+                matchStatus: "Upcoming",
+                roomId: "",
+                roomPass: "",
+                winnerName: "",
+                winnerKills: 0
+            }).then(() => { 
+                alert("🎉 Naya Match Successfully Create Ho Gaya!");
+            });
         }
 
-        let hasPendingDeposit = false;
-        Object.keys(data).forEach(key => {
-            let req = data[key];
-            if (req.status === "Pending" || !req.status) {
-                hasPendingDeposit = true;
-                
-                // 📸 Har sambhav key check karo screenshot ke liye
-                let proofImg = req.screenshot || req.screenshotUrl || req.proofUrl || req.imageUrl || req.img || req.proof || "";
-                
-                // 🔑 User identification backup ke saath
-                let dynamicUid = req.uid || req.userId || req.userUid || "N/A";
-                let userEmail = req.email || req.userEmail || "";
+        // Realtime Tournament Fetcher
+        database.ref('matches').on('value', (snapshot) => {
+            const listContainer = document.getElementById('admin-matches-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = "";
+            let data = snapshot.val();
 
-                let card = document.createElement('div');
-                card.style = "background:#f9f9f9; padding:15px; margin-bottom:12px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
-                
-                card.innerHTML = `
-                    <p style="margin: 4px 0;"><b>User UID:</b> <span style="color:#007bff;">${dynamicUid}</span></p>
-                    ${userEmail ? `<p style="margin: 4px 0;"><b>Email:</b> ${userEmail}</p>` : ''}
-                    <p style="margin: 4px 0; color:#28a745; font-weight:bold; font-size: 15px;"><b>Amount:</b> ₹${req.amount}</p>
-                    <p style="margin: 4px 0;"><b>TXN ID / Ref:</b> ${req.txnId || req.refNo || req.transactionId || 'N/A'}</p>
-                    
-                    <div style="margin: 10px 0;">
-                        <b>Payment Proof Screenshot:</b><br>
-                        ${proofImg ? 
-                            `<a href="${proofImg}" target="_blank"><img src="${proofImg}" style="max-width: 100%; max-height: 280px; border: 1px solid #ccc; margin-top: 5px; border-radius: 6px; display: block; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></a>
-                             <span style="font-size:11px; color:#666;">ℹ️ Photo par click karke badi screen par dekhein</span>` : 
-                            `<span style="color:#dc3545; font-size:12px; font-weight:bold; display:block; margin-top:5px;">⚠️ Screenshot nahi mila! (Check user app code keys)</span>`
-                        }
-                    </div>
+            if (!data) {
+                listContainer.innerHTML = "<p style='text-align:center; color:#777;'>⚠️ No matches found.</p>";
+                return;
+            }
 
-                    <div style="margin-top: 10px;">
-                        <button type="button" onclick="window.approveDepositMoney('${key}', '${dynamicUid}', '${userEmail}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✅ Approve (Add Money)</button>
-                        <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">❌ Reject</button>
+            Object.keys(data).forEach(matchId => {
+                let match = data[matchId];
+                let matchRow = document.createElement('div');
+                matchRow.style.cssText = "background:#f9f9f9; padding:10px; margin-bottom:8px; border-radius:4px; border:1px solid #ddd; text-align:left;";
+
+                matchRow.innerHTML = `
+                    <div>
+                        <strong>${match.title || 'Daily Clash Squad'}</strong>
+                        <div style="font-size:12px; color:#666;">Time: ${match.time} | Fee: ₹${match.fee}</div>
+                        <p style="color: #007bff; font-weight: bold; font-size: 13px; margin: 5px 0;">📊 <span id="joined-count-${matchId}">Joined: Loading...</span></p>
+                        <div style="margin-top: 5px;">
+                            <button type="button" onclick="window.selectMatchToEdit('${matchId}')" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">Edit</button>
+                            <button type="button" onclick="window.deleteMatchFromAdmin('${matchId}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px; margin-left:5px;">Delete</button>
+                        </div>
                     </div>
                 `;
-                depositDiv.appendChild(card);
-            }
+                listContainer.appendChild(matchRow);
+                window.listenToParticipants(matchId);
+            });
         });
-        if (!hasPendingDeposit) depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
-    });
-}
 
-// 💰 SMART MONEY CREDITING FUNCTION
-window.approveDepositMoney = function(requestKey, userUid, userEmail, amount) {
-    let addAmount = Number(amount);
-    if (!addAmount || isNaN(addAmount)) {
-        return alert("❌ Error: Amount valid nahi hai!");
-    }
+        window.listenToParticipants = function(matchId) {
+            database.ref('matchParticipants/' + matchId).on('value', (snapshot) => {
+                let participants = snapshot.val();
+                let totalJoined = participants ? Object.keys(participants).length : 0;
+                let countElement = document.getElementById('joined-count-' + matchId);
+                if (countElement) countElement.innerText = "Joined: " + totalJoined + " Players";
+            });
+        };
 
-    // 🚀 STAGE 1: Agar UID valid hai, toh direct root update chalao
+        window.selectMatchToEdit = function(matchId) {
+            database.ref('matches/' + matchId).once('value', (snapshot) => {
+                let match = snapshot.val();
+                if (!match) return;
+                document.getElementById('match-title').value = match.title || "";
+                document.getElementById('match-time').value = match.time || "";
+                document.getElementById('match-fee').value = match.fee || "20";
+                document.getElementById('match-kill').value = match.kill || "5";
+            });
+        };
 
-// ==========================================================
-// 💰 1. DEPOSIT (ADD MONEY) REQUESTS LOGIC WITH SCREENSHOT
-// ==========================================================
-database.ref('depositRequests').on('value', (snapshot) => {
-    let depositDiv = document.getElementById('user-deposit-list');
-    if (!depositDiv) return;
-    depositDiv.innerHTML = "";
-    let data = snapshot.val();
+        window.deleteMatchFromAdmin = function(matchId) {
+            if (confirm("Match delete karein?")) {
+                database.ref('matches/' + matchId).remove();
+            }
+        };
 
-    if (!data) {
-        depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
-        return;
-    }
+        // ==========================================================
+        // 💰 DEPOSIT (ADD MONEY) REQUESTS ENGINE (WITH SCREENSHOT FIX)
+        // ==========================================================
+        database.ref('depositRequests').on('value', (snapshot) => {
+            let depositDiv = document.getElementById('user-deposit-list');
+            if (!depositDiv) return;
+            depositDiv.innerHTML = "";
+            let data = snapshot.val();
 
-    let hasPendingDeposit = false;
-    Object.keys(data).forEach(key => {
-        let req = data[key];
-        if (req.status === "Pending" || !req.status) {
-            hasPendingDeposit = true;
-            
-            // Screenshot paths mapping
-            let proofImg = req.screenshot || req.screenshotUrl || req.proofUrl || req.imageUrl || req.img || req.proof || "";
-            let dynamicUid = req.uid || req.userId || req.userUid || "N/A";
-            let userEmail = req.email || req.userEmail || "";
+            if (!data) {
+                depositDiv.innerHTML = "<p style='color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
+                return;
+            }
 
-            let card = document.createElement('div');
-            card.style = "background:#f9f9f9; padding:15px; margin-bottom:12px; border-left:4px solid #28a745; border-radius:4px; text-align: left; color:#333; font-family: sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
-            
-            card.innerHTML = `
-                <p style="margin: 4px 0;"><b>User UID:</b> <span style="color:#007bff;">${dynamicUid}</span></p>
-                ${userEmail ? `<p style="margin: 4px 0;"><b>Email:</b> ${userEmail}</p>` : ''}
-                <p style="margin: 4px 0; color:#28a745; font-weight:bold; font-size: 15px;"><b>Amount:</b> ₹${req.amount}</p>
-                <p style="margin: 4px 0;"><b>TXN ID / Ref:</b> ${req.txnId || req.refNo || req.transactionId || 'N/A'}</p>
-                
-                <div style="margin: 10px 0;">
-                    <b>Payment Proof Screenshot:</b><br>
-                    ${proofImg ? 
-                        `<a href="${proofImg}" target="_blank"><img src="${proofImg}" style="max-width: 100%; max-height: 250px; border: 1px solid #ccc; margin-top: 5px; border-radius: 6px; display: block;"></a>` : 
-                        `<span style="color:#dc3545; font-size:12px; font-weight:bold;">⚠️ Screenshot nahi mila!</span>`
-                    }
-                </div>
+            let hasPending = false;
+            Object.keys(data).forEach(key => {
+                let req = data[key];
+                if (req.status === "Pending" || !req.status) {
+                    hasPending = true;
+                    let proofImg = req.screenshot || req.screenshotUrl || req.proofUrl || req.imageUrl || req.img || "";
+                    let dynamicUid = req.uid || req.userId || "N/A";
 
-                <div style="margin-top: 10px;">
-                    <button type="button" onclick="window.approveDepositMoney('${key}', '${dynamicUid}', '${userEmail}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Approve (Add Money)</button>
-                    <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject</button>
-                </div>
-            `;
-            depositDiv.appendChild(card);
-        }
-    });
-    if (!hasPendingDeposit) depositDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
-});
+                    let card = document.createElement('div');
+                    card.style = "background:#f9f9f9; padding:15px; margin-bottom:12px; border-left:4px solid #28a745; border-radius:4px; text-align: left;";
+                    card.innerHTML = `
+                        <p style="margin:4px 0;"><b>User UID:</b> <span style="color:#007bff;">${dynamicUid}</span></p>
+                        <p style="margin:4px 0; color:#28a745; font-weight:bold;"><b>Amount:</b> ₹${req.amount}</p>
+                        <p style="margin:4px 0;"><b>TXN ID:</b> ${req.txnId || req.refNo || 'N/A'}</p>
+                        <div style="margin:10px 0;">
+                            <b>Proof Screenshot:</b><br>
+                            ${proofImg ? `<a href="${proofImg}" target="_blank"><img src="${proofImg}" style="max-width:100%; max-height:220px; border:1px solid #ccc; margin-top:5px; border-radius:6px;"></a>` : `<span style="color:#dc3545; font-size:12px;">⚠️ Screenshot nahi mila</span>`}
+                        </div>
+                        <div style="margin-top:10px;">
+                            <button type="button" onclick="window.approveDepositMoney('${key}', '${dynamicUid}', ${req.amount})" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">✅ Approve</button>
+                            <button type="button" onclick="window.rejectDepositMoney('${key}')" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; margin-left:5px;">❌ Reject</button>
+                        </div>
+                    `;
+                    depositDiv.appendChild(card);
+                }
+            });
+            if (!hasPending) depositDiv.innerHTML = "<p style='color: #28a745; margin: 0;'>🟢 Koi pending deposit request nahi hai.</p>";
+        });
 
-window.approveDepositMoney = function(requestKey, userUid, userEmail, amount) {
-    let addAmount = Number(amount);
-    if (userUid && userUid !== "N/A" && userUid !== "undefined") {
-        executeWalletAddition(userUid, addAmount, requestKey);
-    } else if (userEmail) {
-        database.ref('users').once('value', (snapshot) => {
-            let usersData = snapshot.val();
-            let foundUid = null;
-            if (usersData) {
-                Object.keys(usersData).forEach(uid => {
-                    if (usersData[uid].email && usersData[uid].email.toLowerCase() === userEmail.toLowerCase()) { foundUid = uid; }
+        window.approveDepositMoney = function(requestKey, userUid, amount) {
+            let addAmount = Number(amount);
+            if (!userUid || userUid === "N/A") {
+                userUid = prompt("⚠️ User UID missing! Kripya sahi UID enter karein:");
+                if (!userUid) return;
+            }
+
+            database.ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
+                let currentBalance = Number(snapshot.val()) || 0;
+                let newBalance = currentBalance + addAmount;
+                let updates = {};
+                updates['users/' + userUid + '/wallet'] = newBalance;
+                updates['users/' + userUid + '/balance'] = newBalance;
+                updates['depositRequests/' + requestKey + '/status'] = "Approved";
+
+                database.ref().update(updates).then(() => {
+                    alert("✅ Wallet Updated Successfully!");
+                }).catch(err => alert("Error: " + err.message));
+            });
+        };
+
+        window.rejectDepositMoney = function(requestKey) {
+            if (confirm("Reject karein?")) {
+                database.ref('depositRequests/' + requestKey).update({ status: "Rejected" });
+            }
+        };
+
+        // ==========================================================
+        // 💸 WITHDRAWAL REQUESTS ENGINE
+        // ==========================================================
+        database.ref('withdrawalRequests').on('value', (snapshot) => {
+            let withdrawDiv = document.getElementById('user-withdrawal-list');
+            if (!withdrawDiv) return;
+            withdrawDiv.innerHTML = "";
+            let data = snapshot.val();
+
+            if (!data) {
+                withdrawDiv.innerHTML = "<p style='color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
+                return;
+            }
+
+            let hasPending = false;
+            Object.keys(data).forEach(key => {
+                let req = data[key];
+                if (req.status === "Pending" || !req.status) {
+                    hasPending = true;
+                    let card = document.createElement('div');
+                    card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #dc3545; text-align: left;";
+                    card.innerHTML = `
+                        <p style="margin:3px 0;"><b>User UID:</b> ${req.uid || 'N/A'}</p>
+                        <p style="margin:3px 0; color:#dc3545; font-weight:bold;"><b>Amount:</b> ₹${req.amount}</p>
+                        <p style="margin:3px 0;"><b>UPI ID:</b> ${req.upiId || 'N/A'}</p>
+                        <div style="margin-top:8px;">
+                            <button type="button" onclick="window.approveWithdrawal('${key}')" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">✅ Paid</button>
+                            <button type="button" onclick="window.rejectWithdrawal('${key}', '${req.uid}', ${req.amount})" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin-left:5px;">❌ Reject & Refund</button>
+                        </div>
+                    `;
+                    withdrawDiv.appendChild(card);
+                }
+            });
+            if (!hasPending) withdrawDiv.innerHTML = "<p style='color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
+        });
+
+        window.approveWithdrawal = function(requestKey) {
+            database.ref('withdrawalRequests/' + requestKey).update({ status: "Approved" });
+        };
+
+        window.rejectWithdrawal = function(requestKey, userUid, amount) {
+            if (confirm("Reject aur refund karein?")) {
+                database.ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
+                    let currentBalance = Number(snapshot.val()) || 0;
+                    let newBalance = currentBalance + Number(amount);
+                    let updates = {};
+                    updates['users/' + userUid + '/wallet'] = newBalance;
+                    updates['withdrawalRequests/' + requestKey + '/status'] = "Rejected";
+                    database.ref().update(updates);
                 });
             }
-            if (foundUid) { executeWalletAddition(foundUid, addAmount, requestKey); } 
-            else { fallbackUidPrompt(addAmount, requestKey); }
-        });
-    } else {
-        fallbackUidPrompt(addAmount, requestKey);
-    }
-};
-
-function executeWalletAddition(targetUid, amount, requestKey) {
-    database.ref('users/' + targetUid + '/wallet').once('value', (snapshot) => {
-        let currentBalance = Number(snapshot.val()) || 0;
-        let newBalance = currentBalance + amount;
-        let updates = {};
-        updates['users/' + targetUid + '/wallet'] = newBalance;
-        updates['users/' + targetUid + '/balance'] = newBalance;
-        updates['depositRequests/' + requestKey + '/status'] = "Approved";
-
-        database.ref().update(updates).then(() => {
-            alert("✅ Wallet mein ₹" + amount + " jod diye gaye hain!");
-        }).catch(err => alert("❌ Error: " + err.message));
-    });
-}
-
-function fallbackUidPrompt(amount, requestKey) {
-    let manualUid = prompt("⚠️ User UID nahi mili. Kripya user ki UID yahan sahi se enter karein taaki ₹" + amount + " add kiye ja sakein:");
-    if (manualUid && manualUid.trim() !== "") { executeWalletAddition(manualUid.trim(), amount, requestKey); }
-}
-
-window.rejectDepositMoney = function(requestKey) {
-    if (confirm("Kya aap is request ko reject karna chahte hain?")) {
-        database.ref('depositRequests/' + requestKey).update({ status: "Rejected" })
-        .then(() => alert("❌ Deposit request reject kar di gayi."))
-        .catch(err => alert("Error: " + err.message));
-    }
-};
-
-// ==========================================================
-// 💸 2. WITHDRAWAL (PAYOUT) REQUESTS LOGIC
-// ==========================================================
-database.ref('withdrawalRequests').on('value', (snapshot) => {
-    let withdrawDiv = document.getElementById('user-withdrawal-list');
-    if (!withdrawDiv) return;
-    withdrawDiv.innerHTML = "";
-    let data = snapshot.val();
-
-    if (!data) {
-        withdrawDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
-        return;
-    }
-
-    let hasPendingWithdraw = false;
-    Object.keys(data).forEach(key => {
-        let req = data[key];
-        if (req.status === "Pending" || !req.status) {
-            hasPendingWithdraw = true;
-            let card = document.createElement('div');
-            card.style = "background:#f9f9f9; padding:12px; margin-bottom:10px; border-left:4px solid #dc3545; border-radius:4px; text-align: left; color:#333;";
-            card.innerHTML = `
-                <p style="margin: 3px 0;"><b>User UID:</b> ${req.uid || 'N/A'}</p>
-                <p style="margin: 3px 0; color:#dc3545; font-weight:bold;"><b>Amount:</b> ₹${req.amount}</p>
-                <p style="margin: 3px 0;"><b>UPI ID / Details:</b> ${req.upiId || req.upi || 'N/A'}</p>
-                <div style="margin-top: 8px;">
-                    <button type="button" onclick="window.approveWithdrawal('${key}')" style="background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Paid (Approve)</button>
-                    <button type="button" onclick="window.rejectWithdrawal('${key}', '${req.uid}', ${req.amount})" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; margin-left:5px;">❌ Reject & Refund</button>
-                </div>
-            `;
-            withdrawDiv.appendChild(card);
-        }
-    });
-    if (!hasPendingWithdraw) withdrawDiv.innerHTML = "<p style='text-align: center; color: #28a745; margin: 0;'>🟢 Koi pending withdrawal request nahi hai.</p>";
-});
-
-window.approveWithdrawal = function(requestKey) {
-    database.ref('withdrawalRequests/' + requestKey).update({ status: "Approved" })
-    .then(() => alert("✅ Withdrawal status marked as Approved/Paid!"))
-    .catch(err => alert("Error: " + err.message));
-};
-
-window.rejectWithdrawal = function(requestKey, userUid, amount) {
-    if (confirm("Kya aap ise reject karke user ko paise refund karna chahte hain?")) {
-        let refundAmount = Number(amount);
-        database.ref('users/' + userUid + '/wallet').once('value', (snapshot) => {
-            let currentBalance = Number(snapshot.val()) || 0;
-            let newBalance = currentBalance + refundAmount;
-            let updates = {};
-            updates['users/' + userUid + '/wallet'] = newBalance;
-            updates['users/' + userUid + '/balance'] = newBalance;
-            updates['withdrawalRequests/' + requestKey + '/status'] = "Rejected";
-
-            database.ref().update(updates).then(() => {
-                alert("❌ Withdrawal Rejected! Amount wallet mein refund ho gaya.");
-            }).catch(err => alert("Error: " + err.message));
-        });
-    }
-};
-                    
+        };
     </script> 
-    <div class="card" style="background: #fff; padding: 20px; margin: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; clear: both;">
-        <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; text-align: left;">
-            📋 Channel Joining Tasks Approval (₹5)
-        </h2>
-        <div id="social-tasks-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 50px;">
-            🔄 Pending requests ki checking ho rahi hai...
-        </div>
-    </div>
-    
+
     <script src="admin-tasks.js"></script>
 </body>
 </html>
