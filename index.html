@@ -473,59 +473,76 @@
                 historyContainer.innerHTML = `<p style="color:#aaa; text-align:center; padding:20px;">🚫 No history available.</p>`;
             }
         }
+// 📐 3. DYNAMIC REALTIME MATCH CARD GENERATOR WITH ADMIN INTEGRATION (FIXED ROOM ID/PASS)
+function renderMatchCard(match, matchId, container, isHistory) {
+    const matchDiv = document.createElement('div');
+    matchDiv.className = "match-card";
+    matchDiv.style.cssText = "background: #1e1e1e; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; text-align: left;";
 
-        // 📐 3. DYNAMIC REALTIME MATCH CARD GENERATOR WITH ADMIN INTEGRATION
-        function renderMatchCard(match, matchId, container, isHistory) {
-            const matchDiv = document.createElement('div');
-            matchDiv.className = "match-card";
-            matchDiv.style.cssText = "background: #1e1e1e; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; text-align: left;";
+    let statusHTML = "";
+    let buttonHTML = "";
 
-            let statusHTML = "";
-            let buttonHTML = "";
+    // Dynamic Values From Admin Panel
+    const entryFee = match.fee || match.entryFee || 10;
+    const prizePool = match.prizePool || "100";
+    const mapType = match.mapType || 'Bermuda';
+    const title = match.title || match.matchName || 'Free Fire Solo Match';
+    const time = match.time || '-';
+    const killReward = match.kill || 0;
 
-            // Dynamic Values From Admin Panel
-            const entryFee = match.fee || match.entryFee || 10;
-            const prizePool = match.prizePool || "100";
-            const mapType = match.mapType || 'Bermuda';
-            const title = match.title || match.matchName || 'Free Fire Solo Match';
-            const time = match.time || '-';
-            const killReward = match.kill || 0;
+    // Admin database fields verification (roomPass or roomPassword)
+    const activeRoomId = match.roomId || match.roomid || "";
+    const activeRoomPass = match.roomPass || match.roomPassword || match.roompass || "";
 
-            if (isHistory) {
-                statusHTML = `<div style="background:#222; color:#ffa500; padding:10px; border-radius:4px; margin-bottom:10px; font-weight:bold; border: 1px dashed #ffa500; text-align:center;">
-                                🏆 Winner: ${match.winnerName || 'TBD'} (Kills: ${match.winnerKills || 0})
+    if (isHistory) {
+        statusHTML = `<div style="background:#222; color:#ffa500; padding:10px; border-radius:4px; margin-bottom:10px; font-weight:bold; border: 1px dashed #ffa500; text-align:center;">
+                        🏆 Winner: ${match.winnerName || 'TBD'} (Kills: ${match.winnerKills || 0})
+                      </div>`;
+        buttonHTML = `<button style="width:100%; padding:12px; background:#444; color:#aaa; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>MATCH COMPLETED</button>`;
+    } else {
+        // Check if user is registered in this match
+        if (match.participants && match.participants[userSessionUID]) {
+            
+            // 🔓 AGAR ADMIN NE ROOM ID YA PASSWORD DAL DIYA HAI TOH UNLOCK KARO
+            if (activeRoomId !== "" || activeRoomPass !== "") {
+                statusHTML = `<div style="background: #141414; padding: 12px; border-radius: 6px; border: 2px solid #28a745; text-align: center; margin-bottom: 10px;">
+                                <span style="color: #28a745; font-weight: bold; font-size: 13px;">✅ ROOM ID & PASS READY</span>
+                                <div style="margin-top: 6px; font-size: 12px; color: #fff; text-align: left;">
+                                    <p style="margin: 3px 0;"><strong>Room ID:</strong> <span style="color: #ff9f43; user-select: all; font-weight: bold;">${activeRoomId || 'Not Set'}</span></p>
+                                    <p style="margin: 3px 0;"><strong>Password:</strong> <span style="color: #ff9f43; user-select: all; font-weight: bold;">${activeRoomPass || 'Not Set'}</span></p>
+                                </div>
                               </div>`;
-                buttonHTML = `<button style="width:100%; padding:12px; background:#444; color:#aaa; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>MATCH COMPLETED</button>`;
+                buttonHTML = `<button style="width:100%; padding:12px; background:#28a745; color:white; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>✅ JOINED & UNLOCKED</button>`;
             } else {
-                // Check if user is registered in this match
-                if (match.participants && match.participants[userSessionUID]) {
-                    // Unlocked State: Room credentials provided by Admin
-                    if (match.roomId && (match.roomPassword || match.roomPass)) {
-                        let password = match.roomPassword || match.roomPass;
-                        statusHTML = `<div style="background: #141414; padding: 12px; border-radius: 6px; border: 2px solid #28a745; text-align: center; margin-bottom: 10px;">
-                                        <span style="color: #28a745; font-weight: bold; font-size: 13px;">✅ ROOM ID & PASS READY</span>
-                                        <div style="margin-top: 6px; font-size: 12px; color: #fff; text-align: left;">
-                                            <p style="margin: 3px 0;"><strong>Room ID:</strong> <span style="color: #ff9f43; user-select: all;">${match.roomId}</span></p>
-                                            <p style="margin: 3px 0;"><strong>Password:</strong> <span style="color: #ff9f43; user-select: all;">${password}</span></p>
-                                        </div>
-                                      </div>`;
-                        buttonHTML = `<button style="width:100%; padding:12px; background:#28a745; color:white; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>ALREADY JOINED</button>`;
-                    } else {
-                        // Waiting State: Registered successfully but waiting for credentials
-                        statusHTML = `<div style="background: #141414; padding: 12px; border-radius: 6px; border: 1px dashed #ff9f43; text-align: center; margin-bottom: 10px;">
-                                        <span style="color: #ff9f43; font-weight: bold; font-size: 13px;">🎮 Status: Joined (Registered)</span>
-                                        <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;">Room ID aur Password ka wait karein, match shuru hone se 15 minute pehle yahan dikhega.</p>
-                                      </div>`;
-                        buttonHTML = `<button style="width:100%; padding:12px; background:#ff9f43; color:white; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>WAITING FOR ROOM ID</button>`;
-                    }
-                } else {
-                    // Not Registered State
-                    statusHTML = `<div style="background:#222; color:#e74c3c; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px; font-size:13px;">
-                                    🔒 Room ID & Pass will be visible 15 mins before match.
-                                  </div>`;
-                    buttonHTML = `<button style="width:100%; padding:12px; background:#27ae60; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="openJoinModal('${matchId}', ${entryFee})">JOIN TOURNAMENT</button>`;
-                }
+                // ⏳ AGAR ABHI ADMIN NE NAHI DALA HAI TOH WAITING SCREEN DIKHAO
+                statusHTML = `<div style="background: #141414; padding: 12px; border-radius: 6px; border: 1px dashed #ff9f43; text-align: center; margin-bottom: 10px;">
+                                <span style="color: #ff9f43; font-weight: bold; font-size: 13px;">🎮 Status: Joined (Registered)</span>
+                                <p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0;">Room ID aur Password ka wait karein, match shuru hone se 15 minute pehle yahan dikhega.</p>
+                              </div>`;
+                buttonHTML = `<button style="width:100%; padding:12px; background:#ff9f43; color:white; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed;" disabled>WAITING FOR ROOM ID</button>`;
             }
+        } else {
+            // Not Registered State
+            statusHTML = `<div style="background:#222; color:#e74c3c; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px; font-size:13px;">
+                            🔒 Room ID & Pass will be visible 15 mins before match.
+                          </div>`;
+            buttonHTML = `<button style="width:100%; padding:12px; background:#27ae60; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="openJoinModal('${matchId}', ${entryFee})">JOIN TOURNAMENT</button>`;
+        }
+    }
+
+    matchDiv.innerHTML = `
+        <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ Map: ${mapType}</h3>
+        <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${title}</p>
+        <p style="color:white; margin:5px 0;"><strong>Time:</strong> ${time}</p>
+        <p style="color:white; margin:5px 0;"><strong>Entry Fee:</strong> ₹ ${entryFee}</p>
+        <p style="color:white; margin:5px 0;"><strong>Prize Pool:</strong> ₹ ${prizePool}</p>
+        <p style="color:white; margin:5px 0 15px 0;"><strong>Per Kill:</strong> ₹ ${killReward}</p>
+        ${statusHTML}
+        ${buttonHTML}
+    `;
+    container.appendChild(matchDiv);
+}
+        
 
             matchDiv.innerHTML = `
                 <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ Map: ${mapType}</h3>
