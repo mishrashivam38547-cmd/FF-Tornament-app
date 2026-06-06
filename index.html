@@ -617,21 +617,59 @@ function switchTab(tabName) {
             window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniperTournament&am=${amount}&cu=INR`;
         }
 
+// 🎮 JOIN TOURNAMENT MATCH FUNCTION (Perfect Fix)
+function joinMatch(matchId, entryFee) {
+    // 🔍 Step 1: Check karein ki user sach mein login hai ya nahi
+    if (!userSessionUID || userSessionUID === "") {
+        alert("⚠️ Pehle login karein! Agar aap login hain, toh ek baar page refresh karein.");
+        return;
+    }
 
-        function processJoinTournament() {
-            let name = document.getElementById('player-name').value.trim();
-            let uid = document.getElementById('player-uid').value.trim();
-            if(!name || !uid) { alert("Kripya dono fields bharein!"); return; }
-            if(!/^[0-9]{8,12}$/.test(uid)) { document.getElementById('uid-error').style.display = 'block'; return; }
-            if(currentWalletBalance < activeMatchFee) { alert(`⚠️ Insufficient Balance!`); closeJoinModal(); return; }
+    // 🔍 Step 2: Check karein ki balance kafi hai ya nahi
+    // Database se load hua balance check karne ke liye
+    let currentBalanceText = document.getElementById('user-balance').innerText;
+    let currentBalance = parseFloat(currentBalanceText.replace(/[^\d.-]/g, '')) || 0;
 
-            let newBal = currentWalletBalance - activeMatchFee;
-            database.ref('users/' + userSessionUID + '/balance').set(newBal);
-            database.ref('matchParticipants/' + uid).set({ name: name, uid: uid, timeJoined: Date.now() });
-            document.getElementById('history-match-text').innerHTML = `<span>Joined Match (UID: ${uid})</span>`;
-            alert("🎉 Success! Match Registered.");
-            closeJoinModal();
-        }
+    if (currentBalance < entryFee) {
+        alert("❌ Aapke wallet mein पर्याप्त balance nahi hai! Kripya Add Money par click karke recharge karein.");
+        return;
+    }
+
+    // 🔍 Step 3: Game Name (IGN) pucho user se
+    let gameName = prompt("Enter your Free Fire Game Name (IGN):");
+    if (!gameName || gameName.trim() === "") {
+        alert("⚠️ Match join karne ke liye Game Name daalna zaroori hai!");
+        return;
+    }
+
+    // Naya balance nikalien
+    let updatedBalance = currentBalance - entryFee;
+
+    // 🔄 Step 4: Firebase Database mein data update karein
+    // 1. User ka balance kamao
+    firebase.database().ref('users/' + userSessionUID).update({
+        balance: updatedBalance
+    }).then(() => {
+        
+        // 2. Match ke andar participant ko add karo
+        firebase.database().ref('matches/' + matchId + '/participants/' + userSessionUID).set({
+            uid: userSessionUID,
+            gameName: gameName.trim(),
+            joinTime: new Date().toLocaleString()
+        }).then(() => {
+            alert("🎉 Badhai ho! Aap safaltapoorvak match mein join ho gaye hain.");
+            // UI par balance instantly update kar do
+            document.getElementById('user-balance').innerText = "₹ " + updatedBalance.toFixed(2);
+        }).catch((err) => {
+            alert("❌ Match data sync mein dikkat aayi: " + err.message);
+        });
+
+    }).catch((err) => {
+        alert("❌ Transaction failed: " + err.message);
+    });
+}
+        
+        
 
         function uploadGiveawayPhotoAndSend() {
             let name = document.getElementById('winner-name').value.trim();
