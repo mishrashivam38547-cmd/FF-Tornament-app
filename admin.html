@@ -161,16 +161,23 @@
     </div>
     </div>
 
-    <div class="card" style="background: #f9f9f9; border-color: #ddd;">
-        <h3>📥 User Deposit Requests (Money Approvals)</h3>
-        <div id="deposit-requests-container">Loading requests...</div>
-    </div>
-
-    <div class="card" style="background: #fffdf5; border-color: #ffeaa7;">
-        <h3 style="color: #d63031; border-bottom-color: #d63031;">📤 User Withdrawal Requests (Payouts)</h3>
-        <div id="withdraw-requests-container">Loading withdrawal requests...</div>
+    <div class="card" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+    <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; text-align: left;">
+        📥 User Deposit Requests (Money Approvals)
+    </h2>
+    <div id="user-deposit-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 40px;">
+        🔄 Deposit requests ki checking ho rahi hai...
     </div>
 </div>
+
+<div class="card" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+    <h2 style="color: #ff4e50; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; text-align: left;">
+        📥 User Withdrawal Requests (Payouts)
+    </h2>
+    <div id="user-withdrawal-list" style="margin-top: 15px; text-align: center; color: #666; min-height: 40px;">
+        🔄 Withdrawal requests ki checking ho rahi hai...
+    </div>
+</div> 
 
 <script>
     const firebaseConfig = {
