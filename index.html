@@ -167,9 +167,7 @@
                     <label>Free Fire Game UID:</label>
                     <input type="text" id="player-uid" placeholder="e.g., 1234567890">
                     <div id="match-status-area" style="width: 100%; margin-top: 10px;">
-    <button class="btn-submit" style="background: #28a745; width: 100%; padding: 12px; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;" onclick="joinMatch('match_01', 10)">
-        Confirm & Join Match
-    </button>
+    <button class="btn-submit" style="background: #28a745;" onclick="joinMatch('match_01', 10)">Confirm & Join Match</button>
                     </div>
                     
             </div>
@@ -621,19 +619,18 @@ function switchTab(tabName) {
             window.location.href = `upi://pay?pa=${upiId}&pn=SilentSniperTournament&am=${amount}&cu=INR`;
         }
 
-// 🎮 JOIN TOURNAMENT MATCH FUNCTION (Universal No-Crash Fix)
+// 🎮 SAFE JOIN TOURNAMENT MATCH FUNCTION (Direct UI Injector)
 function joinMatch(matchId, entryFee) {
-    // Agar dynamic data nahi mila toh default parameters set karein
     let targetMatchId = matchId || "match_01";
-    let fee = (entryFee !== undefined) ? entryFee : 10; // Default entry fee agar pass na ho
+    let fee = (entryFee !== undefined) ? entryFee : 10; 
 
-    // 🔍 Step 1: Login Check
+    // 🔍 1. Login Session Check
     if (!userSessionUID || userSessionUID === "") {
         alert("⚠️ Pehle login karein! Agar aap login hain, toh ek baar page refresh karein.");
         return;
     }
 
-    // 🔍 Step 2: Balance Check
+    // 🔍 2. Wallet Balance Check
     let currentBalanceText = document.getElementById('user-balance').innerText;
     let currentBalance = parseFloat(currentBalanceText.replace(/[^\d.-]/g, '')) || 0;
 
@@ -642,7 +639,7 @@ function joinMatch(matchId, entryFee) {
         return;
     }
 
-    // 🔍 Step 3: Game Name (IGN) Prompt
+    // 🔍 3. Free Fire Name (IGN) Prompt Box
     let gameName = prompt("Enter your Free Fire Game Name (IGN):");
     if (!gameName || gameName.trim() === "") {
         alert("⚠️ Match join karne ke liye Game Name daalna zaroori hai!");
@@ -651,18 +648,34 @@ function joinMatch(matchId, entryFee) {
 
     let updatedBalance = currentBalance - fee;
 
-    // 🔄 Step 4: Firebase Update
+    // 🔄 4. Firebase Database Sync
+    // Pehle user ka balance kam karein
     firebase.database().ref('users/' + userSessionUID).update({
         balance: updatedBalance
     }).then(() => {
         
+        // Fir participant list mein entry daalein
         firebase.database().ref('matches/' + targetMatchId + '/participants/' + userSessionUID).set({
             uid: userSessionUID,
             gameName: gameName.trim(),
             joinTime: new Date().toLocaleString()
         }).then(() => {
             alert("🎉 Badhai ho! Aap safaltapoorvak match mein join ho gaye hain.");
+            
+            // UI par balance instantly update karein
             document.getElementById('user-balance').innerText = "₹ " + updatedBalance.toFixed(2);
+            
+            // 🎯 DIRECT UI FIX: Modal ke andar wale button ko automatic waiting text me badlo
+            // Hum direct button ko target kar rahe hain bina layout chhede
+            let submitBtn = document.querySelector('.btn-submit');
+            if (submitBtn) {
+                // Button ko disable kar do aur uska style change karke waiting text daal do
+                submitBtn.disabled = true;
+                submitBtn.style.background = "#ff9f43";
+                submitBtn.style.cursor = "not-allowed";
+                submitBtn.innerHTML = "🎮 Status: Joined! Room ID & Pass ka wait karein...";
+            }
+
         }).catch((err) => {
             alert("❌ Match data sync mein dikkat aayi: " + err.message);
         });
@@ -671,6 +684,7 @@ function joinMatch(matchId, entryFee) {
         alert("❌ Transaction failed: " + err.message);
     });
 }
+        
 // 🔄 LIVE AUTOMATIC MATCH INJECTOR LOOP
 function checkMatchStatus() {
     if (!userSessionUID) return;
