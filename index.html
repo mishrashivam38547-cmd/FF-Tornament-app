@@ -670,7 +670,53 @@ function joinMatch(matchId, entryFee) {
         alert("❌ Transaction failed: " + err.message);
     });
 }
+// 🔄 LIVE STATUS MONITOR: ROOM ID & PASSWORD WAITING SYSTEM
+function checkMatchStatus(matchId) {
+    if (!userSessionUID) return;
 
+    // Firebase database se 'matches/match_01' ka data live listen karein
+    firebase.database().ref('matches/' + matchId).on('value', (snapshot) => {
+        const matchData = snapshot.val();
+        const statusArea = document.getElementById('match-status-area');
+        if (!statusArea) return;
+
+        // 1. Check karein kya player is match me already joined hai?
+        if (matchData && matchData.participants && matchData.participants[userSessionUID]) {
+            
+            // Modal khula ho toh use automatic band kar do kyunki player already join hai
+            if(typeof closeJoinModal === "function") { closeJoinModal(); }
+
+            // 2. Joined hai, toh check karo kya Admin ne Room ID & Pass daal diya hai?
+            if (matchData.roomId && matchData.roomPassword) {
+                statusArea.innerHTML = `
+                    <div style="background: #141414; padding: 12px; border-radius: 8px; border: 2px solid #28a745; text-align: center; margin: 10px 0;">
+                        <span style="color: #28a745; font-weight: bold; font-size: 14px;">✅ ROOM ID & PASS READY</span>
+                        <div style="margin-top: 8px; font-size: 13px; color: #fff; text-align: left; padding-left: 10px;">
+                            <p style="margin: 4px 0;"><strong>Room ID:</strong> <span style="color: #ff9f43; user-select: all;">${matchData.roomId}</span></p>
+                            <p style="margin: 4px 0;"><strong>Password:</strong> <span style="color: #ff9f43; user-select: all;">${matchData.roomPassword}</span></p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 3. User joined hai par abhi admin ne details upload nahi ki (Waiting State)
+                statusArea.innerHTML = `
+                    <div style="background: #141414; padding: 12px; border-radius: 8px; border: 2px dashed #ff9f43; text-align: center; margin: 10px 0;">
+                        <span style="color: #ff9f43; font-weight: bold; font-size: 13px;">🎮 Status: Joined (Registered)</span>
+                        <p style="color: #aaa; font-size: 11px; margin: 5px 0 0 0;">Room ID aur Password ka wait karein, match shuru hone se 15 minute pehle yahan dikhega.</p>
+                    </div>
+                `;
+            }
+        } else {
+            // 4. Agar user ne join nahi kiya hai, toh normal Button dikhao
+            statusArea.innerHTML = `
+                <button class="btn-submit" style="background: #28a745; width: 100%; padding: 10px; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="joinMatch('${matchId}', 10)">
+                    Confirm & Join Match
+                </button>
+            `;
+        }
+    });
+}
+        
         function uploadGiveawayPhotoAndSend() {
             let name = document.getElementById('winner-name').value.trim();
             let phone = document.getElementById('winner-phone').value.trim();
