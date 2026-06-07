@@ -1,32 +1,28 @@
-// 🔐 RS7 ESPORT - MODULAR AUTHENTICATION SYSTEM (auth.js)
+// 🔐 RS7 ESPORT - AUTHENTICATION & USER TRAFFIC CONTROLLER (auth.js)
 
-// 1. Google Provider Instance Configuration
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// 2. Google Login Logic Function
+// 🎮 Google Sign-In Function
 function loginWithGoogle() {
-    console.log("Google Login Button Clicked!");
+    console.log("Google Login Triggered!");
     
     if (typeof firebase === 'undefined') {
-        alert("❌ Firebase core setup is missing or offline!");
+        alert("❌ Firebase module load nahi ho paya!");
         return;
     }
 
-    const currentAuth = firebase.auth();
-    const currentDatabase = firebase.database();
-
-    currentAuth.signInWithPopup(googleProvider)
+    firebase.auth().signInWithPopup(googleProvider)
         .then((result) => {
             const user = result.user;
-            console.log("Google Authenticated User:", user.displayName);
+            console.log("Google User NetID:", user.uid);
             
-            // Check checking user database check
-            return currentDatabase.ref('users/' + user.uid).once('value')
+            // Database registration verify karein
+            return database.ref('users/' + user.uid).once('value')
                 .then((snapshot) => {
                     if (!snapshot.exists()) {
-                        // Naya profile generate karein
-                        return currentDatabase.ref('users/' + user.uid).set({
+                        // Agar naya player hai toh default layout banayein
+                        return database.ref('users/' + user.uid).set({
                             uid: user.uid,
                             name: user.displayName || "Gamer",
                             email: user.email || "",
@@ -42,19 +38,17 @@ function loginWithGoogle() {
         })
         .catch((error) => {
             console.error("Auth Engine Error:", error);
-            
-            // Redirect backup option agar browser popup block kare
             if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-                if (confirm("Popup block ho raha hai! Kya aap fallback sign-in use karna chahte hain?")) {
-                    currentAuth.signInWithRedirect(googleProvider);
+                if (confirm("Popup block ho raha hai! Kya aap default redirect se login karna chahte hain?")) {
+                    firebase.auth().signInWithRedirect(googleProvider);
                 }
             } else {
-                alert("❌ Login Failed: " + error.message + " (Code: " + error.code + ")");
+                alert("❌ Sign-In Failed: " + error.message);
             }
         });
 }
 
-// 3. Logout Logic Function
+// 🚪 Logout Function
 function logoutFirebase() {
     firebase.auth().signOut().then(() => {
         alert("Logged Out Successfully!");
@@ -64,42 +58,40 @@ function logoutFirebase() {
     });
 }
 
-// 4. Realtime User Authentication State Observer
+// 🔓 Realtime Auth Observer Loop
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-        window.userSessionUID = user.uid;
-        window.playerIGN = user.displayName || "Gamer";
+        userSessionUID = user.uid;
+        playerIGN = user.displayName || "Gamer";
 
-        // Dynamic elements injection handler (Safe validation)
+        // Inject text into layout safely
         const uidElement = document.getElementById('user-display-uid');
-        if (uidElement) uidElement.innerText = window.userSessionUID;
+        if (uidElement) uidElement.innerText = userSessionUID;
 
         const welcomeElement = document.getElementById('welcome-username');
-        if (welcomeElement) welcomeElement.innerText = "🎮 " + window.playerIGN;
+        if (welcomeElement) welcomeElement.innerText = "🎮 " + playerIGN;
 
-        // Screen state toggles
+        // Toggle app screens view
         const loginScreen = document.getElementById('login-screen');
         if (loginScreen) loginScreen.style.display = 'none';
 
         const appContainer = document.getElementById('app-container');
         if (appContainer) appContainer.style.display = 'block';
 
-        // Auto sync core changes safely inside global database variable
-        if (typeof database !== 'undefined') {
-            database.ref('users/' + window.userSessionUID).update({
-                uid: window.userSessionUID,
-                name: window.playerIGN,
-                email: user.email || ""
-            });
-        }
+        // Base metadata parameters sync inside database
+        database.ref('users/' + userSessionUID).update({
+            uid: userSessionUID,
+            name: playerIGN,
+            email: user.email || ""
+        });
 
-        // Trigger matches dynamic systems load
+        // Trigger existing background modules
         if (typeof setupUserDatabase === 'function') setupUserDatabase();
         if (typeof startLiveListeners === 'function') startLiveListeners();
 
     } else {
-        window.userSessionUID = "";
-        window.playerIGN = "";
+        userSessionUID = "";
+        playerIGN = "";
         
         const loginScreen = document.getElementById('login-screen');
         if (loginScreen) loginScreen.style.display = 'flex';
