@@ -86,7 +86,6 @@ firebase.auth().onAuthStateChanged((user) => {
         });
 
         // Trigger existing background modules
-        if (typeof setupUserDatabase === 'function') setupUserDatabase();
         if (typeof startLiveListeners === 'function') startLiveListeners();
 
     } else {
