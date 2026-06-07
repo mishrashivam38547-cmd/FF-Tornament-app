@@ -481,54 +481,60 @@ function renderMatchCard(match, matchId, container, isHistory) {
         }
     }
 
+        // 🛠️ 1. DYNAMIC DATA INJECTION
     matchDiv.innerHTML = `
-        <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ Map: ${mapType}</h3>
-        <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${title}</p>
-        <p style="color:white; margin:5px 0;"><strong>Time:</strong> ${time}</p>
-        <p style="color:white; margin:5px 0;"><strong>Entry Fee:</strong> ₹ ${entryFee}</p>
-        <p style="color:white; margin:5px 0;"><strong>Prize Pool:</strong> ₹ ${prizePool}</p>
-        <p style="color:white; margin:5px 0 15px 0;"><strong>Per Kill:</strong> ₹ ${killReward}</p>
+        <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ Map: ${match.mapType || 'N/A'}</h3>
+        <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${match.title || 'FF Match'}</p>
+        <p style="color:white; margin:5px 0;"><strong>Time:</strong> ${match.time || 'N/A'}</p>
+        <p style="color:white; margin:5px 0;"><strong>Entry Fee:</strong> ₹ ${match.fee || '0'}</p>
+        <p style="color:white; margin:5px 0;"><strong>Prize Pool:</strong> ₹ ${match.prize || '0'}</p>
+        <p style="color:white; margin:5px 0 15px 0;"><strong>Per Kill:</strong> ₹ ${match.perkill || '0'}</p>
         ${statusHTML}
         ${buttonHTML}
     `;
-    container.appendChild(matchDiv);
+
+    // 📦 2. APPEND TO LAYOUT
+    if (container) {
+        container.appendChild(matchDiv);
+    }
+} // 👈 Line 495: Yeh renderMatchCard function ka perfect end hai
+
+// 📑 3. TAB SWITCHER SYSTEM (FIXED EXTRA TOKEN & EVENT CRASH)
+function switchTab(tabName) {
+    console.log("Switching to tab:", tabName);
+
+    // Saare tab contents ko hide aur inactive karein
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+        tab.classList.remove('active');
+    });
+
+    // Saare tab buttons se active class hatayein
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Target tab container safely handling layouts
+    const targetTab = document.getElementById(tabName + '-tab') || document.getElementById(tabName + '-matches-container');
+    if (targetTab) {
+        targetTab.style.display = 'block';
+        targetTab.classList.add('active');
+    }
+
+    // Clicked button par active class automatic add karein
+    const clickedButton = document.querySelector(`button[onclick*="${tabName}"]`);
+    if (clickedButton) {
+        clickedButton.classList.add('active');
+    }
+
+    currentTabState = tabName;
+    
+    // Refresh loop structure dynamically
+    if (typeof refreshMatchesDisplay === 'function') {
+        refreshMatchesDisplay();
+    }
 }
-        
-
-            matchDiv.innerHTML = `
-                <h3 style="color:#f1c40f; margin:0 0 10px 0;">🗺️ Map: ${mapType}</h3>
-                <p style="color:white; margin:5px 0;"><strong>Title:</strong> ${title}</p>
-                <p style="color:white; margin:5px 0;"><strong>Time:</strong> ${time}</p>
-                <p style="color:white; margin:5px 0;"><strong>Entry Fee:</strong> ₹ ${entryFee}</p>
-                <p style="color:white; margin:5px 0;"><strong>Prize Pool:</strong> ₹ ${prizePool}</p>
-                <p style="color:white; margin:5px 0 15px 0;"><strong>Per Kill:</strong> ₹ ${killReward}</p>
-                ${statusHTML}
-                ${buttonHTML}
-            `;
-            container.appendChild(matchDiv);
-        }
-
-        // 🔀 4. TAB SWITCHER SYSTEM
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.style.display = 'none';
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            const targetTab = document.getElementById(tabName + '-tab');
-            if(targetTab) {
-                targetTab.style.display = 'block';
-                targetTab.classList.add('active');
-            }
-            
-            if(event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-            
-            currentTabState = tabName;
-            refreshMatchesDisplay();
-        }
+    
 
         function openPaymentModal() { document.getElementById('payment-modal').style.display = 'block'; }
         function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
