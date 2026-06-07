@@ -381,19 +381,24 @@
             allMatchesData = snapshot.val() || {};
             refreshMatchesDisplay();
         });
+// 🔄 WATCH DISPLAY REFRESH FUNCTION WITH REALTIME WAITING SCREEN LINK (FIXED FREEZE)
+function refreshMatchesDisplay() {
+    const activeContainer = document.getElementById('active-matches-container');
+    const historyContainer = document.getElementById('history-matches-container');
 
-        // 🔄 2. MATCH DISPLAY REFRESH FUNCTION WITH REALTIME WAITING SCREEN LINK
-        function refreshMatchesDisplay() {
-            const activeContainer = document.getElementById('active-matches-container');
-            const historyContainer = document.getElementById('history-matches-container');
-            
-            if (!activeContainer || !historyContainer) return;
-            
-            activeContainer.innerHTML = "";
-            historyContainer.innerHTML = "";
-            
-            let hasActive = false;
-            let hasHistory = false;
+    // Agar containers nahi bhi milte, toh bhi script ko crash ya freeze hone se bachayein
+    if (activeContainer) activeContainer.innerHTML = "";
+    if (historyContainer) historyContainer.innerHTML = "";
+
+    // 💡 ZAROORI: Matches milne par "Firebase se matches load ho rahe hain..." wale text ko hide karein
+    // Agar aapke loading element ki ID kuch aur hai, toh 'loading-text' ki jagah wo ID daal dena
+    const loadingMessage = document.getElementById('loading-text') || document.querySelector('p[id*="load"]');
+    if (loadingMessage) {
+        loadingMessage.style.display = 'none';
+    }
+
+    let hasActive = false;
+    let hasHistory = false;
 
             for (let matchId in allMatchesData) {
                 let match = allMatchesData[matchId];
