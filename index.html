@@ -286,64 +286,94 @@
         let globalWhatsAppChannelLink = "https://whatsapp.com";
         const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
-        // 🔐 GOOGLE LOGIN FUNCTION
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-            .then((result) => {
-                console.log("Login Successful!");
-            })
-            .catch((error) => {
-                alert("❌ Login Failed: " + error.message);
-            });
-        }
-
-        // 🚪 LOGOUT FUNCTION
-        function logoutFirebase() {
-            auth.signOut().then(() => {
-                location.reload();
-            });
-        }
-
-        // 🔐 FIREBASE AUTH STATE LISTENER
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                userSessionUID = user.uid;
-                playerIGN = user.displayName || "Gamer";
-
-                let welcomeElement = document.getElementById('welcome-username');
-                if (welcomeElement) welcomeElement.innerText = "🎮 " + playerIGN;
-
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
-
-                firebase.database().ref('users/' + userSessionUID).update({
-                    uid: userSessionUID,
-                    name: playerIGN,
-                    email: user.email || ""
+// 🎮 GOOGLE LOGIN FUNCTION (FIXED RUNTIME CRASH)
+function loginWithGoogle() {
+    console.log("Google Login Button Clicked!");
+    const provider = new firebase.auth.GoogleAuthProvider();
+    
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            const user = result.user;
+            console.log("Google User:", user.displayName);
+            
+            // Realtime database instance verification
+            return database.ref('users/' + user.uid).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        // Naya player hai toh default wallet setup karo
+                        return database.ref('users/' + user.uid).set({
+                            uid: user.uid,
+                            name: user.displayName || "Gamer",
+                            email: user.email || "",
+                            wallet: 0.00,
+                            balance: 0.00
+                        });
+                    }
                 });
-
-                setupUserDatabase();
-                startLiveListeners();
-            } else {
-                userSessionUID = "";
-                playerIGN = "";
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('app-container').style.display = 'none';
-            }
+        })
+        .then(() => {
+            alert("🎉 Login Successful!");
+            window.location.reload();
+        })
+        .catch((error) => {
+            console.error("Auth Error:", error);
+            alert("❌ Login Failed: " + error.message);
         });
+}
+
+// 🚪 LOGOUT FUNCTION
+function logoutFirebase() {
+    auth.signOut().then(() => {
+        alert("Logged Out Successfully!");
+        location.reload();
+    }).catch((error) => {
+        alert("Logout Error: " + error.message);
+    });
+}
+
+// 🔓 FIREBASE AUTH STATE LISTENER (AUTO SYNC)
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        userSessionUID = user.uid;
+        playerIGN = user.displayName || "Gamer";
+
+        // UI elements text handling safely
+        const uidElement = document.getElementById('user-display-uid');
+        if (uidElement) uidElement.innerText = userSessionUID;
+
+        const welcomeElement = document.getElementById('welcome-username');
+        if (welcomeElement) welcomeElement.innerText = "🎮 " + playerIGN;
+
+        // Screen toggles
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) loginScreen.style.display = 'none';
+
+        const appContainer = document.getElementById('app-container');
+        if (appContainer) appContainer.style.display = 'block';
+
+        // Backup update logic mapping with globally defined database
+        database.ref('users/' + userSessionUID).update({
+            uid: userSessionUID,
+            name: playerIGN,
+            email: user.email || ""
+        });
+
+        // Trigger dynamic handlers
+        if (typeof setupUserDatabase === 'function') setupUserDatabase();
+        if (typeof startLiveListeners === 'function') startLiveListeners();
+
+    } else {
+        userSessionUID = "";
+        playerIGN = "";
         
-        function setupUserDatabase() {
-            if (!userSessionUID) return;
-            database.ref('users/' + userSessionUID).once('value', (snapshot) => {
-                if (!snapshot.exists()) {
-                    database.ref('users/' + userSessionUID).set({
-                        uid: userSessionUID,
-                        name: playerIGN || "Gamer",
-                        balance: 0.00,
-                        wallet: 0.00 
-                    });
-                } else {
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) loginScreen.style.display = 'flex';
+
+        const appContainer = document.getElementById('app-container');
+        if (appContainer) appContainer.style.display = 'none';
+    }
+});
+        
                     database.ref('users/' + userSessionUID).update({ uid: userSessionUID });
                 }
             });
