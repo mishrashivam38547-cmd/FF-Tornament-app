@@ -285,8 +285,13 @@
         let currentWalletBalance = 0.00; 
         let globalWhatsAppChannelLink = "https://whatsapp.com";
         const imgbbApiKey = "0de43554e74e8bef68fc0f49cccf0d1f"; 
+        // 🚨 ERROR DETECTOR HACK (Ise script tag ke shuru me daal dein)
+window.onerror = function(message, source, lineno, colno, error) {
+    alert("🚨 ALERT ERROR IN CODE:\n" + message + "\nLine: " + lineno);
+    return false;
+};
         </script>
-
+    
 <script src="auth.js"></script>
 
 <script>
