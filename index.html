@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RS7_esport Tournament</title>
-    
+      <link rel="manifest" href="manifest.json">
+
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="">
+    <link id="dynamic-apple-icon" rel="apple-touch-icon" href="">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -295,6 +298,25 @@ window.onerror = function(message, source, lineno, colno, error) {
 <script src="auth.js"></script>
 
 <script>
+    // ⚡ AUTOMATIC LOGO SOLVER ENGINE (BINA NAAM BADLE KAAM KAREGA)
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. Aapke page par jo main visible logo laga hai (chahe uska koi bhi naam ho)
+    // Yeh script use dhoondh legi. Apne logo img tag par class="app-main-logo" ya simple id="logo" laga sakte hain.
+    const siteLogoImg = document.querySelector('.logo img') || document.querySelector('#logo') || document.querySelector('img[src*="logo"]') || document.querySelector('img');
+    
+    if (siteLogoImg && siteLogoImg.src) {
+        const detectedLogoUrl = siteLogoImg.src;
+        console.log("🚀 System Auto-Detected Logo Path:", detectedLogoUrl);
+
+        // 2. Browser tab ka logo automatic change karein
+        const favicon = document.getElementById('dynamic-favicon');
+        const appleIcon = document.getElementById('dynamic-apple-icon');
+        
+        if (favicon) favicon.href = detectedLogoUrl;
+        if (appleIcon) appleIcon.href = detectedLogoUrl;
+    }
+});
+    
     // 🔄 DYNAMIC LIVE LISTENERS (Line 295 se jo aapka purana chal raha hai)
     function startLiveListeners() {
         if (!userSessionUID) return;
