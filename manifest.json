@@ -3,21 +3,15 @@
   "name": "RS7 Esport Tournament Hub",
   "icons": [
     {
-      "src": "logo.png", 
+      "src": "https://i.ibb.co/pr5FnM3f/file-00000000169471f8bfb159ec5761f602.png", // 👈 Firebase wala direct image link yahan daal dein
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "logo.png",
+      "src": "https://i.ibb.co/pr5FnM3f/file-00000000169471f8bfb159ec5761f602.png", // 👈 Dono jagah same link daal dein
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "./index.html",
-  "background_color": "#121212",
-  "theme_color": "#1e1e1e",
-  "display": "standalone",
-  "orientation": "portrait"
-}
