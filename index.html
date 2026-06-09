@@ -650,18 +650,30 @@ function switchTab(tabName) {
                 } else { alert("❌ Photo Upload Failed!"); btn.innerText = "Submit Details via WhatsApp"; btn.disabled = false; }
             }).catch(() => { btn.disabled = false; });
         }
-
-        // 🖼️ LIVE LOGO SYNC FOR BOTH LOGIN & MAIN SCREEN
-        database.ref('appSettings/logoUrl').on('value', (snapshot) => {
-            let url = snapshot.val();
-            let logoImages = document.getElementsByClassName('app-live-logo-src');
-            if (url && logoImages.length > 0) {
-                for (let i = 0; i < logoImages.length; i++) {
-                    logoImages[i].src = url;
-                    logoImages[i].style.display = "block";
-                }
+// 🖼️ LIVE LOGO SYNC FOR BOTH LOGIN, MAIN SCREEN & HOME ICONS (DYNAMIC FIXED)
+database.ref('appSettings/logoUrl').on('value', (snapshot) => {
+    let url = snapshot.val();
+    if (url) {
+        // 1. Page ke saare visible images ko sync karein
+        let logoImages = document.getElementsByClassName('app-live-logo-src');
+        if (logoImages.length > 0) {
+            for (let i = 0; i < logoImages.length; i++) {
+                logoImages[i].src = url;
+                logoImages[i].style.display = "block";
             }
-        });
+        }
+
+        // 2. Head tag ke dynamic tab icon aur home screen icon ko sync karein
+        const favicon = document.getElementById('dynamic-favicon');
+        const appleIcon = document.getElementById('dynamic-apple-icon');
+        
+        if (favicon) favicon.href = url;
+        if (appleIcon) appleIcon.href = url;
+
+        console.log("🚀 Firebase Cloud Logo Synchronized Successfully!");
+    }
+});
+    
     </script>
     <script src="tasks.js"></script>
     <script src="deposit.js"></script>
