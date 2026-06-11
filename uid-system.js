@@ -1,59 +1,65 @@
 // ==========================================
-// 📋 AUTO-INJECT USER UID SYSTEM (DYNAMIC CHECK)
+// 📋 AUTOMATIC USER UID INJECTOR (FAIL-PROOF)
 // ==========================================
 
-// 🔄 1. LOGO KO AUTOMATICALLY DHOONDH KAR UID INJECT KARNE KA ENGINE
-function autoInjectUIDBox() {
-    // Hum baar-baar 500ms par check karenge jab tak logo mil na jaye
+function forceInjectUIDBox() {
     const checkExist = setInterval(function() {
-        // Aapke screenshot ke mutabik jo class logo par ho sakti hai unhe target kiya hai
-        const logoElement = document.querySelector('img[src*="logo"]') || 
-                            document.querySelector('.app-logo') || 
-                            document.querySelector('#site-logo') ||
-                            document.querySelector('header img');
+        // Agar pehle se ban gaya hai toh dobara nahi banayenge
+        if (document.getElementById('user-profile-section')) {
+            clearInterval(checkExist);
+            return;
+        }
 
-        if (logoElement) {
-            clearInterval(checkExist); // Logo mil gaya, loop roko!
+        // 🎯 TARGETS: Hum page ke sabse main containers ko target kar rahe hain
+        // Taki agar logo na bhi mile, toh header ya main app container ke top par chipak jaye
+        const targetElement = document.querySelector('.header') || 
+                              document.querySelector('header') || 
+                              document.querySelector('.app-container') ||
+                              document.querySelector('.container') ||
+                              document.body.firstChild; // Kuch na mile toh page ke shuruat me
 
-            // Check karenge kya UID box pehle se toh nahi bana hai
-            if (document.getElementById('user-profile-section')) return;
+        if (targetElement) {
+            clearInterval(checkExist); // Loop ko roko
 
-            // UID Display Box ka html design create karna
             const uidHTML = `
-                <div id="user-profile-section" style="text-align: center; margin: 12px auto; font-family: 'Roboto', sans-serif; display: block; width: 100%; max-width: 250px;">
-                    <p style="color: #aaa; font-size: 11px; margin: 0;">Your Account ID (UID):</p>
-                    <div style="display: inline-flex; align-items: center; background: #1a1a1a; padding: 5px 12px; border-radius: 20px; border: 1px solid #333; margin-top: 4px;">
-                        <span id="display-user-uid" style="color: #ff9f43; font-weight: bold; font-size: 12px; margin-right: 8px;">Loading...</span>
-                        <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43; color: #fff; border: none; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; cursor: pointer;">
+                <div id="user-profile-section" style="text-align: center; margin: 15px auto; padding: 10px; font-family: 'Roboto', sans-serif; background: rgba(0,0,0,0.4); border-radius: 8px; max-width: 280px; width: 90%; display: block; border: 1px solid #222;">
+                    <p style="color: #aaa; font-size: 11px; margin: 0 0 5px 0;">Your Account ID (UID):</p>
+                    <div style="display: inline-flex; align-items: center; background: #111; padding: 6px 12px; border-radius: 20px; border: 1px solid #333;">
+                        <span id="display-user-uid" style="color: #ff9f43; font-weight: bold; font-size: 12px; margin-right: 8px; word-break: break-all;">Loading...</span>
+                        <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43; color: #fff; border: none; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; cursor: pointer; white-space: nowrap;">
                             📋 Copy
                         </button>
                     </div>
                 </div>
             `;
             
-            // Logo ke exact theek niche ise fit kar dena
-            logoElement.insertAdjacentHTML('afterend', uidHTML);
+            // Element ke starting me top par box insert kar dena
+            if(targetElement === document.body.firstChild) {
+                document.body.insertBefore(document.createRange().createContextualFragment(uidHTML), document.body.firstChild);
+            } else {
+                targetElement.insertAdjacentHTML('afterbegin', uidHTML);
+            }
             
-            // UI taiyar hote hi real-time data listen karna shuru karna
+            // Backend synchronization start karna
             setupUIDListener();
         }
-    }, 500); // Har half-second me check karega jab tak page poora load na ho jaye
+    }, 400);
 }
 
-// 🔐 2. AUTH STATE CHANGE LISTENER FOR REALTIME SYNC
+// 🔐 FIREBASE REAL-TIME DATA SYNC
 function setupUIDListener() {
     firebase.auth().onAuthStateChanged((user) => {
         const uidDisplayElement = document.getElementById('display-user-uid');
         if (user) {
             if (uidDisplayElement) uidDisplayElement.innerText = user.uid;
-            window.userSessionUID = user.uid; // index.html ke global scope me save
+            window.userSessionUID = user.uid; // Backup globally
         } else {
             if (uidDisplayElement) uidDisplayElement.innerText = "Not Logged In";
         }
     });
 }
 
-// 📋 3. CLIPBOARD COPY TO FUNCTION
+// 📋 CLIPBOARD COPY CONTROLLER
 function copyUserUIDToClipboard() {
     const uidText = document.getElementById('display-user-uid').innerText;
     if (uidText === "Loading..." || uidText === "Not Logged In") return;
@@ -61,7 +67,6 @@ function copyUserUIDToClipboard() {
     navigator.clipboard.writeText(uidText).then(() => {
         alert("🎉 Account ID (UID) successfully copy ho gayi hai!");
     }).catch((err) => {
-        // Fallback for older browsers
         const el = document.createElement('textarea');
         el.value = uidText;
         document.body.appendChild(el);
@@ -72,9 +77,9 @@ function copyUserUIDToClipboard() {
     });
 }
 
-// 🚀 ENGINE KO RUN KARNA (Jaise hi file load ho, bina kisi parent dependency ke)
+// RUN FORCED INITIALIZATION
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", autoInjectUIDBox);
+    document.addEventListener("DOMContentLoaded", forceInjectUIDBox);
 } else {
-    autoInjectUIDBox();
+    forceInjectUIDBox();
 }
