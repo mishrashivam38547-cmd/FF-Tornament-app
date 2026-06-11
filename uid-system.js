@@ -27,17 +27,20 @@ function injectUserUIDBox(parentElementId) {
     parentElement.insertAdjacentHTML('afterend', uidHTML);
 }
 
-// 🔐 2. AUTH STATE CHANGE LISTENER (Login hote hi UID text badalna)
+// 🔐 AUTH STATE CHANGE LISTENER FOR REALTIME SYNC
 function setupUIDListener() {
     firebase.auth().onAuthStateChanged((user) => {
         const uidDisplayElement = document.getElementById('display-user-uid');
-        if (!uidDisplayElement) return;
-
         if (user) {
-            uidDisplayElement.innerText = user.uid;
-            window.userSessionUID = user.uid; // Global variable baki functions ke liye
+            if (uidDisplayElement) uidDisplayElement.innerText = user.uid;
+            userSessionUID = user.uid; // index.html ke main variable me save ho jayega
+            
+            // Agar aapka balance listener function hai toh wo load ho jaye
+            if (typeof startLiveListeners === "function") {
+                startLiveListeners();
+            }
         } else {
-            uidDisplayElement.innerText = "Not Logged In";
+            if (uidDisplayElement) uidDisplayElement.innerText = "Not Logged In";
         }
     });
 }
