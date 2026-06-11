@@ -1,174 +1,175 @@
-// =======================================================
-// 📌 STICKY NAVIGATION & AUTOMATIC RESULT SUBMISSION SYSTEM
-// =======================================================
+// =================================================================
+// 📌 STICKY NAVIGATION, FIXED BUTTONS & AUTOMATIC RESULT SYSTEM
+// =================================================================
 
 function setupStickyNavigation() {
+    // Agar dashboard tabs pehle se bane hain toh loop se bachein
     if (document.getElementById('fixed-tab-nav-bar')) return;
 
-    const bodyElement = document.body;
-    if (bodyElement) {
+    // Aapke main matches containers ke theek upar ise set karne ke liye target dhoondhna
+    const targetContainer = document.getElementById('matches-tab') || 
+                            document.querySelector('.main-content') || 
+                            document.body;
+
+    if (targetContainer) {
         const navHTML = `
             <div id="fixed-tab-nav-bar" style="
-                position: sticky !important;
-                top: 0 !important;
-                z-index: 9999 !important;
                 display: flex !important;
                 justify-content: space-around !important;
                 align-items: center !important;
                 background: #111111 !important;
-                padding: 12px 10px !important;
-                border-bottom: 2px solid #222222 !important;
-                width: 100% !important;
+                padding: 10px !important;
+                border: 1px solid #222222 !important;
+                border-radius: 8px !important;
+                margin: 15px auto !important;
+                width: 95% !important;
+                max-width: 400px !important;
                 box-sizing: border-box !important;
-                margin-bottom: 10px !important;
             ">
-                <button onclick="switchTab('live')" id="tab-live-btn" style="
-                    flex: 1 !important; margin: 0 5px !important; padding: 10px !important;
-                    background: linear-gradient(135deg, #ff9f43, #ff6b6b) !important;
+                <button onclick="handleTabSwitch('matches')" id="btn-tab-matches" style="
+                    flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
+                    background: linear-gradient(135deg, #ff4e50, #f9d423) !important;
                     color: #ffffff !important; border: none !important; border-radius: 6px !important;
-                    font-weight: bold !important; font-size: 13px !important; cursor: pointer !important;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
-                ">🎮 Live Matches</button>
+                    font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
+                ">Matches</button>
 
-                <button onclick="switchTab('history')" id="tab-history-btn" style="
-                    flex: 1 !important; margin: 0 5px !important; padding: 10px !important;
+                <button onclick="handleTabSwitch('history')" id="btn-tab-history" style="
+                    flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
                     background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
-                    border-radius: 6px !important; font-weight: bold !important; font-size: 13px !important; cursor: pointer !important;
-                ">🏆 Match History</button>
+                    border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
+                ">History</button>
 
-                <button onclick="switchTab('giveaway')" id="tab-giveaway-btn" style="
-                    flex: 1 !important; margin: 0 5px !important; padding: 10px !important;
+                <button onclick="handleTabSwitch('giveaway')" id="btn-tab-giveaway" style="
+                    flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
                     background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
-                    border-radius: 6px !important; font-weight: bold !important; font-size: 13px !important; cursor: pointer !important;
-                ">🎁 Giveaway</button>
+                    border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
+                ">Giveaway Claim</button>
             </div>
             
-            <div id="result-submission-global-container" style="width: 100%; padding: 0 10px; box-sizing: border-box;"></div>
+            <div id="player-result-box-wrapper" style="width: 95%; max-width: 400px; margin: 0 auto 15px auto; box-sizing: border-box;"></div>
         `;
 
-        bodyElement.insertAdjacentHTML('afterbegin', navHTML);
+        // Container ke theek shuruat me is navigation block ko chipkana
+        targetContainer.insertAdjacentHTML('beforebegin', navHTML);
         
-        // Loop lagakar completed matches me check karna ki user joined tha ya nahi
-        listenMatchesForResults();
+        // Firebase loop chalu karna joined matches dhoondhne ke liye
+        startResultFormListener();
     }
 }
 
-function switchTab(tabName) {
-    const liveBtn = document.getElementById('tab-live-btn');
-    const historyBtn = document.getElementById('tab-history-btn');
-    const giveawayBtn = document.getElementById('tab-giveaway-btn');
+// 🔄 TABS REDIRECTION CONTROL
+function handleTabSwitch(tabName) {
+    const mBtn = document.getElementById('btn-tab-matches');
+    const hBtn = document.getElementById('btn-tab-history');
+    const gBtn = document.getElementById('btn-tab-giveaway');
 
-    if (!liveBtn || !historyBtn || !giveawayBtn) return;
+    if (!mBtn || !hBtn || !gBtn) return;
 
-    const inactiveStyle = "background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important; box-shadow: none !important;";
-    const activeStyle = "background: linear-gradient(135deg, #ff9f43, #ff6b6b) !important; color: #ffffff !important; border: none !important; box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;";
+    const offStyle = "background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;";
+    const onStyle = "background: linear-gradient(135deg, #ff4e50, #f9d423) !important; color: #ffffff !important; border: none !important;";
 
-    liveBtn.style.cssText = inactiveStyle;
-    historyBtn.style.cssText = inactiveStyle;
-    giveawayBtn.style.cssText = inactiveStyle;
+    mBtn.style.cssText = offStyle;
+    hBtn.style.cssText = offStyle;
+    gBtn.style.cssText = offStyle;
 
-    if (tabName === 'live') {
-        liveBtn.style.cssText = activeStyle;
-        if (typeof showLiveMatches === "function") showLiveMatches(); 
+    if (tabName === 'matches') {
+        mBtn.style.cssText = onStyle;
+        if (typeof switchTab === "function") switchTab('matches');
     } else if (tabName === 'history') {
-        historyBtn.style.cssText = activeStyle;
-        if (typeof showMatchHistory === "function") showMatchHistory();
+        hBtn.style.cssText = onStyle;
+        if (typeof switchTab === "function") switchTab('history');
     } else if (tabName === 'giveaway') {
-        giveawayBtn.style.cssText = activeStyle;
-        if (typeof showGiveaways === "function") showGiveaways();
+        gBtn.style.cssText = onStyle;
+        if (typeof switchTab === "function") switchTab('giveaway');
     }
 }
 
-// 🎯 REAL-TIME RESULT CHECKER FOR JOINED PLAYERS
-function listenMatchesForResults() {
-    const intervalCheck = setInterval(() => {
+// 🎯 REALTIME VERIFICATION ENGINE FOR SECURE RESULT UPLOADS
+function startResultFormListener() {
+    const checkDb = setInterval(() => {
         if (typeof firebase !== 'undefined' && firebase.database && window.userSessionUID) {
-            clearInterval(intervalCheck);
+            clearInterval(checkDb);
 
-            // Firebase database se matches reference read karna
             firebase.database().ref('matches').on('value', (snapshot) => {
                 const matches = snapshot.val();
-                const resultArea = document.getElementById('result-submission-global-container');
-                if (!resultArea || !matches) return;
+                const formWrapper = document.getElementById('player-result-box-wrapper');
+                if (!formWrapper || !matches) return;
 
-                resultArea.innerHTML = ""; // Clear previous
+                formWrapper.innerHTML = ""; // Purane boxes clear karein
 
                 Object.keys(matches).forEach((matchId) => {
                     const match = matches[matchId];
                     
-                    // Logic Condition: Match 'Completed' hona chahiye AUR user 'participants' list me hona chahiye
-                    const isCompleted = match.status === "Completed" || match.isHistory === true;
-                    const isUserJoined = match.participants && match.participants[window.userSessionUID];
+                    // Rule 1: Match complete hona chahiye
+                    const isMatchOver = match.status === "Completed" || match.isHistory === true;
+                    // Rule 2: Player list me user registered hona chahiye
+                    const hasUserJoined = match.participants && match.participants[window.userSessionUID];
 
-                    if (isCompleted && isUserJoined) {
-                        
-                        // Check karenge ki user ne pehle se result send toh nahi kiya hai
-                        const alreadySubmitted = match.submittedResults && match.submittedResults[window.userSessionUID];
+                    if (isMatchOver && hasUserJoined) {
+                        const hasSubmitted = match.submittedResults && match.submittedResults[window.userSessionUID];
 
-                        if (alreadySubmitted) {
-                            resultArea.innerHTML += `
-                                <div style="background: #111; border: 1px solid #28a745; padding: 12px; margin: 10px 0; border-radius: 8px; text-align: center;">
-                                    <p style="color: #28a745; margin: 0; font-size: 13px; font-weight: bold;">✓ Match [${match.title || 'Free Fire'}] Result Submitted Successfully!</p>
+                        if (hasSubmitted) {
+                            formWrapper.innerHTML += `
+                                <div style="background: #111; border: 1px solid #28a745; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
+                                    <p style="color: #28a745; margin: 0; font-size: 12px; font-weight: bold;">✓ [${match.title || 'FF Match'}] Result Already Submitted!</p>
                                 </div>
                             `;
                         } else {
-                            // Input form box show karna agar user joined tha aur result baaki hai
-                            const formHTML = `
-                                <div id="upload-box-${matchId}" style="background: #1a1a1a; border: 1px solid #ff9f43; padding: 15px; margin: 10px 0; border-radius: 8px; font-family: 'Roboto', sans-serif;">
-                                    <h4 style="color: #ff9f43; margin: 0 0 10px 0; font-size: 14px; text-align: center;">📤 Upload Result: ${match.title || 'FF Match'}</h4>
+                            // User joined hai aur match complete hai -> Form dikhao
+                            const submissionFormHTML = `
+                                <div id="form-card-${matchId}" style="background: #161616; border: 1px solid #ff4e50; padding: 14px; border-radius: 8px; font-family: 'Roboto', sans-serif; margin-bottom: 12px;">
+                                    <h4 style="color: #ff4e50; margin: 0 0 10px 0; font-size: 13px; text-align: center; font-weight: bold;">📤 Submit Result: ${match.title || 'FF Tournament'}</h4>
                                     
-                                    <input type="text" id="game-id-${matchId}" placeholder="Enter Game UID (e.g., 4829104)" style="width:100%; padding:8px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:12px;">
+                                    <input type="text" id="inp-game-id-${matchId}" placeholder="Enter Game UID" style="width:100%; padding:8px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
                                     
-                                    <input type="number" id="game-kills-${matchId}" placeholder="Enter Total Kills" style="width:100%; padding:8px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:12px;">
+                                    <input type="number" id="inp-kills-${matchId}" placeholder="Enter Kills Number" style="width:100%; padding:8px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
                                     
-                                    <p style="color: #aaa; font-size: 11px; margin: 0 0 4px 0;">Screenshot Upload Link (Paste ImgBB/Imgur Link):</p>
-                                    <input type="text" id="game-ss-${matchId}" placeholder="https://ibb.co/example" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:12px;">
+                                    <input type="text" id="inp-screenshot-${matchId}" placeholder="Paste Screenshot Link (ImgBB/Imgur)" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
                                     
-                                    <button onclick="uploadPlayerMatchResult('${matchId}')" style="width:100%; padding:10px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:5px; cursor:pointer; font-size:13px;">Submit Match Result</button>
+                                    <button onclick="processResultUpload('${matchId}')" style="width:100%; padding:9px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:5px; cursor:pointer; font-size:12px;">Submit Details</button>
                                 </div>
                             `;
-                            resultArea.innerHTML += formHTML;
+                            formWrapper.innerHTML += submissionFormHTML;
                         }
                     }
                 });
             });
         }
-    }, 500);
+    }, 600);
 }
 
-// 🚀 RESULT SUBMIT DATA SEND TO FIREBASE
-function uploadPlayerMatchResult(matchId) {
-    const gameId = document.getElementById(`game-id-${matchId}`).value.trim();
-    const kills = document.getElementById(`game-kills-${matchId}`).value;
-    const ssLink = document.getElementById(`game-ss-${matchId}`).value.trim();
+// 🚀 FIREBASE DATA SAVE FUNCTION
+function processResultUpload(matchId) {
+    const uidVal = document.getElementById(`inp-game-id-${matchId}`).value.trim();
+    const killsVal = document.getElementById(`inp-kills-${matchId}`).value;
+    const ssVal = document.getElementById(`inp-screenshot-${matchId}`).value.trim();
 
-    if (!gameId || !kills || !ssLink) {
-        alert("🚨 Kripya saari details (UID, Kills, Screenshot Link) sahi se fill karein!");
+    if (!uidVal || !killsVal || !ssVal) {
+        alert("🚨 Kripya saari fields (Game UID, Kills, Screenshot Link) bharein!");
         return;
     }
 
-    const resultData = {
+    const payload = {
         playerUID: window.userSessionUID,
-        gameId: gameId,
-        kills: parseInt(kills) || 0,
-        screenshot: ssLink,
+        gameId: uidVal,
+        kills: parseInt(killsVal) || 0,
+        screenshot: ssVal,
         submittedAt: Date.now()
     };
 
-    // Firebase database me match id ke andar submittedResults node me save karna
-    firebase.database().ref(`matches/${matchId}/submittedResults/${window.userSessionUID}`).set(resultData)
+    firebase.database().ref(`matches/${matchId}/submittedResults/${window.userSessionUID}`).set(payload)
     .then(() => {
-        alert("🎉 Boom! Aapka result successfully save ho gaya hai. Admin verification ke baad wallet me money add ho jayegi.");
+        alert("🎉 Result successfully upload ho gaya! Admin verify karte hi prize wallet me daal dega.");
     })
-    .catch((error) => {
-        alert("❌ Error: " + error.message);
+    .catch((err) => {
+        alert("❌ Database Error: " + err.message);
     });
 }
 
-// AUTOMATIC INITIALIZATION ENGINE
-const launchNavEngine = setInterval(() => {
+// AUTO INITIALIZE START
+const initNavLoop = setInterval(() => {
     if (document.body) {
-        clearInterval(launchNavEngine);
+        clearInterval(initNavLoop);
         setupStickyNavigation();
     }
-}, 250);
+}, 300);
