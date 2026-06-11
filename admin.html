@@ -104,6 +104,10 @@
                     <input type="number" id="match-kill" value="5">
                 </div>
                 <div class="form-group">
+    <label>Prize Pool (₹):</label>
+    <input type="number" id="match-prize-pool" value="100">
+                </div>
+                <div class="form-group">
                     <label>Select Map:</label>
                     <select id="match-map">
                         <option value="Bermuda">Bermuda</option>
@@ -208,34 +212,48 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 🔄 LIVE MATCH INITIALIZER
-        function createNewMatch() {
-            let title = document.getElementById('match-title').value;
-            let time = document.getElementById('match-time').value;
-            let fee = document.getElementById('match-fee').value;
-            let kill = document.getElementById('match-kill').value;
-            let mapType = document.getElementById('match-map').value || "Bermuda";
+        // 🔄 LIVE MATCH INITIALIZER (WITH MANUAL PRIZE POOL SETUP)
+function createNewMatch() {
+    let title = document.getElementById('match-title').value;
+    let time = document.getElementById('match-time').value;
+    let fee = document.getElementById('match-fee').value;
+    let kill = document.getElementById('match-kill').value;
+    let mapType = document.getElementById('match-map').value || "Bermuda";
+    
+    // 🎯 1. PRIZE POOL BOX SE MANUAL VALUE READ KARNA
+    let prizePool = document.getElementById('match-prize-pool').value || "100";
 
-            if(!title || !time) { alert("Match Title aur Time fill karein!"); return; }
+    if(!title || !time) { 
+        alert("Match Title aur Time fill karein!"); 
+        return; 
+    }
 
-            let newMatchKey = database.ref('matches').push().key;
-            database.ref('matches/' + newMatchKey).set({ 
-                matchId: newMatchKey,
-                title: title, 
-                time: time, 
-                fee: fee, 
-                kill: kill, 
-                mapType: mapType,
-                matchStatus: "Upcoming",
-                roomId: "",
-                roomPass: "",
-                winnerName: "",
-                winnerKills: 0
-            }).then(() => { 
-                alert("🎉 Naya Match Successfully Create Ho Gaya!");
-            });
-        }
-
+    let newMatchKey = database.ref('matches').push().key;
+    database.ref('matches/' + newMatchKey).set({ 
+        matchId: newMatchKey,
+        title: title, 
+        time: time, 
+        fee: fee, 
+        kill: kill, 
+        mapType: mapType,
+        prizePool: prizePool, // 👈 2. FIREBASE DATABASE MEIN MANUAL PRIZE POOL APNE AAP CHALA JAYEGA
+        matchStatus: "Upcoming",
+        roomId: "",
+        roomPass: "",
+        winnerName: "",
+        winnerKills: 0
+    }).then(() => { 
+        alert("🎉 Naya Match Successfully Create Ho Gaya!");
+        
+        // 🧼 3. BONUS: Match banne ke baad input boxes ko khali aur prize pool ko default 100 karna
+        document.getElementById('match-title').value = "";
+        document.getElementById('match-time').value = "";
+        document.getElementById('match-fee').value = "";
+        document.getElementById('match-kill').value = "";
+        document.getElementById('match-prize-pool').value = "100";
+    });
+}
+        
         // Realtime Tournament Fetcher & Dropdown Populator
         database.ref('matches').on('value', (snapshot) => {
             const listContainer = document.getElementById('admin-matches-list');
@@ -368,6 +386,7 @@
                 document.getElementById('match-time').value = match.time || "";
                 document.getElementById('match-fee').value = match.fee || "20";
                 document.getElementById('match-kill').value = match.kill || "5";
+                document.getElementById('match-prize-pool').value = match.prizePool || "100";
             });
         };
 
