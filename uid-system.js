@@ -1,62 +1,60 @@
 // ==========================================
-// 📋 AUTOMATIC USER UID INJECTOR (FAIL-PROOF)
+// 📋 AUTOMATIC USER UID INJECTOR (CSS FIXED)
 // ==========================================
 
 function forceInjectUIDBox() {
-    const checkExist = setInterval(function() {
-        // Agar pehle se ban gaya hai toh dobara nahi banayenge
-        if (document.getElementById('user-profile-section')) {
-            clearInterval(checkExist);
-            return;
-        }
+    // Agar pehle se bana hai toh loop se bachein
+    if (document.getElementById('user-profile-section')) return;
 
-        // 🎯 TARGETS: Hum page ke sabse main containers ko target kar rahe hain
-        // Taki agar logo na bhi mile, toh header ya main app container ke top par chipak jaye
-        const targetElement = document.querySelector('.header') || 
-                              document.querySelector('header') || 
-                              document.querySelector('.app-container') ||
-                              document.querySelector('.container') ||
-                              document.body.firstChild; // Kuch na mile toh page ke shuruat me
+    // Target check: Header ya main container ko target karenge
+    const targetElement = document.querySelector('.header') || 
+                          document.querySelector('header') || 
+                          document.querySelector('.app-container') ||
+                          document.body;
 
-        if (targetElement) {
-            clearInterval(checkExist); // Loop ko roko
-
-            const uidHTML = `
-                <div id="user-profile-section" style="text-align: center; margin: 15px auto; padding: 10px; font-family: 'Roboto', sans-serif; background: rgba(0,0,0,0.4); border-radius: 8px; max-width: 280px; width: 90%; display: block; border: 1px solid #222;">
-                    <p style="color: #aaa; font-size: 11px; margin: 0 0 5px 0;">Your Account ID (UID):</p>
-                    <div style="display: inline-flex; align-items: center; background: #111; padding: 6px 12px; border-radius: 20px; border: 1px solid #333;">
-                        <span id="display-user-uid" style="color: #ff9f43; font-weight: bold; font-size: 12px; margin-right: 8px; word-break: break-all;">Loading...</span>
-                        <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43; color: #fff; border: none; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; cursor: pointer; white-space: nowrap;">
-                            📋 Copy
-                        </button>
-                    </div>
+    if (targetElement) {
+        // 🔥 Is layout mein width aur display ko clear kiya hai taaki vertical na ho
+        const uidHTML = `
+            <div id="user-profile-section" style="clear: both !important; display: block !important; width: 100% !important; text-align: center !important; margin: 15px auto !important; padding: 5px !important; font-family: 'Roboto', sans-serif;">
+                <p style="color: #aaa; font-size: 11px; margin: 0 0 4px 0; display: block !important;">Your Account ID (UID):</p>
+                <div style="display: inline-flex !important; align-items: center !important; justify-content: center !important; background: #1a1a1a; padding: 6px 14px; border-radius: 20px; border: 1px solid #333; max-width: 90%;">
+                    <span id="display-user-uid" style="color: #ff9f43; font-weight: bold; font-size: 12px; margin-right: 10px; word-break: break-all !important; white-space: nowrap !important;">Loading...</span>
+                    <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43; color: #fff; border: none; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; cursor: pointer; white-space: nowrap !important; display: inline-block !important;">
+                        📋 Copy
+                    </button>
                 </div>
-            `;
-            
-            // Element ke starting me top par box insert kar dena
-            if(targetElement === document.body.firstChild) {
-                document.body.insertBefore(document.createRange().createContextualFragment(uidHTML), document.body.firstChild);
-            } else {
-                targetElement.insertAdjacentHTML('afterbegin', uidHTML);
-            }
-            
-            // Backend synchronization start karna
-            setupUIDListener();
-        }
-    }, 400);
+            </div>
+        `;
+        
+        // Element ko insert karna
+        targetElement.insertAdjacentHTML('afterbegin', uidHTML);
+        
+        // Data listen start karna
+        listenFirebaseForUID();
+    }
 }
 
 // 🔐 FIREBASE REAL-TIME DATA SYNC
-function setupUIDListener() {
-    firebase.auth().onAuthStateChanged((user) => {
-        const uidDisplayElement = document.getElementById('display-user-uid');
-        if (user) {
-            if (uidDisplayElement) uidDisplayElement.innerText = user.uid;
-            window.userSessionUID = user.uid; // Backup globally
-        } else {
-            if (uidDisplayElement) uidDisplayElement.innerText = "Not Logged In";
+function listenFirebaseForUID() {
+    const authCheck = setInterval(() => {
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            clearInterval(authCheck);
+            
+            firebase.auth().onAuthStateChanged((user) => {
+                const uidDisplayElement = document.getElementById('display-user-uid');
+                if (user) {
+                    if (uidDisplayElement) {
+                        uidDisplayElement.innerText = user.uid;
+                        // CSS safe check taaki text break na ho
+                        uidDisplayElement.style.whiteSpace = "nowrap";
+                    }
+                    window.userSessionUID = user.uid; 
+                } else {
+                    if (uidDisplayElement) uidDisplayElement.innerText = "Not Logged In";
+                }
+            });
         }
-    });
+    }, 500);
 }
 
 // 📋 CLIPBOARD COPY CONTROLLER
@@ -77,9 +75,10 @@ function copyUserUIDToClipboard() {
     });
 }
 
-// RUN FORCED INITIALIZATION
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", forceInjectUIDBox);
-} else {
-    forceInjectUIDBox();
-}
+// RUN ENGINE
+const launchEngine = setInterval(() => {
+    if (document.body) {
+        clearInterval(launchEngine);
+        forceInjectUIDBox();
+    }
+}, 300);
