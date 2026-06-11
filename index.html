@@ -313,6 +313,27 @@ window.addEventListener('DOMContentLoaded', () => {
         
         if (favicon) favicon.href = detectedLogoUrl;
         if (appleIcon) appleIcon.href = detectedLogoUrl;
+                // 📋 LOGO KE NICHE MANUALLY UID DESIGN BOX ADD KARNA
+        // Aapka automatic selector jise dhoondh raha hai, usi ke sath inject karenge
+        if (siteLogoImg) {
+            const uidHTML = `
+                <div id="user-profile-section" style="text-align: center; margin: 12px 0; font-family: 'Roboto', sans-serif;">
+                    <p style="color: #aaa; font-size: 11px; margin: 0;">Your Account ID (UID):</p>
+                    <div style="display: inline-flex; align-items: center; background: #1a1a1a; padding: 5px 12px; border-radius: 20px; border: 1px solid #333; margin-top: 4px;">
+                        <span id="display-user-uid" style="color: #ff9f43; font-weight: bold; font-size: 12px; margin-right: 8px;">Loading...</span>
+                        <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43; color: #fff; border: none; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; cursor: pointer;">
+                            📋 Copy
+                        </button>
+                    </div>
+                </div>
+            `;
+            // Logo image ke element ke theek niche box display ho jayega
+            siteLogoImg.insertAdjacentHTML('afterend', uidHTML);
+        }
+        
+        // Real-time UID data check function ko fire karna
+        setupUIDListener();
+        
     }
 });
     
