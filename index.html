@@ -482,15 +482,14 @@ function renderMatchCard(match, matchId, container, isHistory) {
             </div>
         `;
     }
-
-    // Dynamic Values From Admin Panel
-    const entryFee = match.fee || match.entryFee || 10;
-    const prizePool = match.prizePool || "100";
-    const mapType = match.mapType || 'Bermuda';
-    const title = match.title || match.matchName || 'Free Fire Solo Match';
-    const time = match.time || '-';
-    const killReward = match.kill || 0;
-
+// Dynamic Values From Admin Panel
+const entryFee = match.fee || match.entryFee || 10;
+const mapType = match.mapType || 'Bermuda';
+const title = match.title || match.matchName || 'Free Fire Solo Match';
+const time = match.time || '-';
+const killReward = match.kill || 0;
+const prizePool = match.prizePool || "0"; // 👈 Sirf ek baar safe manual database check
+    
     // Admin database fields verification (roomPass or roomPassword)
     const activeRoomId = match.roomId || match.roomid || "";
     const activeRoomPass = match.roomPass || match.roomPassword || match.roompass || "";
