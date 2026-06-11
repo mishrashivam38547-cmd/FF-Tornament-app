@@ -1,35 +1,58 @@
-// ==========================================
-// 📋 AUTOMATIC USER UID INJECTOR (CSS FIXED)
-// ==========================================
+// =======================================================
+// 📋 AUTOMATIC USER UID INJECTOR (FLOATING SAFE SYSTEM)
+// =======================================================
 
 function forceInjectUIDBox() {
-    // Agar pehle se bana hai toh loop se bachein
+    // Agar pehle se bana hai toh dobara nahi banayenge
     if (document.getElementById('user-profile-section')) return;
 
-    // Target check: Header ya main container ko target karenge
-    const targetElement = document.querySelector('.header') || 
-                          document.querySelector('header') || 
-                          document.querySelector('.app-container') ||
-                          document.body;
+    // Direct body ko target karenge taki header ke design se koi lena-dena na rahe
+    const bodyElement = document.body;
 
-    if (targetElement) {
-        // 🔥 Is layout mein width aur display ko clear kiya hai taaki vertical na ho
+    if (bodyElement) {
+        // 🚀 Floating bar style jo page ke top par alag se center me baithega
         const uidHTML = `
-            <div id="user-profile-section" style="clear: both !important; display: block !important; width: 100% !important; text-align: center !important; margin: 15px auto !important; padding: 5px !important; font-family: 'Roboto', sans-serif;">
-                <p style="color: #aaa; font-size: 11px; margin: 0 0 4px 0; display: block !important;">Your Account ID (UID):</p>
-                <div style="display: inline-flex !important; align-items: center !important; justify-content: center !important; background: #1a1a1a; padding: 6px 14px; border-radius: 20px; border: 1px solid #333; max-width: 90%;">
-                    <span id="display-user-uid" style="color: #ff9f43; font-weight: bold; font-size: 12px; margin-right: 10px; word-break: break-all !important; white-space: nowrap !important;">Loading...</span>
-                    <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43; color: #fff; border: none; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; cursor: pointer; white-space: nowrap !important; display: inline-block !important;">
+            <div id="user-profile-section" style="
+                display: flex !important; 
+                flex-direction: column !important;
+                align-items: center !important; 
+                justify-content: center !important; 
+                width: 90% !important; 
+                max-width: 320px !important;
+                margin: 15px auto !important; 
+                padding: 10px !important; 
+                font-family: 'Roboto', sans-serif !important; 
+                background: #111111 !important; 
+                border: 1px solid #333333 !important; 
+                border-radius: 12px !important;
+                box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
+                text-align: center !important;
+            ">
+                <p style="color: #aaaaaa !important; font-size: 11px !important; margin: 0 0 6px 0 !important; font-weight: normal !important; width: 100% !important;">Your Account ID (UID):</p>
+                <div style="
+                    display: flex !important; 
+                    flex-direction: row !important;
+                    align-items: center !important; 
+                    justify-content: space-between !important; 
+                    background: #1a1a1a !important; 
+                    padding: 6px 12px !important; 
+                    border-radius: 8px !important; 
+                    border: 1px solid #444444 !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                ">
+                    <span id="display-user-uid" style="color: #ff9f43 !important; font-weight: bold !important; font-size: 11px !important; word-break: break-all !important; text-align: left !important; padding-right: 5px !important;">Loading...</span>
+                    <button onclick="copyUserUIDToClipboard()" style="background: #ff9f43 !important; color: #ffffff !important; border: none !important; padding: 4px 10px !important; border-radius: 6px !important; font-size: 11px !important; font-weight: bold !important; cursor: pointer !important; white-space: nowrap !important; min-width: 60px !important;">
                         📋 Copy
                     </button>
                 </div>
             </div>
         `;
         
-        // Element ko insert karna
-        targetElement.insertAdjacentHTML('afterbegin', uidHTML);
+        // Is bar ko direct page ke body ke sabshe upar insert kar dena
+        bodyElement.insertAdjacentHTML('afterbegin', uidHTML);
         
-        // Data listen start karna
+        // Real-time data check chalana
         listenFirebaseForUID();
     }
 }
@@ -45,8 +68,6 @@ function listenFirebaseForUID() {
                 if (user) {
                     if (uidDisplayElement) {
                         uidDisplayElement.innerText = user.uid;
-                        // CSS safe check taaki text break na ho
-                        uidDisplayElement.style.whiteSpace = "nowrap";
                     }
                     window.userSessionUID = user.uid; 
                 } else {
@@ -75,7 +96,7 @@ function copyUserUIDToClipboard() {
     });
 }
 
-// RUN ENGINE
+// RUN ENGINE AS SOON AS BODY IS READY
 const launchEngine = setInterval(() => {
     if (document.body) {
         clearInterval(launchEngine);
