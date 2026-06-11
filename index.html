@@ -293,28 +293,9 @@ window.onerror = function(message, source, lineno, colno, error) {
     return false;
 };
         </script>
-    
-<script src="auth.js"></script>
-    <script src="uid-system.js"></script>
+  <script src="auth.js"></script>
+<script src="uid-system.js"></script>
 <script>
-    // ⚡ AUTOMATIC LOGO SOLVER ENGINE (BINA NAAM BADLE KAAM KAREGA)
-window.addEventListener('DOMContentLoaded', () => {
-    // 1. Aapke page par jo main visible logo laga hai (chahe uska koi bhi naam ho)
-    // Yeh script use dhoondh legi. Apne logo img tag par class="app-main-logo" ya simple id="logo" laga sakte hain.
-    const siteLogoImg = document.querySelector('.logo img') || document.querySelector('#logo') || document.querySelector('img[src*="logo"]') || document.querySelector('img');
-    
-    if (siteLogoImg && siteLogoImg.src) {
-        const detectedLogoUrl = siteLogoImg.src;
-        console.log("🚀 System Auto-Detected Logo Path:", detectedLogoUrl);
-
-        // 2. Browser tab ka logo automatic change karein
-        const favicon = document.getElementById('dynamic-favicon');
-        const appleIcon = document.getElementById('dynamic-apple-icon');
-        
-        if (favicon) favicon.href = detectedLogoUrl;
-        if (appleIcon) appleIcon.href = detectedLogoUrl;
-    }
-});
     
     // 🔄 DYNAMIC LIVE LISTENERS (Line 295 se jo aapka purana chal raha hai)
     function startLiveListeners() {
