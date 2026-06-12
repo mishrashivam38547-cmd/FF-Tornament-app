@@ -1,5 +1,5 @@
 // ====================================================================
-// 👑 ADMIN RESULTS VIEW & PRIZE DISTRIBUTION SYSTEM (UPGRADED BALANCER)
+// 👑 ADMIN RESULTS VIEW & AUTO-HIDE PRIZE SYSTEM (CLEAN PANEL V6)
 // ====================================================================
 
 function injectResultsAndPrizeSystem() {
@@ -45,7 +45,8 @@ function toggleMatchResultsPanel(matchId, containerElement) {
     resultsDiv.innerHTML = "⏳ Player results dhoondhe ja rahe hain...";
     containerElement.appendChild(resultsDiv);
 
-    firebase.database().ref(`matches/${matchId}/submittedResults`).once('value', (snapshot) => {
+    // .on('value', ...) lagane se jab bhi prize send hoga, list automatic refresh ho jayegi!
+    firebase.database().ref(`matches/${matchId}/submittedResults`).on('value', (snapshot) => {
         const results = snapshot.val();
         
         if (!results) {
@@ -53,8 +54,11 @@ function toggleMatchResultsPanel(matchId, containerElement) {
             return;
         }
 
+        // Check karenge ki kya koi pending player bacha hai jise reward nahi mila
+        let hasPendingPlayers = false;
+
         let blockHTML = `
-            <h5 style="color: #17a2b8; margin: 0 0 10px 0; text-transform: uppercase; font-size: 12px; font-weight: bold; text-align:center;">📊 SUBMITTED RESULTS & PRIZE SECTION</h5>
+            <h5 style="color: #17a2b8; margin: 0 0 10px 0; text-transform: uppercase; font-size: 12px; font-weight: bold; text-align:center;">📊 SUBMITTED RESULTS (PENDING REWARDS)</h5>
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; min-width: 450px; text-align: left;">
                     <thead>
@@ -71,11 +75,18 @@ function toggleMatchResultsPanel(matchId, containerElement) {
 
         Object.keys(results).forEach((playerUID) => {
             const data = results[playerUID];
-            // Safe fallback agar data object me internal clear ID na ho
             const targetUID = data.playerAppUID || playerUID;
 
+            // 🔥 AUTO-HIDE FILTER: Agar reward already send ho chuka hai, toh is player ko skip (hide) kar do
+            if (data.rewardStatus === "Rewarded") {
+                return; 
+            }
+
+            // Agar control yahan tak aaya hai, matlab kam se kam ek player pending hai
+            hasPendingPlayers = true;
+
             blockHTML += `
-                <tr style="border-bottom: 1px solid #252525; font-size: 11px; background: #1a1a1a;">
+                <tr id="row-${matchId}-${targetUID}" style="border-bottom: 1px solid #252525; font-size: 11px; background: #1a1a1a;">
                     <td style="padding: 8px; color: #ff9f43; font-weight: bold;">${data.playerName || 'N/A'}<br><span style="color:#666; font-size:9px;">App ID: ${targetUID}</span></td>
                     <td style="padding: 8px; color: #fff;">${data.gameId || 'N/A'}</td>
                     <td style="padding: 8px; color: #28a745; font-weight: bold; font-size: 12px;">${data.kills ?? 0}</td>
@@ -95,13 +106,17 @@ function toggleMatchResultsPanel(matchId, containerElement) {
                 </table>
             </div>
         `;
-        resultsDiv.innerHTML = blockHTML;
-    }).catch((err) => {
-        resultsDiv.innerHTML = "<p style='color: #ff4e50; margin:0;'>🚨 Error: " + err.message + "</p>";
+
+        // Agar saare players ko reward mil chuka hai aur koi pending nahi hai
+        if (!hasPendingPlayers) {
+            resultsDiv.innerHTML = "<p style='color: #28a745; margin:0; text-align:center; font-weight:bold;'>🎉 Sabhi players ko prize mil chuka hai! List ekdam saaf hai.</p>";
+        } else {
+            resultsDiv.innerHTML = blockHTML;
+        }
     });
 }
 
-// 🎁 MULTI-PATH BALANCE TRANSACTION ENGINE
+// 🎁 MULTI-PATH BALANCE TRANSACTION & STATUS SETTER
 function distributePlayerPrize(playerUID, matchId) {
     const prizeInput = document.getElementById(`prize-amount-${matchId}-${playerUID}`);
     if (!prizeInput) return;
@@ -113,38 +128,39 @@ function distributePlayerPrize(playerUID, matchId) {
         return;
     }
 
-    const confirmPrize = confirm(`Kya aap sach mein is player ko ₹${prizeAmount} ka prize send karna chahte hain?`);
+    const confirmPrize = confirm(`Kya aap sach mein is player ko ₹${prizeAmount} ka prize send karna chahte hain?\n\nSend karte hi yeh player is list se automatic hat jayega.`);
     if (!confirmPrize) return;
 
-    // 🔥 DUAL CHECK STRATEGY: Hum user node ko pehle read karenge taaki sahi key pakad sakein
     const userRef = firebase.database().ref(`users/${playerUID}`);
+    const matchResultRef = firebase.database().ref(`matches/${matchId}/submittedResults/${playerUID}`);
 
+    // Step 1: User ka balance badhana saare paths par
     userRef.once('value').then((snapshot) => {
         const userData = snapshot.val() || {};
         
-        // Purana balance nikalna alag-alag paths se (jo bhi active ho)
         let currentWallet = parseInt(userData.wallet) || 0;
         let currentBalance = parseInt(userData.balance) || 0;
         let currentCoins = parseInt(userData.coins) || 0;
 
-        // Naya balance jodna
-        const updatedWallet = currentWallet + prizeAmount;
-        const updatedBalance = currentBalance + prizeAmount;
-        const updatedCoins = currentCoins + prizeAmount;
-
-        // Ek sath saare possible fields ko update karna taaki user app jo bhi padh raha ho, use data mil jaye!
         return userRef.update({
-            wallet: updatedWallet,
-            balance: updatedBalance,
-            coins: updatedCoins
+            wallet: currentWallet + prizeAmount,
+            balance: currentBalance + prizeAmount,
+            coins: currentCoins + prizeAmount
         });
     })
     .then(() => {
-        alert(`🎉 Success! Player (ID: ${playerUID}) ke account me ₹${prizeAmount} safe credit ho gaye hain.`);
-        prizeInput.value = ""; // Input box khali karna
+        // Step 2: Match database mein rewardStatus ko "Rewarded" mark karna taaki ye hide ho sake
+        return matchResultRef.update({
+            rewardStatus: "Rewarded",
+            prizeGiven: prizeAmount,
+            rewardedAt: Date.now()
+        });
+    })
+    .then(() => {
+        alert(`🎉 Success! Player ko ₹${prizeAmount} bhej diya gaya hai aur uska naam list se saaf ho gaya hai.`);
     })
     .catch((error) => {
-        alert("❌ Database Update Error: " + error.message);
+        alert("❌ Error: " + error.message);
     });
 }
 
