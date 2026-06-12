@@ -1,5 +1,5 @@
 // ====================================================================
-// 📥 USER RESULT SUBMISSION ENGINE (V17 ATTACHMENT)
+// 📥 USER RESULT SUBMISSION ENGINE (V19 SYNCED)
 // ====================================================================
 
 const IMGBB_API_KEY = "0de43554e74e8bef68fc0f49cccf0d1f"; 
@@ -23,11 +23,11 @@ function runLiveFormInjector() {
                 const divCards = document.querySelectorAll('div');
                 divCards.forEach((card) => {
                     const txt = card.innerText || "";
-                    if ((txt.includes("Map:") || txt.includes("Title:")) && txt.includes(match.title) && !card.querySelector(`.v17-form-box`)) {
+                    if ((txt.includes("Map:") || txt.includes("Title:")) && txt.includes(match.title) && !card.querySelector(`.v19-form-box`)) {
                         
                         const hasSubmitted = match.submittedResults && match.submittedResults[currentUID];
                         const containerDiv = document.createElement('div');
-                        containerDiv.className = 'v17-form-box';
+                        containerDiv.className = 'v19-form-box';
                         containerDiv.style.cssText = "width: 100%; margin-top:10px; clear:both;";
 
                         if (hasSubmitted) {
@@ -42,22 +42,22 @@ function runLiveFormInjector() {
                                     <h4 style="color: #ff4e50; margin: 0 0 8px 0; font-size: 12px; text-align: center; font-weight: bold; text-transform:uppercase;">📤 Submit Match Result</h4>
                                     
                                     <label style="color:#777; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">App Account UID:</label>
-                                    <input type="text" id="v17-app-id-${matchId}" value="${currentUID}" disabled style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#ff9f43; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px; font-weight:bold;">
+                                    <input type="text" id="v19-app-id-${matchId}" value="${currentUID}" disabled style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#ff9f43; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px; font-weight:bold;">
                                     
                                     <label style="color:#ccc; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">Free Fire Game UID:</label>
-                                    <input type="text" id="v17-game-id-${matchId}" placeholder="Enter Free Fire UID" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <input type="text" id="v19-game-id-${matchId}" placeholder="Enter Free Fire UID" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
                                     
                                     <label style="color:#ccc; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">In-Game Name (IGN):</label>
-                                    <input type="text" id="v17-player-name-${matchId}" placeholder="Enter Game Nickname" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <input type="text" id="v19-player-name-${matchId}" placeholder="Enter Game Nickname" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
                                     
                                     <label style="color:#ccc; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">Total Kills Done:</label>
-                                    <input type="number" id="v17-kills-${matchId}" placeholder="0" style="width:100%; padding:7px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <input type="number" id="v19-kills-${matchId}" placeholder="0" style="width:100%; padding:7px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
                                     
                                     <label style="color:#ff9f43; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">📸 Upload Screenshot (From Gallery):</label>
-                                    <input type="file" id="v17-file-${matchId}" accept="image/*" style="width:100%; padding:5px; margin-bottom:4px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
-                                    <p id="v17-status-${matchId}" style="color: #ff9f43; font-size: 10px; margin: 0 0 10px 0; font-weight: bold;"></p>
+                                    <input type="file" id="v19-file-${matchId}" accept="image/*" style="width:100%; padding:5px; margin-bottom:4px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <p id="v19-status-${matchId}" style="color: #ff9f43; font-size: 10px; margin: 0 0 10px 0; font-weight: bold;"></p>
                                     
-                                    <button onclick="processV17Upload('${matchId}', '${currentUID}')" id="v17-btn-${matchId}" style="width:100%; padding:9px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:12px; text-transform:uppercase;">Submit Form</button>
+                                    <button onclick="processV19Upload('${matchId}', '${currentUID}')" id="v19-btn-${matchId}" style="width:100%; padding:9px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:12px; text-transform:uppercase;">Submit Form</button>
                                 </div>
                             `;
                         }
@@ -69,14 +69,14 @@ function runLiveFormInjector() {
     });
 }
 
-// 📸 ImgBB Core Uploader
-function processV17Upload(matchId, currentUID) {
-    const gameIdVal = document.getElementById(`v17-game-id-${matchId}`).value.trim();
-    const nameVal = document.getElementById(`v17-player-name-${matchId}`).value.trim();
-    const killsVal = document.getElementById(`v17-kills-${matchId}`).value;
-    const fileInput = document.getElementById(`v17-file-${matchId}`);
-    const statusText = document.getElementById(`v17-status-${matchId}`);
-    const submitBtn = document.getElementById(`v17-btn-${matchId}`);
+// 📸 ImgBB Uploader
+function processV19Upload(matchId, currentUID) {
+    const gameIdVal = document.getElementById(`v19-game-id-${matchId}`).value.trim();
+    const nameVal = document.getElementById(`v19-player-name-${matchId}`).value.trim();
+    const killsVal = document.getElementById(`v19-kills-${matchId}`).value;
+    const fileInput = document.getElementById(`v19-file-${matchId}`);
+    const statusText = document.getElementById(`v19-status-${matchId}`);
+    const submitBtn = document.getElementById(`v19-btn-${matchId}`);
 
     if (!gameIdVal || !nameVal || !killsVal || !fileInput.files[0]) {
         alert("🚨 Sabhi fields ko sahi se bharein!");
@@ -124,5 +124,5 @@ function processV17Upload(matchId, currentUID) {
     });
 }
 
-// Run Form Injection Loops constantly
+// Loop Running
 setInterval(runLiveFormInjector, 1000);
