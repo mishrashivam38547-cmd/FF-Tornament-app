@@ -1,56 +1,18 @@
 // ====================================================================
-// 🎯 PARENT CONTAINER PLACEMENT & MATCH FILTER SYSTEM (V14)
+// 👑 SAFE HEADER TABS INJECTOR & CARD-ONLY FILTER SYSTEM (V15)
 // ====================================================================
 
 window.currentSelectedTab = 'matches'; // Global active state
 
-function injectTabsStrictlyBelowBalance() {
+function injectTabsInsideHeader() {
     // Agar bar pehle se bana hai toh dubara nahi banana hai
     if (document.getElementById('fixed-tab-nav-bar')) return;
 
-    // 🔥 FIX: "Withdraw Balance" button ka jo main block/box hai usko directly target karna
-    let balanceContainer = null;
-    
-    // Tarika 1: Pehle check karenge agar aapke layout me wallet ya card box hai
-    const potentialContainers = document.querySelectorAll('div');
-    for (let box of potentialContainers) {
-        if (box.innerText && box.innerText.includes("Withdraw Balance") && box.childElementCount > 1) {
-            // Hum us sabse bade div ko pakdenge jisme wallet balance aur button dono hain
-            balanceContainer = box;
-        }
-    }
+    // 🔥 FIX: Sabse safe jagah hai page ka main header/title (h1, h2 ya top navbar)
+    const headerTarget = document.querySelector('h1, h2, .header, #header') || document.body;
+    if (!headerTarget) return;
 
-    // Tarika 2: Agar wo nahi milta toh specific buttons ke parent div ko pakdenge
-    if (!balanceContainer) {
-        const allButtons = document.querySelectorAll('button');
-        for (let btn of allButtons) {
-            if (btn.innerText && btn.innerText.includes("Withdraw Balance")) {
-                balanceContainer = btn.parentElement;
-                break;
-            }
-        }
-    }
-
-    // Fallback: Agar kuch bhi kaam na kare, tabhi matches block ke pehle lagao
-    if (!balanceContainer) {
-        balanceContainer = document.getElementById('matches-tab') || document.querySelector('.main-content');
-        if (balanceContainer) {
-            balanceContainer.insertAdjacentHTML('beforebegin', getNavigationHTML());
-            applyLiveTabFilter();
-            return;
-        }
-    }
-
-    if (!balanceContainer) return;
-
-    // 🔥 Balance waale box ke external content border ke theek baad (afterend) buttons lagao
-    balanceContainer.insertAdjacentHTML('afterend', getNavigationHTML());
-    applyLiveTabFilter();
-}
-
-// Separate UI string to keep code super clean
-function getNavigationHTML() {
-    return `
+    const navHTML = `
         <div id="fixed-tab-nav-bar" style="
             display: flex !important;
             justify-content: space-around !important;
@@ -90,6 +52,15 @@ function getNavigationHTML() {
             🎁 No Giveaway Claims active at this moment.
         </div>
     `;
+
+    // Header ke theek baad daalenge taaki balance button ke upar ya niche safe rahe
+    if (headerTarget === document.body) {
+        headerTarget.insertAdjacentHTML('afterbegin', navHTML);
+    } else {
+        headerTarget.insertAdjacentHTML('afterend', navHTML);
+    }
+    
+    applyLiveTabFilter();
 }
 
 // 🔄 TABS SWITCH CONTROLLER
@@ -116,17 +87,19 @@ function handleTabSwitch(tabName) {
     applyLiveTabFilter();
 }
 
-// 🔥 LIVE CARDS FILTER LOGIC
+// 🔥 SAFE FILTER LOGIC: Sirf asli cards ko target karna (Page black nahi hoga!)
 function applyLiveTabFilter() {
     const gMsg = document.getElementById('giveaway-msg-zone');
     const allDivs = document.querySelectorAll('div');
 
+    // STRICT CHECK: Sirf wahi div select honge jo sach me match card hain
     const masterCardsList = Array.from(allDivs).filter(el => {
         const txt = el.innerText || "";
         const id = el.id || "";
-        return (txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL")) && 
-               !id.includes("fixed-tab-nav-bar") && 
-               el.childElementCount > 1;
+        const hasCardData = txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL");
+        
+        // Kisi main body layout element ko hide hone se bachane ke liye strict logic
+        return hasCardData && !id.includes("fixed-tab-nav-bar") && !el.contains(document.getElementById('fixed-tab-nav-bar')) && el.childElementCount >= 2;
     });
 
     if (window.currentSelectedTab === 'giveaway') {
@@ -160,7 +133,6 @@ function applyLiveTabFilter() {
     });
 }
 
-// Loops
-setInterval(injectTabsStrictlyBelowBalance, 400);
+// System Loops Engine
+setInterval(injectTabsInsideHeader, 400);
 setInterval(applyLiveTabFilter, 500);
-                                       
