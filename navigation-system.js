@@ -1,22 +1,56 @@
 // ====================================================================
-// 🎯 STRICT TOP-POSITIONING TABS SYSTEM (V13)
+// 🎯 PARENT CONTAINER PLACEMENT & MATCH FILTER SYSTEM (V14)
 // ====================================================================
 
 window.currentSelectedTab = 'matches'; // Global active state
 
-function injectTabsStrictlyAboveCards() {
+function injectTabsStrictlyBelowBalance() {
     // Agar bar pehle se bana hai toh dubara nahi banana hai
     if (document.getElementById('fixed-tab-nav-bar')) return;
 
-    // 🔥 PRECISE TARGETING: Matches tab container ya main-content ko target karna
-    const matchesContainer = document.getElementById('matches-tab') || 
-                             document.querySelector('.main-content') ||
-                             document.querySelector('.container');
+    // 🔥 FIX: "Withdraw Balance" button ka jo main block/box hai usko directly target karna
+    let balanceContainer = null;
     
-    if (!matchesContainer) return;
+    // Tarika 1: Pehle check karenge agar aapke layout me wallet ya card box hai
+    const potentialContainers = document.querySelectorAll('div');
+    for (let box of potentialContainers) {
+        if (box.innerText && box.innerText.includes("Withdraw Balance") && box.childElementCount > 1) {
+            // Hum us sabse bade div ko pakdenge jisme wallet balance aur button dono hain
+            balanceContainer = box;
+        }
+    }
 
-    // Beautiful dynamic responsive navigation design
-    const navHTML = `
+    // Tarika 2: Agar wo nahi milta toh specific buttons ke parent div ko pakdenge
+    if (!balanceContainer) {
+        const allButtons = document.querySelectorAll('button');
+        for (let btn of allButtons) {
+            if (btn.innerText && btn.innerText.includes("Withdraw Balance")) {
+                balanceContainer = btn.parentElement;
+                break;
+            }
+        }
+    }
+
+    // Fallback: Agar kuch bhi kaam na kare, tabhi matches block ke pehle lagao
+    if (!balanceContainer) {
+        balanceContainer = document.getElementById('matches-tab') || document.querySelector('.main-content');
+        if (balanceContainer) {
+            balanceContainer.insertAdjacentHTML('beforebegin', getNavigationHTML());
+            applyLiveTabFilter();
+            return;
+        }
+    }
+
+    if (!balanceContainer) return;
+
+    // 🔥 Balance waale box ke external content border ke theek baad (afterend) buttons lagao
+    balanceContainer.insertAdjacentHTML('afterend', getNavigationHTML());
+    applyLiveTabFilter();
+}
+
+// Separate UI string to keep code super clean
+function getNavigationHTML() {
+    return `
         <div id="fixed-tab-nav-bar" style="
             display: flex !important;
             justify-content: space-around !important;
@@ -25,7 +59,7 @@ function injectTabsStrictlyAboveCards() {
             padding: 10px !important;
             border: 1px solid #222222 !important;
             border-radius: 8px !important;
-            margin: 10px auto 20px auto !important;
+            margin: 15px auto !important;
             width: 95% !important;
             max-width: 400px !important;
             box-sizing: border-box !important;
@@ -56,11 +90,6 @@ function injectTabsStrictlyAboveCards() {
             🎁 No Giveaway Claims active at this moment.
         </div>
     `;
-
-    // 🔥 FIX: Matches Cards block ke *THEEK PEHLE* (beforebegin) inject karna 
-    // Isse buttons har haal mein matches cards ke upar dikhenge, niche nahi!
-    matchesContainer.insertAdjacentHTML('beforebegin', navHTML);
-    applyLiveTabFilter();
 }
 
 // 🔄 TABS SWITCH CONTROLLER
@@ -92,7 +121,6 @@ function applyLiveTabFilter() {
     const gMsg = document.getElementById('giveaway-msg-zone');
     const allDivs = document.querySelectorAll('div');
 
-    // Filter out core card chunks safely
     const masterCardsList = Array.from(allDivs).filter(el => {
         const txt = el.innerText || "";
         const id = el.id || "";
@@ -132,6 +160,7 @@ function applyLiveTabFilter() {
     });
 }
 
-// System Loops Engine
-setInterval(injectTabsStrictlyAboveCards, 400);
+// Loops
+setInterval(injectTabsStrictlyBelowBalance, 400);
 setInterval(applyLiveTabFilter, 500);
+                                       
