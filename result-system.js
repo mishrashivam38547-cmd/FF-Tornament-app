@@ -1,5 +1,5 @@
 // ====================================================================
-// 👑 AUTOMATIC TABS INJECTOR & DYNAMIC MATCH FILTER SYSTEM (V8 LIVE)
+// 👑 AUTOMATIC TABS INJECTOR & DYNAMIC MATCH FILTER SYSTEM (V9 FIXED)
 // ====================================================================
 
 const IMGBB_API_KEY = "0de43554e74e8bef68fc0f49cccf0d1f"; 
@@ -9,27 +9,9 @@ function injectSmartStickyNavigation() {
     // Agar bar pehle se bana hai toh kuch mat karo
     if (document.getElementById('fixed-tab-nav-bar')) return;
 
-    // 🔥 FOOLPROOF TARGETING: "Withdraw Balance" button ya kisi bhi primary block ko dhoondhna
-    let targetElement = null;
-    
-    // Tarika 1: Pure page par jo text "Withdraw Balance" dhoondhna
-    const allButtons = document.querySelectorAll('button, div, p, a');
-    for (let el of allButtons) {
-        if (el.innerText && el.innerText.includes("Withdraw Balance")) {
-            targetElement = el;
-            break;
-        }
-    }
-
-    // Tarika 2: Agar upar wala na mile toh matches container ya body ka main container dhoondhna
-    if (!targetElement) {
-        targetElement = document.getElementById('matches-tab') || 
-                        document.querySelector('.main-content') || 
-                        document.getElementById('main-content');
-    }
-
-    // Agar abhi bhi na mile, toh thoda wait karein jab tak layout render ho raha hai
-    if (!targetElement) return;
+    // 🔥 FIX: Ab hum kisi element ka wait nahi karenge, direct body ke starting me daal denge
+    const bodyContainer = document.body;
+    if (!bodyContainer) return;
 
     const navHTML = `
         <div id="fixed-tab-nav-bar" style="
@@ -45,6 +27,8 @@ function injectSmartStickyNavigation() {
             max-width: 400px !important;
             box-sizing: border-box !important;
             clear: both !important;
+            position: relative !important;
+            z-index: 99999 !important;
         ">
             <button onclick="handleTabSwitch('matches')" id="btn-tab-matches" style="
                 flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
@@ -71,10 +55,10 @@ function injectSmartStickyNavigation() {
         </div>
     `;
 
-    // Target element ke theek NICHE (afterend) is poore system ko chipka do
-    targetElement.insertAdjacentHTML('afterend', navHTML);
+    // Body ke theek andar sabse upar inject karein taaki 100% render ho
+    bodyContainer.insertAdjacentHTML('afterbegin', navHTML);
     
-    // Turant filter state refresh kar do
+    // Turant filter refresh
     applyLiveTabFilter();
 }
 
@@ -106,16 +90,14 @@ function handleTabSwitch(tabName) {
 function applyLiveTabFilter() {
     const gMsg = document.getElementById('giveaway-msg-zone');
     
-    // Aapke code se banne wale saare match cards ko select karna
+    // Aapke original system ke bane saare match cards ko select karna
     const allMatchCards = document.querySelectorAll('.match-card-item-box, [id^="match-card-"], #matches-tab > div');
-    
-    // Kuch themes me dynamic cards bina generic wrappers ke hote hain, unhe query select se handle karna
-    const layoutContainers = document.querySelectorAll('div[style*="background: #111"], div[style*="background:#111"]');
+    const layoutContainers = document.querySelectorAll('div[style*="background: #111"], div[style*="background:#111"], div[style*="background: rgb(17, 17, 17)"]');
 
     const masterCardsList = [...allMatchCards, ...layoutContainers].filter(el => {
-        // Sirf wahi elements lein jo sach mein match card hain (unme 'Map:', 'Title:', ya 'PRIZE POOL' likha ho)
         const txt = el.innerText || "";
-        return txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL");
+        // Yeh line verify karti hai ki element sach me match card hai ya nahi
+        return (txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL")) && !el.id.includes("fixed-tab-nav-bar");
     });
 
     if (currentSelectedTab === 'giveaway') {
@@ -129,7 +111,7 @@ function applyLiveTabFilter() {
     masterCardsList.forEach((card) => {
         const cardText = card.innerText || "";
         
-        // Status Check Logic
+        // Match status verification
         const isCompleted = cardText.includes("Status: Completed") || 
                             cardText.includes("Match Ended") || 
                             cardText.includes("Completed") || 
@@ -137,15 +119,15 @@ function applyLiveTabFilter() {
 
         if (currentSelectedTab === 'matches') {
             if (isCompleted) {
-                card.style.setProperty('display', 'none', 'important'); // Completed hide
+                card.style.setProperty('display', 'none', 'important'); // Active tab me Completed match hide hoga
             } else {
-                card.style.setProperty('display', 'block', 'important'); // Active show
+                card.style.setProperty('display', 'block', 'important'); // Active tab me Live/Upcoming dikhega
             }
         } else if (currentSelectedTab === 'history') {
             if (isCompleted) {
-                card.style.setProperty('display', 'block', 'important'); // Completed show
+                card.style.setProperty('display', 'block', 'important'); // History me Completed dikhega
             } else {
-                card.style.setProperty('display', 'none', 'important'); // Active hide
+                card.style.setProperty('display', 'none', 'important'); // History me Active hide hoga
             }
         }
     });
@@ -168,7 +150,6 @@ function runLiveFormInjector() {
             const hasUserJoined = match.participants && match.participants[currentUID];
 
             if (isMatchOver && hasUserJoined) {
-                // Sahi card dhoondh kar uske andar form fit karna
                 const divCards = document.querySelectorAll('div');
                 divCards.forEach((card) => {
                     const txt = card.innerText || "";
@@ -218,7 +199,7 @@ function runLiveFormInjector() {
     });
 }
 
-// 📸 IMGBB IMAGE UPLOAD PRO ENGINE
+// 📸 IMGBB UPLOAD FUNCTION
 function processV8Upload(matchId, currentUID) {
     const gameIdVal = document.getElementById(`v8-game-id-${matchId}`).value.trim();
     const nameVal = document.getElementById(`v8-player-name-${matchId}`).value.trim();
@@ -262,7 +243,7 @@ function processV8Upload(matchId, currentUID) {
 
             return firebase.database().ref(`matches/${matchId}/submittedResults/${currentUID}`).set(payload);
         } else {
-            throw new Error("ImgBB Server Connection Error!");
+            throw new Error("ImgBB Error!");
         }
     })
     .then(() => {
@@ -277,8 +258,8 @@ function processV8Upload(matchId, currentUID) {
     });
 }
 
-// Execution Timers Loops
-setInterval(injectSmartStickyNavigation, 500);
+// Run loop constantly
+setInterval(injectSmartStickyNavigation, 400);
 setInterval(runLiveFormInjector, 1000);
-setInterval(applyLiveTabFilter, 600);
-        
+setInterval(applyLiveTabFilter, 500);
+                            
