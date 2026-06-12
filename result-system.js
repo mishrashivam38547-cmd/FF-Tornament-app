@@ -1,139 +1,9 @@
 // ====================================================================
-// 👑 AUTOMATIC TABS INJECTOR & DYNAMIC MATCH FILTER SYSTEM (V9 FIXED)
+// 📥 PURE USER RESULT SUBMISSION & IMGBB PACKET ENGINE (V11)
 // ====================================================================
 
 const IMGBB_API_KEY = "0de43554e74e8bef68fc0f49cccf0d1f"; 
-let currentSelectedTab = 'matches'; // Default active tab
 
-function injectSmartStickyNavigation() {
-    // Agar bar pehle se bana hai toh kuch mat karo
-    if (document.getElementById('fixed-tab-nav-bar')) return;
-
-    // 🔥 FIX: Ab hum kisi element ka wait nahi karenge, direct body ke starting me daal denge
-    const bodyContainer = document.body;
-    if (!bodyContainer) return;
-
-    const navHTML = `
-        <div id="fixed-tab-nav-bar" style="
-            display: flex !important;
-            justify-content: space-around !important;
-            align-items: center !important;
-            background: #111111 !important;
-            padding: 10px !important;
-            border: 1px solid #222222 !important;
-            border-radius: 8px !important;
-            margin: 15px auto !important;
-            width: 95% !important;
-            max-width: 400px !important;
-            box-sizing: border-box !important;
-            clear: both !important;
-            position: relative !important;
-            z-index: 99999 !important;
-        ">
-            <button onclick="handleTabSwitch('matches')" id="btn-tab-matches" style="
-                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
-                background: linear-gradient(135deg, #ff4e50, #f9d423) !important;
-                color: #ffffff !important; border: none !important; border-radius: 6px !important;
-                font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-            ">Matches</button>
-
-            <button onclick="handleTabSwitch('history')" id="btn-tab-history" style="
-                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
-                background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
-                border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
-            ">History</button>
-
-            <button onclick="handleTabSwitch('giveaway')" id="btn-tab-giveaway" style="
-                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
-                background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
-                border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
-            ">Giveaway Claim</button>
-        </div>
-        <div id="giveaway-msg-zone" style="display:none; color:#888; text-align:center; padding:20px; font-family:sans-serif; font-size:12px;">
-            🎁 No Giveaway Claims active at this moment.
-        </div>
-    `;
-
-    // Body ke theek andar sabse upar inject karein taaki 100% render ho
-    bodyContainer.insertAdjacentHTML('afterbegin', navHTML);
-    
-    // Turant filter refresh
-    applyLiveTabFilter();
-}
-
-// 🔄 TABS SWITCH CONTROLLER
-function handleTabSwitch(tabName) {
-    currentSelectedTab = tabName;
-    
-    const mBtn = document.getElementById('btn-tab-matches');
-    const hBtn = document.getElementById('btn-tab-history');
-    const gBtn = document.getElementById('btn-tab-giveaway');
-
-    if (!mBtn || !hBtn || !gBtn) return;
-
-    const offStyle = "background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;";
-    const onStyle = "background: linear-gradient(135deg, #ff4e50, #f9d423) !important; color: #ffffff !important; border: none !important;";
-
-    mBtn.style.cssText = offStyle;
-    hBtn.style.cssText = offStyle;
-    gBtn.style.cssText = offStyle;
-
-    if (tabName === 'matches') mBtn.style.cssText = onStyle;
-    if (tabName === 'history') hBtn.style.cssText = onStyle;
-    if (tabName === 'giveaway') mBtn.style.cssText = onStyle;
-
-    applyLiveTabFilter();
-}
-
-// 🔥 SEPARATION ENGINE: Card ke background elements ko target karna
-function applyLiveTabFilter() {
-    const gMsg = document.getElementById('giveaway-msg-zone');
-    
-    // Aapke original system ke bane saare match cards ko select karna
-    const allMatchCards = document.querySelectorAll('.match-card-item-box, [id^="match-card-"], #matches-tab > div');
-    const layoutContainers = document.querySelectorAll('div[style*="background: #111"], div[style*="background:#111"], div[style*="background: rgb(17, 17, 17)"]');
-
-    const masterCardsList = [...allMatchCards, ...layoutContainers].filter(el => {
-        const txt = el.innerText || "";
-        // Yeh line verify karti hai ki element sach me match card hai ya nahi
-        return (txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL")) && !el.id.includes("fixed-tab-nav-bar");
-    });
-
-    if (currentSelectedTab === 'giveaway') {
-        if (gMsg) gMsg.style.display = "block";
-        masterCardsList.forEach(card => card.style.setProperty('display', 'none', 'important'));
-        return;
-    } else {
-        if (gMsg) gMsg.style.display = "none";
-    }
-
-    masterCardsList.forEach((card) => {
-        const cardText = card.innerText || "";
-        
-        // Match status verification
-        const isCompleted = cardText.includes("Status: Completed") || 
-                            cardText.includes("Match Ended") || 
-                            cardText.includes("Completed") || 
-                            cardText.includes("Status: Ended");
-
-        if (currentSelectedTab === 'matches') {
-            if (isCompleted) {
-                card.style.setProperty('display', 'none', 'important'); // Active tab me Completed match hide hoga
-            } else {
-                card.style.setProperty('display', 'block', 'important'); // Active tab me Live/Upcoming dikhega
-            }
-        } else if (currentSelectedTab === 'history') {
-            if (isCompleted) {
-                card.style.setProperty('display', 'block', 'important'); // History me Completed dikhega
-            } else {
-                card.style.setProperty('display', 'none', 'important'); // History me Active hide hoga
-            }
-        }
-    });
-}
-
-// 📥 RESULT FORM AUTO-INJECTOR CODE
 function runLiveFormInjector() {
     if (typeof firebase === 'undefined' || !firebase.database) return;
     
@@ -153,11 +23,12 @@ function runLiveFormInjector() {
                 const divCards = document.querySelectorAll('div');
                 divCards.forEach((card) => {
                     const txt = card.innerText || "";
-                    if ((txt.includes("Map:") || txt.includes("Title:")) && txt.includes(match.title) && !card.querySelector(`.v8-form-box`)) {
+                    // Sahi ended match card dhoondh kar uske andar form daalna
+                    if ((txt.includes("Map:") || txt.includes("Title:")) && txt.includes(match.title) && !card.querySelector(`.v11-form-box`)) {
                         
                         const hasSubmitted = match.submittedResults && match.submittedResults[currentUID];
                         const containerDiv = document.createElement('div');
-                        containerDiv.className = 'v8-form-box';
+                        containerDiv.className = 'v11-form-box';
                         containerDiv.style.cssText = "width: 100%; margin-top:10px; clear:both;";
 
                         if (hasSubmitted) {
@@ -172,22 +43,22 @@ function runLiveFormInjector() {
                                     <h4 style="color: #ff4e50; margin: 0 0 8px 0; font-size: 12px; text-align: center; font-weight: bold; text-transform:uppercase;">📤 Submit Match Result</h4>
                                     
                                     <label style="color:#777; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">App Account UID:</label>
-                                    <input type="text" id="v8-app-id-${matchId}" value="${currentUID}" disabled style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#ff9f43; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px; font-weight:bold;">
+                                    <input type="text" id="v11-app-id-${matchId}" value="${currentUID}" disabled style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#ff9f43; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px; font-weight:bold;">
                                     
                                     <label style="color:#ccc; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">Free Fire Game UID:</label>
-                                    <input type="text" id="v8-game-id-${matchId}" placeholder="Enter Free Fire UID" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <input type="text" id="v11-game-id-${matchId}" placeholder="Enter Free Fire UID" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
                                     
                                     <label style="color:#ccc; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">In-Game Name (IGN):</label>
-                                    <input type="text" id="v8-player-name-${matchId}" placeholder="Enter Game Nickname" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <input type="text" id="v11-player-name-${matchId}" placeholder="Enter Game Nickname" style="width:100%; padding:7px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
                                     
                                     <label style="color:#ccc; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">Total Kills Done:</label>
-                                    <input type="number" id="v8-kills-${matchId}" placeholder="0" style="width:100%; padding:7px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <input type="number" id="v11-kills-${matchId}" placeholder="0" style="width:100%; padding:7px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
                                     
                                     <label style="color:#ff9f43; font-size:10px; display:block; margin-bottom:2px; font-weight:bold;">📸 Upload Screenshot (From Gallery):</label>
-                                    <input type="file" id="v8-file-${matchId}" accept="image/*" style="width:100%; padding:5px; margin-bottom:4px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
-                                    <p id="v8-status-${matchId}" style="color: #ff9f43; font-size: 10px; margin: 0 0 10px 0; font-weight: bold;"></p>
+                                    <input type="file" id="v11-file-${matchId}" accept="image/*" style="width:100%; padding:5px; margin-bottom:4px; background:#222; color:#fff; border:1px solid #333; border-radius:4px; box-sizing:border-box; font-size:11px;">
+                                    <p id="v11-status-${matchId}" style="color: #ff9f43; font-size: 10px; margin: 0 0 10px 0; font-weight: bold;"></p>
                                     
-                                    <button onclick="processV8Upload('${matchId}', '${currentUID}')" id="v8-btn-${matchId}" style="width:100%; padding:9px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:12px; text-transform:uppercase;">Submit Form</button>
+                                    <button onclick="processV11Upload('${matchId}', '${currentUID}')" id="v11-btn-${matchId}" style="width:100%; padding:9px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:12px; text-transform:uppercase;">Submit Form</button>
                                 </div>
                             `;
                         }
@@ -199,24 +70,24 @@ function runLiveFormInjector() {
     });
 }
 
-// 📸 IMGBB UPLOAD FUNCTION
-function processV8Upload(matchId, currentUID) {
-    const gameIdVal = document.getElementById(`v8-game-id-${matchId}`).value.trim();
-    const nameVal = document.getElementById(`v8-player-name-${matchId}`).value.trim();
-    const killsVal = document.getElementById(`v8-kills-${matchId}`).value;
-    const fileInput = document.getElementById(`v8-file-${matchId}`);
-    const statusText = document.getElementById(`v8-status-${matchId}`);
-    const submitBtn = document.getElementById(`v8-btn-${matchId}`);
+// 📸 Secure ImgBB Upload Processor Engine
+function processV11Upload(matchId, currentUID) {
+    const gameIdVal = document.getElementById(`v11-game-id-${matchId}`).value.trim();
+    const nameVal = document.getElementById(`v11-player-name-${matchId}`).value.trim();
+    const killsVal = document.getElementById(`v11-kills-${matchId}`).value;
+    const fileInput = document.getElementById(`v11-file-${matchId}`);
+    const statusText = document.getElementById(`v11-status-${matchId}`);
+    const submitBtn = document.getElementById(`v11-btn-${matchId}`);
 
     if (!gameIdVal || !nameVal || !killsVal || !fileInput.files[0]) {
-        alert("🚨 Sabhi fields bharein aur gallery se photo select karein!");
+        alert("🚨 Sabhi fields bharein aur screenshot zaroor chunein!");
         return;
     }
 
     const file = fileInput.files[0];
     submitBtn.disabled = true;
     submitBtn.innerText = "Uploading...";
-    statusText.innerText = "⏳ Image upload ho rahi hai...";
+    statusText.innerText = "⏳ Photo server par bhej rahe hain...";
 
     const formData = new FormData();
     formData.append("image", file);
@@ -228,37 +99,33 @@ function processV8Upload(matchId, currentUID) {
     .then(res => res.json())
     .then(result => {
         if (result.success) {
-            const uploadedImgURL = result.data.url;
-            statusText.innerText = "📸 Database sync in progress...";
+            const finalUrl = result.data.url;
+            statusText.innerText = "📸 Saving to database...";
 
             const payload = {
                 playerAppUID: currentUID,
                 gameId: gameIdVal,
                 playerName: nameVal,
                 kills: parseInt(killsVal) || 0,
-                screenshot: uploadedImgURL, 
+                screenshot: finalUrl, 
                 rewardStatus: "Pending",
                 submittedAt: Date.now()
             };
-
             return firebase.database().ref(`matches/${matchId}/submittedResults/${currentUID}`).set(payload);
         } else {
-            throw new Error("ImgBB Error!");
+            throw new Error("ImgBB Node Crash!");
         }
     })
     .then(() => {
-        alert("🎉 Result successfully save ho gaya!");
+        alert("🎉 Result safely save ho gaya hai!");
         location.reload();
     })
     .catch((err) => {
         alert("❌ Error: " + err.message);
         submitBtn.disabled = false;
         submitBtn.innerText = "Submit Form";
-        statusText.innerText = "";
     });
 }
 
-// Run loop constantly
-setInterval(injectSmartStickyNavigation, 400);
+// Data Loop Injector Runner
 setInterval(runLiveFormInjector, 1000);
-setInterval(applyLiveTabFilter, 500);
