@@ -262,4 +262,3 @@ function processV8Upload(matchId, currentUID) {
 setInterval(injectSmartStickyNavigation, 400);
 setInterval(runLiveFormInjector, 1000);
 setInterval(applyLiveTabFilter, 500);
-                            
