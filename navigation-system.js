@@ -1,6 +1,9 @@
 // =================================================================
-// 📌 STICKY NAVIGATION, FIXED BUTTONS & AUTOMATIC RESULT SYSTEM
+// 📌 STICKY NAVIGATION, FIXED BUTTONS & AUTOMATIC RESULT SYSTEM (V5 PRO)
 // =================================================================
+
+// 🔑 Aapki ImgBB API Key yahan safe config ho gayi hai
+const IMGBB_API_KEY = "0de43554e74e8bef68fc0f49cccf0d1f"; 
 
 function setupStickyNavigation() {
     // Agar dashboard tabs pehle se bane hain toh loop se bachein
@@ -87,8 +90,10 @@ function handleTabSwitch(tabName) {
 // 🎯 REALTIME VERIFICATION ENGINE FOR SECURE RESULT UPLOADS
 function startResultFormListener() {
     const checkDb = setInterval(() => {
-        if (typeof firebase !== 'undefined' && firebase.database && window.userSessionUID) {
+        if (typeof firebase !== 'undefined' && firebase.database && (window.userSessionUID || firebase.auth().currentUser)) {
             clearInterval(checkDb);
+
+            const currentUID = window.userSessionUID || firebase.auth().currentUser.uid;
 
             firebase.database().ref('matches').on('value', (snapshot) => {
                 const matches = snapshot.val();
@@ -100,33 +105,44 @@ function startResultFormListener() {
                 Object.keys(matches).forEach((matchId) => {
                     const match = matches[matchId];
                     
-                    // Rule 1: Match complete hona chahiye
+                    // Rule 1: Match admin se 'Completed' mark hona chahiye
                     const isMatchOver = match.status === "Completed" || match.isHistory === true;
                     // Rule 2: Player list me user registered hona chahiye
-                    const hasUserJoined = match.participants && match.participants[window.userSessionUID];
+                    const hasUserJoined = match.participants && match.participants[currentUID];
 
                     if (isMatchOver && hasUserJoined) {
-                        const hasSubmitted = match.submittedResults && match.submittedResults[window.userSessionUID];
+                        const hasSubmitted = match.submittedResults && match.submittedResults[currentUID];
 
                         if (hasSubmitted) {
                             formWrapper.innerHTML += `
-                                <div style="background: #111; border: 1px solid #28a745; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
-                                    <p style="color: #28a745; margin: 0; font-size: 12px; font-weight: bold;">✓ [${match.title || 'FF Match'}] Result Already Submitted!</p>
+                                <div style="background: #111; border: 1px solid #28a745; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 12px; font-family: sans-serif;">
+                                    <p style="color: #28a745; margin: 0; font-size: 13px; font-weight: bold;">✓ [${match.title || 'FF Match'}] Result Successfully Submitted via ImgBB!</p>
                                 </div>
                             `;
                         } else {
-                            // User joined hai aur match complete hai -> Form dikhao
+                            // 🔥 BOOM! ALL NEW 5 OPTIONS ADDED PERFECTLY HERE
                             const submissionFormHTML = `
-                                <div id="form-card-${matchId}" style="background: #161616; border: 1px solid #ff4e50; padding: 14px; border-radius: 8px; font-family: 'Roboto', sans-serif; margin-bottom: 12px;">
-                                    <h4 style="color: #ff4e50; margin: 0 0 10px 0; font-size: 13px; text-align: center; font-weight: bold;">📤 Submit Result: ${match.title || 'FF Tournament'}</h4>
+                                <div id="form-card-${matchId}" style="background: #161616; border: 1px solid #ff4e50; padding: 16px; border-radius: 10px; font-family: sans-serif; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: left;">
+                                    <h4 style="color: #ff4e50; margin: 0 0 4px 0; font-size: 14px; text-align: center; font-weight: bold; text-transform: uppercase;">📤 Submit Match Result</h4>
+                                    <p style="color: #aaa; font-size: 11px; text-align: center; margin: 0 0 12px 0;">Tournament: ${match.title || 'Solo Match'}</p>
                                     
-                                    <input type="text" id="inp-game-id-${matchId}" placeholder="Enter Game UID" style="width:100%; padding:8px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
+                                    <label style="color:#888; font-size:11px; display:block; margin-bottom:3px; font-weight: bold;">App Account ID:</label>
+                                    <input type="text" id="inp-app-id-${matchId}" value="${currentUID}" disabled style="width:100%; padding:8px; margin-bottom:10px; background:#222; color:#ff9f43; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px; font-weight:bold;">
                                     
-                                    <input type="number" id="inp-kills-${matchId}" placeholder="Enter Kills Number" style="width:100%; padding:8px; margin-bottom:8px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
+                                    <label style="color:#ccc; font-size:11px; display:block; margin-bottom:3px; font-weight: bold;">Free Fire Game UID:</label>
+                                    <input type="text" id="inp-game-id-${matchId}" placeholder="Enter Free Fire UID" style="width:100%; padding:8px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
                                     
-                                    <input type="text" id="inp-screenshot-${matchId}" placeholder="Paste Screenshot Link (ImgBB/Imgur)" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
+                                    <label style="color:#ccc; font-size:11px; display:block; margin-bottom:3px; font-weight: bold;">In-Game Name (IGN):</label>
+                                    <input type="text" id="inp-player-name-${matchId}" placeholder="Enter Your Game Name" style="width:100%; padding:8px; margin-bottom:10px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
                                     
-                                    <button onclick="processResultUpload('${matchId}')" style="width:100%; padding:9px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:5px; cursor:pointer; font-size:12px;">Submit Details</button>
+                                    <label style="color:#ccc; font-size:11px; display:block; margin-bottom:3px; font-weight: bold;">Total Kills:</label>
+                                    <input type="number" id="inp-kills-${matchId}" placeholder="Enter Total Kills" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
+                                    
+                                    <label style="color:#ff9f43; font-size:11px; display:block; margin-bottom:3px; font-weight:bold;">📸 Upload Screenshot (Select from Gallery):</label>
+                                    <input type="file" id="inp-file-${matchId}" accept="image/*" style="width:100%; padding:7px; margin-bottom:4px; background:#222; color:#fff; border:1px solid #333; border-radius:5px; box-sizing:border-box; font-size:12px;">
+                                    <p id="upload-status-${matchId}" style="color: #ff9f43; font-size: 11px; margin: 0 0 12px 0; font-weight: bold;"></p>
+                                    
+                                    <button onclick="processResultUploadV5('${matchId}', '${currentUID}')" id="btn-submit-${matchId}" style="width:100%; padding:10px; background: linear-gradient(135deg, #28a745, #218838); color:#fff; border:none; font-weight:bold; border-radius:6px; cursor:pointer; font-size:13px; text-transform:uppercase;">Submit Details</button>
                                 </div>
                             `;
                             formWrapper.innerHTML += submissionFormHTML;
@@ -138,31 +154,64 @@ function startResultFormListener() {
     }, 600);
 }
 
-// 🚀 FIREBASE DATA SAVE FUNCTION
-function processResultUpload(matchId) {
-    const uidVal = document.getElementById(`inp-game-id-${matchId}`).value.trim();
+// 🚀 DIRECT IMGBB IMAGE UPLOAD ENGINE
+function processResultUploadV5(matchId, currentUID) {
+    const gameIdVal = document.getElementById(`inp-game-id-${matchId}`).value.trim();
+    const nameVal = document.getElementById(`inp-player-name-${matchId}`).value.trim();
     const killsVal = document.getElementById(`inp-kills-${matchId}`).value;
-    const ssVal = document.getElementById(`inp-screenshot-${matchId}`).value.trim();
+    const fileInput = document.getElementById(`inp-file-${matchId}`);
+    const statusText = document.getElementById(`upload-status-${matchId}`);
+    const submitBtn = document.getElementById(`btn-submit-${matchId}`);
 
-    if (!uidVal || !killsVal || !ssVal) {
-        alert("🚨 Kripya saari fields (Game UID, Kills, Screenshot Link) bharein!");
+    if (!gameIdVal || !nameVal || !killsVal || !fileInput.files[0]) {
+        alert("🚨 Kripya saari fields bharein aur image file select karein!");
         return;
     }
 
-    const payload = {
-        playerUID: window.userSessionUID,
-        gameId: uidVal,
-        kills: parseInt(killsVal) || 0,
-        screenshot: ssVal,
-        submittedAt: Date.now()
-    };
+    const file = fileInput.files[0];
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Uploading Screenshot...";
+    statusText.style.color = "#ff9f43";
+    statusText.innerText = "⏳ ImgBB Server par photo upload ho rahi hai...";
 
-    firebase.database().ref(`matches/${matchId}/submittedResults/${window.userSessionUID}`).set(payload)
+    const formData = new FormData();
+    formData.append("image", file);
+
+    // Dynamic ImgBB Call
+    fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const downloadURL = result.data.url;
+            statusText.style.color = "#28a745";
+            statusText.innerText = "📸 Image uploaded! Saving data packet...";
+
+            const payload = {
+                playerAppUID: currentUID,
+                gameId: gameIdVal,
+                playerName: nameVal,
+                kills: parseInt(killsVal) || 0,
+                screenshot: downloadURL, 
+                submittedAt: Date.now()
+            };
+
+            return firebase.database().ref(`matches/${matchId}/submittedResults/${currentUID}`).set(payload);
+        } else {
+            throw new Error("ImgBB Connection Timeout!");
+        }
+    })
     .then(() => {
-        alert("🎉 Result successfully upload ho gaya! Admin verify karte hi prize wallet me daal dega.");
+        alert("🎉 Boom! Aapka result saari details aur screenshot ke sath successfully save ho gaya hai.");
     })
     .catch((err) => {
-        alert("❌ Database Error: " + err.message);
+        alert("❌ Error: " + err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit Details";
+        statusText.style.color = "#ff4e50";
+        statusText.innerText = "❌ Upload failed!";
     });
 }
 
