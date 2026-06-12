@@ -1,66 +1,81 @@
 // ====================================================================
-// 👑 FLOATING TABS INJECTOR & DYNAMIC MATCH FILTER ENGINE (V11)
+// 🎯 DYNAMIC POSITIONING TABS & MATCH FILTER SYSTEM (V12)
 // ====================================================================
 
-window.currentSelectedTab = 'matches'; // Global state banana taaki dusri file bhi read kar sake
+window.currentSelectedTab = 'matches'; // Global active state
 
-function injectSmartStickyNavigation() {
-    // Agar bar pehle se bana hai toh dubara mat banao
+function injectTabsBelowWithdrawButton() {
+    // Agar bar pehle se bana hai toh dubara nahi banana hai
     if (document.getElementById('fixed-tab-nav-bar')) return;
 
-    const bodyContainer = document.body;
-    if (!bodyContainer) return;
+    // 🔥 STEP 1: Pure page par "Withdraw Balance" waala button dhoondhna
+    let withdrawBtn = null;
+    const allElements = document.querySelectorAll('button, div, p, a, span');
+    
+    for (let el of allElements) {
+        if (el.innerText && el.innerText.trim().includes("Withdraw Balance")) {
+            // Agar text kisi button ke andar hai ya khud hi button hai
+            withdrawBtn = el.closest('button') || el;
+            break;
+        }
+    }
 
-    // Fixed Top Navigation UI layout
+    // Agar withdraw button abhi screen par render nahi hua, toh matches container ko target karo
+    if (!withdrawBtn) {
+        withdrawBtn = document.getElementById('matches-tab') || document.querySelector('.main-content');
+    }
+
+    // Agar dono me se kuch bhi na mile, toh thoda rukenge (loop chal raha hai)
+    if (!withdrawBtn) return;
+
+    // Beautiful original responsive navigation design
     const navHTML = `
         <div id="fixed-tab-nav-bar" style="
             display: flex !important;
             justify-content: space-around !important;
             align-items: center !important;
-            background: rgba(17, 17, 17, 0.98) !important;
-            padding: 12px 10px !important;
-            border-bottom: 2px solid #ff4e50 !important;
-            width: 100% !important;
+            background: #111111 !important;
+            padding: 10px !important;
+            border: 1px solid #222222 !important;
+            border-radius: 8px !important;
+            margin: 15px auto !important;
+            width: 95% !important;
+            max-width: 400px !important;
             box-sizing: border-box !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 999999 !important;
-            backdrop-filter: blur(5px) !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+            clear: both !important;
         ">
             <button onclick="handleTabSwitch('matches')" id="btn-tab-matches" style="
-                flex: 1 !important; margin: 0 5px !important; padding: 10px 5px !important;
+                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
                 background: linear-gradient(135deg, #ff4e50, #f9d423) !important;
                 color: #ffffff !important; border: none !important; border-radius: 6px !important;
-                font-weight: bold !important; font-size: 13px !important; cursor: pointer !important;
+                font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             ">Matches</button>
 
             <button onclick="handleTabSwitch('history')" id="btn-tab-history" style="
-                flex: 1 !important; margin: 0 5px !important; padding: 10px 5px !important;
+                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
                 background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
-                border-radius: 6px !important; font-weight: bold !important; font-size: 13px !important; cursor: pointer !important;
+                border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
             ">History</button>
 
             <button onclick="handleTabSwitch('giveaway')" id="btn-tab-giveaway" style="
-                flex: 1 !important; margin: 0 5px !important; padding: 10px 5px !important;
+                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
                 background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
-                border-radius: 6px !important; font-weight: bold !important; font-size: 13px !important; cursor: pointer !important;
+                border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
             ">Giveaway Claim</button>
         </div>
         
-        <div id="tabs-spacer-block" style="width: 100%; height: 65px; display: block !important;"></div>
-        
-        <div id="giveaway-msg-zone" style="display:none; color:#888; text-align:center; padding:40px; font-family:sans-serif; font-size:13px;">
+        <div id="giveaway-msg-zone" style="display:none; color:#888; text-align:center; padding:25px; font-family:sans-serif; font-size:12px;">
             🎁 No Giveaway Claims active at this moment.
         </div>
     `;
 
-    bodyContainer.insertAdjacentHTML('afterbegin', navHTML);
+    // 🔥 Withdraw Balance button ke THEEK NICHE html inject karna
+    withdrawBtn.insertAdjacentHTML('afterend', navHTML);
     applyLiveTabFilter();
 }
 
-// 🔄 TABS REDIRECTION & CSS BUTTON CONTROLLER
+// 🔄 TABS SWITCH CONTROLLER
 function handleTabSwitch(tabName) {
     window.currentSelectedTab = tabName;
     
@@ -84,12 +99,12 @@ function handleTabSwitch(tabName) {
     applyLiveTabFilter();
 }
 
-// 🔥 MATCH CARDS LIVE FILTER ENGINE
+// 🔥 LIVE CARDS FILTER LOGIC
 function applyLiveTabFilter() {
     const gMsg = document.getElementById('giveaway-msg-zone');
     const allDivs = document.querySelectorAll('div');
 
-    // Live filtering core match box containers
+    // Filter out core card chunks safely
     const masterCardsList = Array.from(allDivs).filter(el => {
         const txt = el.innerText || "";
         const id = el.id || "";
@@ -129,7 +144,7 @@ function applyLiveTabFilter() {
     });
 }
 
-// Execution Loop Intervals
-setInterval(injectSmartStickyNavigation, 300);
-setInterval(applyLiveTabFilter, 400);
-          
+// System Loops Engine
+setInterval(injectTabsBelowWithdrawButton, 400);
+setInterval(applyLiveTabFilter, 500);
+                                
