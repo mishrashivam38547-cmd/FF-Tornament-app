@@ -1,32 +1,27 @@
 // ====================================================================
-// 👑 ADMIN RESULTS VIEW & PRIZE DISTRIBUTION SYSTEM (DYNAMIC FILE)
+// 👑 ADMIN RESULTS VIEW & PRIZE DISTRIBUTION SYSTEM (UPGRADED BALANCER)
 // ====================================================================
 
 function injectResultsAndPrizeSystem() {
-    // Admin panel ke saare normal buttons ko scan karna
     const allButtons = document.querySelectorAll('button');
     
     allButtons.forEach((btn) => {
-        // Sirf wahi area pakadna jahan match cards ke control buttons (jaise Delete) hain
         if (btn.innerText && btn.innerText.trim() === "Delete") {
             const parentElement = btn.parentElement;
             if (!parentElement) return;
 
-            // Onclick text se Match ID isolated karna
             const onclickText = btn.getAttribute('onclick') || "";
             const matchKeys = onclickText.match(/'([^']+)'/) || onclickText.match(/"([^"]+)"/);
             
             if (matchKeys && matchKeys[1]) {
                 const matchId = matchKeys[1];
 
-                // Check aur Inject: 👁️ View Results & Prize Button
                 if (!parentElement.querySelector('.admin-view-results-btn')) {
                     const viewBtn = document.createElement('button');
                     viewBtn.className = 'admin-view-results-btn';
                     viewBtn.innerText = '👁️ View Results & Rewards';
                     viewBtn.style.cssText = "background: linear-gradient(135deg, #17a2b8, #117a8b) !important; color: #ffffff !important; border: none !important; padding: 6px 12px !important; margin-left: 6px !important; border-radius: 4px !important; font-size: 12px !important; font-weight: bold !important; cursor: pointer !important; display: inline-block !important; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);";
                     
-                    // Click trigger to fetch and render
                     viewBtn.onclick = function() {
                         toggleMatchResultsPanel(matchId, parentElement);
                     };
@@ -37,7 +32,6 @@ function injectResultsAndPrizeSystem() {
     });
 }
 
-// 📊 FIREBASE REALTIME FETCH & DISPLAY ENGINE WITH PRIZE CONTROLS
 function toggleMatchResultsPanel(matchId, containerElement) {
     const existingList = containerElement.querySelector(`.results-holder-${matchId}`);
     if (existingList) {
@@ -45,14 +39,12 @@ function toggleMatchResultsPanel(matchId, containerElement) {
         return;
     }
 
-    // Main results panel div holder create karna
     const resultsDiv = document.createElement('div');
     resultsDiv.className = `results-holder-${matchId}`;
     resultsDiv.style.cssText = "background: #161616; border: 1px solid #17a2b8; padding: 12px; margin-top: 12px; border-radius: 8px; text-align: left; color: #fff; font-family: sans-serif; font-size: 12px; width: 100%; box-sizing: border-box; clear: both; box-shadow: 0 4px 8px rgba(0,0,0,0.5);";
     resultsDiv.innerHTML = "⏳ Player results dhoondhe ja rahe hain...";
     containerElement.appendChild(resultsDiv);
 
-    // Firebase database node connection
     firebase.database().ref(`matches/${matchId}/submittedResults`).once('value', (snapshot) => {
         const results = snapshot.val();
         
@@ -79,17 +71,20 @@ function toggleMatchResultsPanel(matchId, containerElement) {
 
         Object.keys(results).forEach((playerUID) => {
             const data = results[playerUID];
+            // Safe fallback agar data object me internal clear ID na ho
+            const targetUID = data.playerAppUID || playerUID;
+
             blockHTML += `
                 <tr style="border-bottom: 1px solid #252525; font-size: 11px; background: #1a1a1a;">
-                    <td style="padding: 8px; color: #ff9f43; font-weight: bold;">${data.playerName || 'N/A'}<br><span style="color:#666; font-size:9px;">App ID: ${data.playerAppUID || playerUID}</span></td>
+                    <td style="padding: 8px; color: #ff9f43; font-weight: bold;">${data.playerName || 'N/A'}<br><span style="color:#666; font-size:9px;">App ID: ${targetUID}</span></td>
                     <td style="padding: 8px; color: #fff;">${data.gameId || 'N/A'}</td>
                     <td style="padding: 8px; color: #28a745; font-weight: bold; font-size: 12px;">${data.kills ?? 0}</td>
                     <td style="padding: 8px;">
                         <a href="${data.screenshot}" target="_blank" style="color: #007bff; text-decoration: none; font-weight: bold; background: #222; padding: 4px 8px; border-radius: 4px; border: 1px solid #333;">👁️ View SS</a>
                     </td>
                     <td style="padding: 8px; text-align: center; white-space: nowrap;">
-                        <input type="number" id="prize-amount-${matchId}-${playerUID}" placeholder="Amount" style="width: 60px; padding: 4px; background: #111; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 11px; margin-right: 4px;">
-                        <button onclick="distributePlayerPrize('${playerUID}', '${matchId}')" style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer;">🎁 Send</button>
+                        <input type="number" id="prize-amount-${matchId}-${targetUID}" placeholder="Amount" style="width: 60px; padding: 4px; background: #111; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 11px; margin-right: 4px;">
+                        <button onclick="distributePlayerPrize('${targetUID}', '${matchId}')" style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer;">🎁 Send</button>
                     </td>
                 </tr>
             `;
@@ -106,7 +101,7 @@ function toggleMatchResultsPanel(matchId, containerElement) {
     });
 }
 
-// 🎁 WALLET DEPOSIT TRANSACTION CONTROLLER
+// 🎁 MULTI-PATH BALANCE TRANSACTION ENGINE
 function distributePlayerPrize(playerUID, matchId) {
     const prizeInput = document.getElementById(`prize-amount-${matchId}-${playerUID}`);
     if (!prizeInput) return;
@@ -114,29 +109,44 @@ function distributePlayerPrize(playerUID, matchId) {
     const prizeAmount = parseInt(prizeInput.value);
 
     if (!prizeAmount || prizeAmount <= 0) {
-        alert("🚨 Please valid prize amount daalein (e.g., 10, 20, 50)!");
+        alert("🚨 Please ek sahi amount enter karein!");
         return;
     }
 
     const confirmPrize = confirm(`Kya aap sach mein is player ko ₹${prizeAmount} ka prize send karna chahte hain?`);
     if (!confirmPrize) return;
 
-    // Player ke wallet node ka rasta dhoondhna
-    const userWalletRef = firebase.database().ref(`users/${playerUID}/wallet`);
+    // 🔥 DUAL CHECK STRATEGY: Hum user node ko pehle read karenge taaki sahi key pakad sakein
+    const userRef = firebase.database().ref(`users/${playerUID}`);
 
-    // Transaction ka use karke coins safely secure update karna (anti-hack formula)
-    userWalletRef.transaction((currentBalance) => {
-        // Agar pehle se balance hai toh usme jodna, nahi toh zero manna
-        return (currentBalance || 0) + prizeAmount;
-    }, (error, committed, snapshot) => {
-        if (error) {
-            alert("❌ Wallet Transaction Error: " + error.message);
-        } else if (committed) {
-            alert(`🎉 Success! Player ke account me ₹${prizeAmount} successfully credit ho gaye hain.`);
-            prizeInput.value = ""; // Input saaf karna
-        }
+    userRef.once('value').then((snapshot) => {
+        const userData = snapshot.val() || {};
+        
+        // Purana balance nikalna alag-alag paths se (jo bhi active ho)
+        let currentWallet = parseInt(userData.wallet) || 0;
+        let currentBalance = parseInt(userData.balance) || 0;
+        let currentCoins = parseInt(userData.coins) || 0;
+
+        // Naya balance jodna
+        const updatedWallet = currentWallet + prizeAmount;
+        const updatedBalance = currentBalance + prizeAmount;
+        const updatedCoins = currentCoins + prizeAmount;
+
+        // Ek sath saare possible fields ko update karna taaki user app jo bhi padh raha ho, use data mil jaye!
+        return userRef.update({
+            wallet: updatedWallet,
+            balance: updatedBalance,
+            coins: updatedCoins
+        });
+    })
+    .then(() => {
+        alert(`🎉 Success! Player (ID: ${playerUID}) ke account me ₹${prizeAmount} safe credit ho gaye hain.`);
+        prizeInput.value = ""; // Input box khali karna
+    })
+    .catch((error) => {
+        alert("❌ Database Update Error: " + error.message);
     });
 }
 
-// Background dynamic scanner engine running every 800ms
+// Loop scan initialization
 setInterval(injectResultsAndPrizeSystem, 800);
