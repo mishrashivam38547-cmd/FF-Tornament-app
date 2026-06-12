@@ -1,65 +1,65 @@
 // ====================================================================
-// 👑 SAFE HEADER TABS INJECTOR & CARD-ONLY FILTER SYSTEM (V15)
+// 📱 FIXED BOTTOM NAVIGATION FOOTER SYSTEM (V17 FIXED)
 // ====================================================================
 
 window.currentSelectedTab = 'matches'; // Global active state
 
-function injectTabsInsideHeader() {
-    // Agar bar pehle se bana hai toh dubara nahi banana hai
-    if (document.getElementById('fixed-tab-nav-bar')) return;
+function injectBottomNavigationBar() {
+    // Agar bottom bar pehle se bana hai toh dubara nahi banana hai
+    if (document.getElementById('fixed-bottom-nav-bar')) return;
 
-    // 🔥 FIX: Sabse safe jagah hai page ka main header/title (h1, h2 ya top navbar)
-    const headerTarget = document.querySelector('h1, h2, .header, #header') || document.body;
-    if (!headerTarget) return;
+    const bodyContainer = document.body;
+    if (!bodyContainer) return;
 
+    // Fixed Bottom Layout - bilkul CashKaro app ki tarah permanent bottom par rahega
     const navHTML = `
-        <div id="fixed-tab-nav-bar" style="
+        <div id="bottom-nav-spacer" style="width: 100%; height: 75px; display: block !important; clear: both !important;"></div>
+
+        <div id="fixed-bottom-nav-bar" style="
             display: flex !important;
             justify-content: space-around !important;
             align-items: center !important;
             background: #111111 !important;
-            padding: 10px !important;
-            border: 1px solid #222222 !important;
-            border-radius: 8px !important;
-            margin: 15px auto !important;
-            width: 95% !important;
-            max-width: 400px !important;
+            padding: 10px 5px !important;
+            border-top: 2px solid #ff4e50 !important;
+            width: 100% !important;
             box-sizing: border-box !important;
-            clear: both !important;
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            z-index: 999999 !important;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.6) !important;
         ">
             <button onclick="handleTabSwitch('matches')" id="btn-tab-matches" style="
-                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
+                flex: 1 !important; margin: 0 4px !important; padding: 12px 5px !important;
                 background: linear-gradient(135deg, #ff4e50, #f9d423) !important;
                 color: #ffffff !important; border: none !important; border-radius: 6px !important;
                 font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-            ">Matches</button>
+                text-transform: uppercase !important;
+            ">🔥 Matches</button>
 
             <button onclick="handleTabSwitch('history')" id="btn-tab-history" style="
-                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
+                flex: 1 !important; margin: 0 4px !important; padding: 12px 5px !important;
                 background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
                 border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
-            ">History</button>
+                text-transform: uppercase !important;
+            ">⏳ History</button>
 
             <button onclick="handleTabSwitch('giveaway')" id="btn-tab-giveaway" style="
-                flex: 1 !important; margin: 0 4px !important; padding: 10px 5px !important;
+                flex: 1 !important; margin: 0 4px !important; padding: 12px 5px !important;
                 background: #222222 !important; color: #aaaaaa !important; border: 1px solid #333333 !important;
                 border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; cursor: pointer !important;
-            ">Giveaway Claim</button>
+                text-transform: uppercase !important;
+            ">🎁 Giveaway</button>
         </div>
         
-        <div id="giveaway-msg-zone" style="display:none; color:#888; text-align:center; padding:25px; font-family:sans-serif; font-size:12px;">
+        <div id="giveaway-msg-zone" style="display:none; color:#ff9f43; text-align:center; padding:50px 20px; font-family:sans-serif; font-size:14px; font-weight:bold; clear:both;">
             🎁 No Giveaway Claims active at this moment.
         </div>
     `;
 
-    // Header ke theek baad daalenge taaki balance button ke upar ya niche safe rahe
-    if (headerTarget === document.body) {
-        headerTarget.insertAdjacentHTML('afterbegin', navHTML);
-    } else {
-        headerTarget.insertAdjacentHTML('afterend', navHTML);
-    }
-    
+    // Safe append at the very end of body
+    bodyContainer.insertAdjacentHTML('beforeend', navHTML);
     applyLiveTabFilter();
 }
 
@@ -87,19 +87,25 @@ function handleTabSwitch(tabName) {
     applyLiveTabFilter();
 }
 
-// 🔥 SAFE FILTER LOGIC: Sirf asli cards ko target karna (Page black nahi hoga!)
+// 🔥 SAFE FILTER LOGIC: Sirf asli Match Cards ko handle karega (Page black nahi hoga!)
 function applyLiveTabFilter() {
     const gMsg = document.getElementById('giveaway-msg-zone');
     const allDivs = document.querySelectorAll('div');
 
-    // STRICT CHECK: Sirf wahi div select honge jo sach me match card hain
+    // STRICT CHECK: Pura page check karke sirf card boxes nikalo
     const masterCardsList = Array.from(allDivs).filter(el => {
         const txt = el.innerText || "";
         const id = el.id || "";
-        const hasCardData = txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL");
         
-        // Kisi main body layout element ko hide hone se bachane ke liye strict logic
-        return hasCardData && !id.includes("fixed-tab-nav-bar") && !el.contains(document.getElementById('fixed-tab-nav-bar')) && el.childElementCount >= 2;
+        // Match card data elements verification
+        const isMatchCard = txt.includes("Map:") || txt.includes("Title:") || txt.includes("PRIZE POOL");
+        
+        // Kisi wallet/profile structure box ko hide hone se strictly bachana hai
+        return isMatchCard && 
+               !id.includes("fixed-bottom-nav-bar") && 
+               !id.includes("bottom-nav-spacer") && 
+               !el.contains(document.getElementById('fixed-bottom-nav-bar')) && 
+               el.childElementCount >= 2;
     });
 
     if (window.currentSelectedTab === 'giveaway') {
@@ -133,6 +139,7 @@ function applyLiveTabFilter() {
     });
 }
 
-// System Loops Engine
-setInterval(injectTabsInsideHeader, 400);
-setInterval(applyLiveTabFilter, 500);
+// System Core Running Intervals
+setInterval(injectBottomNavigationBar, 300);
+setInterval(applyLiveTabFilter, 400);
+                            
