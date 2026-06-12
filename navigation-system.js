@@ -1,34 +1,21 @@
 // ====================================================================
-// 🎯 DYNAMIC POSITIONING TABS & MATCH FILTER SYSTEM (V12)
+// 🎯 STRICT TOP-POSITIONING TABS SYSTEM (V13)
 // ====================================================================
 
 window.currentSelectedTab = 'matches'; // Global active state
 
-function injectTabsBelowWithdrawButton() {
+function injectTabsStrictlyAboveCards() {
     // Agar bar pehle se bana hai toh dubara nahi banana hai
     if (document.getElementById('fixed-tab-nav-bar')) return;
 
-    // 🔥 STEP 1: Pure page par "Withdraw Balance" waala button dhoondhna
-    let withdrawBtn = null;
-    const allElements = document.querySelectorAll('button, div, p, a, span');
+    // 🔥 PRECISE TARGETING: Matches tab container ya main-content ko target karna
+    const matchesContainer = document.getElementById('matches-tab') || 
+                             document.querySelector('.main-content') ||
+                             document.querySelector('.container');
     
-    for (let el of allElements) {
-        if (el.innerText && el.innerText.trim().includes("Withdraw Balance")) {
-            // Agar text kisi button ke andar hai ya khud hi button hai
-            withdrawBtn = el.closest('button') || el;
-            break;
-        }
-    }
+    if (!matchesContainer) return;
 
-    // Agar withdraw button abhi screen par render nahi hua, toh matches container ko target karo
-    if (!withdrawBtn) {
-        withdrawBtn = document.getElementById('matches-tab') || document.querySelector('.main-content');
-    }
-
-    // Agar dono me se kuch bhi na mile, toh thoda rukenge (loop chal raha hai)
-    if (!withdrawBtn) return;
-
-    // Beautiful original responsive navigation design
+    // Beautiful dynamic responsive navigation design
     const navHTML = `
         <div id="fixed-tab-nav-bar" style="
             display: flex !important;
@@ -38,7 +25,7 @@ function injectTabsBelowWithdrawButton() {
             padding: 10px !important;
             border: 1px solid #222222 !important;
             border-radius: 8px !important;
-            margin: 15px auto !important;
+            margin: 10px auto 20px auto !important;
             width: 95% !important;
             max-width: 400px !important;
             box-sizing: border-box !important;
@@ -70,8 +57,9 @@ function injectTabsBelowWithdrawButton() {
         </div>
     `;
 
-    // 🔥 Withdraw Balance button ke THEEK NICHE html inject karna
-    withdrawBtn.insertAdjacentHTML('afterend', navHTML);
+    // 🔥 FIX: Matches Cards block ke *THEEK PEHLE* (beforebegin) inject karna 
+    // Isse buttons har haal mein matches cards ke upar dikhenge, niche nahi!
+    matchesContainer.insertAdjacentHTML('beforebegin', navHTML);
     applyLiveTabFilter();
 }
 
@@ -145,6 +133,5 @@ function applyLiveTabFilter() {
 }
 
 // System Loops Engine
-setInterval(injectTabsBelowWithdrawButton, 400);
+setInterval(injectTabsStrictlyAboveCards, 400);
 setInterval(applyLiveTabFilter, 500);
-                                
