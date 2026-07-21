@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS7_ESPORT - Admin Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="error-logger.js"></script>
+    
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans p-4 max-w-4xl mx-auto space-y-6">
+
+    <!-- Admin Header -->
+    <header class="flex justify-between items-center bg-slate-900 border border-slate-800 p-5 rounded-3xl">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 font-bold">
+                AD
+            </div>
+            <div>
+                <h1 class="text-sm font-black text-white">RS7 Admin Panel</h1>
+                <p class="text-[10px] text-slate-400">Manage deposits, withdrawals & user balances</p>
+            </div>
+        </div>
+        <button onclick="adminLogout()" class="text-xs text-rose-400 bg-rose-500/10 px-3 py-2 rounded-xl border border-rose-500/20 font-bold">
+            Logout
+        </button>
+    </header>
+
+    <!-- SECTION 1: Manual Winner / Balance Adder (By App ID) -->
+    <section class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-lg">
+        <h2 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-user-plus mr-2"></i>Add Balance / Winner Prize to User</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input type="text" id="target-appid" placeholder="Enter App ID (e.g. RS7-4821)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <input type="number" id="target-amount" placeholder="Enter Amount (₹)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <button onclick="addBalanceByAppId()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-xs transition shadow-md">
+                Add Balance Now
+            </button>
+        </div>
+    </section>
+
+    <!-- SECTION 2: Pending Add Money Requests (Deposits) -->
+    <section class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-lg">
+        <h2 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-money-bill-transfer mr-2"></i>Pending Deposit Requests</h2>
+        <div id="deposits-container" class="space-y-3">
+            <p class="text-xs text-slate-500">Loading pending deposits...</p>
+        </div>
+    </section>
+
+    <!-- SECTION 3: Pending Withdrawal Requests -->
+    <section class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-lg">
+        <h2 class="text-sm font-bold text-indigo-400"><i class="fa-solid fa-wallet mr-2"></i>Pending Withdrawal Requests</h2>
+        <div id="withdrawals-container" class="space-y-3">
+            <p class="text-xs text-slate-500">Loading pending withdrawals...</p>
+        </div>
+    </section>
+
+    <!-- Admin Script Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyTfxnBHJvWfq7QEoMszl8OFrwY_rK59Q",
+            authDomain: "rs7esport-7a6cb.firebaseapp.com",
+            projectId: "rs7esport-7a6cb",
+            storageBucket: "rs7esport-7a6cb.firebasestorage.app",
+            messagingSenderId: "260824306083",
+            appId: "1:260824306083:web:86533606cc8ea4bce78a16"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Load Pending Deposits
+        async function loadDeposits() {
+            const container = document.getElementById('deposits-container');
+            container.innerHTML = '<p class="text-xs text-slate-500">Loading...</p>';
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, "deposits"));
+                container.innerHTML = '';
+                let count = 0;
+
+                querySnapshot.forEach((resDoc) => {
+                    const data = resDoc.data();
+                    if(data.status === "Pending") {
+                        count++;
+                        container.innerHTML += `
+                            <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div class="space-y-1">
+                                    <p class="text-xs text-white"><b>Email:</b> ${data.email}</p>
+                                    <p class="text-xs text-emerald-400 font-mono"><b>UTR ID:</b> ${data.utr}</p>
+                                    <a href="${data.screenshotUrl}" target="_blank" class="text-[10px] text-blue-400 underline block">View Payment Screenshot</a>
+                                </div>
+                                <button onclick="approveDeposit('${resDoc.id}', '${data.uid}')" class="bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                                    Approve & Add Balance
+                                </button>
+                            </div>
+                        `;
+                    }
+                });
+
+                if(count === 0) container.innerHTML = '<p class="text-xs text-slate-500">No pending deposits found.</p>';
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Approve Deposit and Automatically Add Balance to User
+        window.approveDeposit = async function(depositId, userId) {
+            const amountStr = prompt("Enter amount to add for this UTR (e.g. 100):");
+            if(!amountStr) return;
+            const amount = parseFloat(amountStr);
+
+            try {
+                const userRef = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+                if(userSnap.exists()) {
+                    const currentBal = userSnap.data().balance || 0;
+                    await updateDoc(userRef, { balance: currentBal + amount });
+                }
+
+                await updateDoc(doc(db, "deposits", depositId), { status: "Approved" });
+
+                alert("Deposit approved and balance added successfully!");
+                loadDeposits();
+            } catch(e) {
+                alert("Error approving deposit: " + e.message);
+            }
+        };
+
+        // Add Balance by Unique App ID (Winner / Custom Credit)
+        window.addBalanceByAppId = async function() {
+            const appId = document.getElementById('target-appid').value.trim();
+            const amount = parseFloat(document.getElementById('target-amount').value);
+
+            if(!appId || !amount) {
+                alert("Please enter both App ID and Amount.");
+                return;
+            }
+
+            try {
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("appId", "==", appId));
+                const querySnap = await getDocs(q);
+
+                if(querySnap.empty) {
+                    alert("User with this App ID not found!");
+                    return;
+                }
+
+                querySnap.forEach(async (userDoc) => {
+                    const userData = userDoc.data();
+                    const newBal = (userData.balance || 0) + amount;
+                    await updateDoc(doc(db, "users", userDoc.id), { balance: newBal });
+                    alert(`Successfully added ₹${amount} to user ${userData.email} (${appId})!`);
+                    document.getElementById('target-appid').value = '';
+                    document.getElementById('target-amount').value = '';
+                });
+            } catch(e) {
+                alert("Error: " + e.message);
+            }
+        };
+
+        // Load Withdrawals with UPI ID, Copy Button & Cancel Option
+        async function loadWithdrawals() {
+            const container = document.getElementById('withdrawals-container');
+            container.innerHTML = '<p class="text-xs text-slate-500">Loading...</p>';
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, "withdrawals"));
+                container.innerHTML = '';
+                let count = 0;
+
+                querySnapshot.forEach((resDoc) => {
+                    const data = resDoc.data();
+                    if(data.status === "Pending") {
+                        count++;
+                        const userUpi = data.upiId || data.upi || "Not Provided";
+                        
+                        container.innerHTML += `
+                            <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div class="space-y-1">
+                                    <p class="text-xs text-white"><b>UID:</b> ${data.uid}</p>
+                                    <p class="text-xs text-indigo-400 font-bold"><b>Requested Amount:</b> ₹${data.amount}</p>
+                                    <div class="flex items-center space-x-2 pt-1">
+                                        <p class="text-xs text-slate-300"><b>UPI ID:</b> <span id="upi-${resDoc.id}" class="text-emerald-400 font-mono">${userUpi}</span></p>
+                                        <button onclick="copyUpiId('${userUpi}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg text-[10px] transition border border-slate-700">
+                                            <i class="fa-regular fa-copy mr-1"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                                    <button onclick="cancelWithdrawal('${resDoc.id}', '${data.uid}', ${data.amount})" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold px-3 py-2 rounded-xl text-xs transition">
+                                        Cancel Request
+                                    </button>
+                                    <button onclick="markWithdrawalDone('${resDoc.id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
+                                        Mark Paid
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                if(count === 0) container.innerHTML = '<p class="text-xs text-slate-500">No pending withdrawal requests.</p>';
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Copy UPI function
+        window.copyUpiId = function(upiText) {
+            if(!upiText || upiText === "Not Provided") {
+                alert("No UPI ID available to copy.");
+                return;
+            }
+            navigator.clipboard.writeText(upiText).then(() => {
+                alert("UPI ID copied to clipboard: " + upiText);
+            }).catch(err => {
+                alert("Failed to copy UPI ID.");
+            });
+        };
+
+        // Cancel Withdrawal Request & Refund Balance (Optional safety feature)
+        window.cancelWithdrawal = async function(withdrawId, userId, amount) {
+            if(!confirm("Are you sure you want to cancel this withdrawal request?")) return;
+
+            try {
+                // Status update to Cancelled
+                await updateDoc(doc(db, "withdrawals", withdrawId), { status: "Cancelled" });
+
+                // (Optional) Agar aap chahte hain ki cancel hone par user ka paisa wapas uske wallet mein refund ho jaye:
+                const userRef = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+                if(userSnap.exists()) {
+                    const currentBal = userSnap.data().balance || 0;
+                    await updateDoc(userRef, { balance: currentBal + amount });
+                }
+
+                alert("Withdrawal request cancelled successfully!");
+                loadWithdrawals();
+            } catch(e) {
+                alert("Error cancelling withdrawal: " + e.message);
+            }
+        };
+
+        window.markWithdrawalDone = async function(withdrawId) {
+            await updateDoc(doc(db, "withdrawals", withdrawId), { status: "Completed" });
+            alert("Withdrawal marked as completed!");
+            loadWithdrawals();
+        };
+
+        window.adminLogout = function() {
+            alert("Logged out from admin panel.");
+            window.location.href = "index.html";
+        };
+
+        // Initialize loader on load
+        loadDeposits();
+        loadWithdrawals();
+    </script>
+</body>
+</html>
