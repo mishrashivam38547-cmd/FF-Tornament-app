@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS7_ESPORT - Pro Gaming Arena</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="error-logger.js"></script>
+    <link rel="stylesheet" href="style-3d.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans pb-24 select-none">
+
+    <!-- Top Header -->
+    <header class="p-4 flex justify-between items-center border-b border-slate-900 bg-slate-950/80 sticky top-0 z-40 backdrop-blur-md">
+        <div class="flex items-center space-x-2">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+                RS7
+            </div>
+            <div>
+                <h1 class="text-sm font-black tracking-wider text-emerald-400">RS7_ESPORT</h1>
+                <p class="text-[10px] text-slate-400">Pro Gaming Arena</p>
+            </div>
+        </div>
+        
+        <!-- Wallet Balance Chip -->
+        <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-2xl">
+            <i class="fa-solid fa-wallet text-emerald-400 text-xs"></i>
+            <span id="user-wallet-balance" class="text-xs font-bold text-white">₹0</span>
+        </div>
+    </header>
+
+    <!-- Main Content Container (Tabs) -->
+    <main class="p-4 space-y-4">
+
+        <!-- HOME SECTION -->
+        <section id="home-section" class="space-y-4">
+            <!-- User Profile Header Card -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center shadow-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
+                        RS
+                    </div>
+                    <div>
+                        <h2 id="profile-name" class="text-sm font-bold text-white">Loading...</h2>
+                        <div class="flex items-center space-x-2 mt-0.5">
+                            <p id="user-app-id" class="text-[10px] text-emerald-400 font-mono">App ID: Loading...</p>
+                            <button onclick="copyAppId()" class="text-slate-400 hover:text-emerald-400 text-[10px]" title="Copy App ID">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20">
+                    Logout
+                </button>
+            </div>
+
+            <!-- Featured Mega Battle / Giveaway Card -->
+            <div id="featured-battle-card" class="bg-gradient-to-br from-indigo-900/40 via-purple-900/20 to-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xl relative overflow-hidden">
+                <div id="battle-tag" class="inline-block bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-bold">
+                    Mega Battle
+                </div>
+                <div>
+                    <h3 id="battle-title" class="text-lg font-black text-white">Free Fire MAX Solo Clash</h3>
+                    <p id="battle-details" class="text-xs text-slate-400 mt-1">Prize Pool: ₹10,000 | Entry: Free</p>
+                </div>
+                <button onclick="joinTournament(0, 'Free Fire MAX Solo Clash', 'megaBattleMatch')" class="w-full bg-white text-slate-950 font-bold py-3 rounded-2xl text-xs hover:bg-slate-100 transition shadow-md">
+                    Join Match Now
+                </button>
+            </div>
+        </section>
+
+        <!-- TOURNEYS SECTION -->
+        <section id="tourneys-section" class="hidden space-y-3">
+            <h3 class="text-sm font-bold text-white">Active Custom Rooms</h3>
+            <div id="tournaments-container" class="space-y-3">
+                <p class="text-slate-400 text-center py-4 text-xs">Loading tournaments...</p>
+            </div>
+        </section>
+
+        <!-- HISTORY SECTION -->
+        <section id="history-section" class="hidden space-y-3">
+            <h3 class="text-sm font-bold text-white">Completed Match History</h3>
+            <div id="history-container" class="space-y-3">
+                <p class="text-slate-400 text-center py-4 text-xs">Loading history...</p>
+            </div>
+        </section>
+        
+        <!-- WALLET SECTION -->
+        <section id="wallet-section" class="hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4">
+                <h3 class="text-sm font-bold text-white">Wallet Management</h3>
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/60 flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase">Available Balance</p>
+                        <p id="wallet-page-balance" class="text-2xl font-black text-emerald-400 mt-1">₹0</p>
+                    </div>
+                    <button onclick="openAddMoneyModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md">
+                        + Add Money
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-400">Withdraw Amount (₹)</label>
+                        <input type="number" id="withdraw-amount" placeholder="Enter amount" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-400">Enter Your UPI ID</label>
+                        <input type="text" id="withdraw-upi-input" placeholder="e.g. username@paytm" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white">
+                    </div>
+                    <button onclick="requestWithdrawal()" class="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl text-xs mt-1">
+                        Request Withdrawal
+                    </button>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300">Withdrawal History</h4>
+                    <div id="withdrawal-history-list" class="space-y-2 max-h-40 overflow-y-auto">
+                        <p class="text-[10px] text-slate-500 text-center py-2">No withdrawal requests found.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EARN SECTION (Updated with Coin System & Watch Ad SDK Space) -->
+        <section id="earn-section" class="hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 text-center">
+                <h3 class="text-sm font-bold text-white">Watch & Earn Coins</h3>
+                
+                <!-- Coin Balance Display -->
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex justify-around items-center">
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase">My Coins</p>
+                        <p id="user-coin-balance" class="text-xl font-black text-amber-400 mt-0.5">0 🪙</p>
+                    </div>
+                    <div class="border-l border-slate-800 pl-4">
+                        <p class="text-[10px] text-slate-400 uppercase">Conversion Rate</p>
+                        <p class="text-xs font-bold text-slate-300 mt-1">100 Coins = ₹10</p>
+                    </div>
+                </div>
+
+                <!-- Watch Ad Button with SDK space -->
+                <div id="ad-container" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div class="text-slate-500 text-xs">
+                        <!-- [ AD NETWORK SDK / SCRIPT INTEGRATION SPACE ] -->
+                        <p class="text-[11px] text-slate-400">Watch full ad video to earn 10 coins instantly.</p>
+                    </div>
+                    <button onclick="watchAdToEarnCoins()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> Watch Ad & Earn 10 Coins
+                    </button>
+                </div>
+
+                <!-- Convert Coins Card -->
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3 text-left">
+                    <h4 class="text-xs font-bold text-white">Convert Coins to Wallet Balance</h4>
+                    <button onclick="convertCoinsToWallet()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                        Convert Coins to ₹ (100 Coins = ₹10)
+                    </button>
+                </div>
+
+                <!-- Transfer / Withdrawal to Main Wallet using App ID Verification -->
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3 text-left">
+                    <h4 class="text-xs font-bold text-white">Transfer to Main Balance</h4>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-400">Enter Your App ID for Security</label>
+                        <input type="text" id="transfer-appid-input" placeholder="e.g. RS7-5228" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                    </div>
+                    <button onclick="transferCoinsToMainWallet()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                        Withdraw / Add to Wallet Balance
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFILE SECTION -->
+        <section id="profile-section" class="hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4">
+                <h3 class="text-sm font-bold text-white">Account Settings & Gaming Details</h3>
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-400">Connected Account Email</p>
+                    <p id="profile-email" class="text-xs font-mono text-emerald-400">Loading...</p>
+                </div>
+
+                <div class="space-y-3 pt-2 border-t border-slate-800">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-400 font-semibold">Free Fire Game UID</label>
+                        <input type="text" id="game-uid-input" placeholder="e.g. 483920192" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-slate-400 font-semibold">In-Game Name (IGN)</label>
+                        <input type="text" id="game-ign-input" placeholder="e.g. Silent Sniper" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white">
+                    </div>
+                    <button onclick="saveGamingDetails()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                        Save Gaming Profile
+                    </button>
+                </div>
+
+                <button onclick="handleLogout()" class="w-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold py-3 rounded-xl text-xs mt-2">
+                    Log Out of Account
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-900 flex justify-around items-center py-2.5 px-2 z-40">
+        <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center text-emerald-400 transition" data-tab="home">
+            <i class="fa-solid fa-house text-base"></i>
+            <span class="text-[10px] mt-0.5">Home</span>
+        </button>
+        <button onclick="switchTab('tourneys')" class="nav-btn flex flex-col items-center text-slate-500 transition" data-tab="tourneys">
+            <i class="fa-solid fa-trophy text-base"></i>
+            <span class="text-[10px] mt-0.5">Tourneys</span>
+        </button>
+        <button onclick="switchTab('history')" class="nav-btn flex flex-col items-center text-slate-500 transition" data-tab="history">
+            <i class="fa-solid fa-clock-rotate-left text-base"></i>
+            <span class="text-[10px] mt-0.5">History</span>
+        </button>
+        
+        <!-- Earn Tab Button in Nav -->
+        <button onclick="switchTab('earn')" class="nav-btn flex flex-col items-center text-slate-500 transition" data-tab="earn">
+            <i class="fa-solid fa-coins text-base text-amber-400"></i>
+            <span class="text-[10px] mt-0.5">Earn</span>
+        </button>
+
+        <!-- + Add Money Button in Bottom Nav -->
+        <button onclick="openAddMoneyModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-2xl flex flex-col items-center shadow-lg transition transform active:scale-95">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span class="text-[9px] font-black uppercase mt-0.5">Add Money</span>
+        </button>
+
+        <button onclick="switchTab('wallet')" class="nav-btn flex flex-col items-center text-slate-500 transition" data-tab="wallet">
+            <i class="fa-solid fa-wallet text-base"></i>
+            <span class="text-[10px] mt-0.5">Wallet</span>
+        </button>
+        <button onclick="switchTab('profile')" class="nav-btn flex flex-col items-center text-slate-500 transition" data-tab="profile">
+            <i class="fa-solid fa-user text-base"></i>
+            <span class="text-[10px] mt-0.5">Profile</span>
+        </button>
+    </nav>
+
+    <!-- Add Money Modal -->
+    <div id="add-money-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-5 rounded-3xl space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-white">Add Funds via UPI</h3>
+                <button onclick="closeAddMoneyModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-400">Transfer funds to admin UPI ID below:</p>
+            <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <span class="text-emerald-400 font-mono text-xs select-all" id="admin-upi-display">admin@upi</span>
+                <button onclick="copyAdminUpi()" class="text-slate-400 hover:text-emerald-400 text-xs px-2 py-1"><i class="fa-regular fa-copy"></i></button>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 uppercase tracking-semibold">Enter Amount (₹)</label>
+                <input type="number" id="amount-input" placeholder="e.g. 100" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            
+            <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 uppercase font-semibold">Enter UTR / Transaction ID</label>
+                <input type="text" id="utr-input" placeholder="e.g. 4039281928" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 uppercase font-semibold">Upload Payment Screenshot</label>
+                <input type="file" id="screenshot-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white">
+            </div>
+
+            <div class="flex space-x-2 pt-2">
+                <button onclick="submitAddMoney()" class="flex-1 bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl text-xs">Submit Request</button>
+                <button onclick="closeAddMoneyModal()" class="flex-1 bg-slate-800 text-white font-bold py-3 rounded-xl text-xs">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="hidden fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 p-6 space-y-6">
+        <div class="text-center space-y-2">
+            <div class="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto">
+                RS7
+            </div>
+            <h2 class="text-lg font-black text-white">Welcome to RS7_ESPORT</h2>
+            <p class="text-xs text-slate-400">Sign in with Google or Email to continue</p>
+        </div>
+
+        <div class="w-full max-w-sm space-y-3">
+            <button onclick="handleGoogleLogin()" class="w-full bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs py-3.5 rounded-xl flex items-center justify-center space-x-2 transition shadow-md">
+                <i class="fa-brands fa-google text-red-500 text-sm"></i>
+                <span>Continue with Google</span>
+            </button>
+                    
+            <div class="flex items-center my-4 w-full">
+                <div class="flex-grow border-t border-slate-800"></div>
+                <span class="px-3 text-[10px] text-slate-500">OR</span>
+                <div class="flex-grow border-t border-slate-800"></div>
+            </div>
+
+            <div class="w-full space-y-3">
+                <input type="email" id="email-input" placeholder="Enter Email" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+                <input type="password" id="password-input" placeholder="Enter Password" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+                
+                <button onclick="loginWithEmail()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-xs transition shadow-md">
+                    Login with Email
+                </button>
+                <button onclick="signupWithEmail()" class="w-full bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-bold py-2.5 rounded-xl text-xs transition">
+                    Create New Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts & Core App Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithRedirect, 
+            getRedirectResult, 
+            GoogleAuthProvider, 
+            onAuthStateChanged,
+            signOut,
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword 
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyTfxnBHJvWfq7QEoMszl8OFrwY_rK59Q",
+            authDomain: "rs7esport-7a6cb.firebaseapp.com",
+            projectId: "rs7esport-7a6cb",
+            storageBucket: "rs7esport-7a6cb.firebasestorage.app",
+            messagingSenderId: "260824306083",
+            appId: "1:260824306083:web:86533606cc8ea4bce78a16"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ADMIN_UPI_ID = "rs7esport@ybl";
+        const googleProvider = new GoogleAuthProvider();
+
+        let currentActiveUserAppId = "";
+
+        // 1. Real-time listener for Mega Battle Card
+        onSnapshot(doc(db, "settings", "megaBattleMatch"), (docSnap) => {
+            const cardEl = document.getElementById('featured-battle-card');
+            if (!cardEl) return;
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.showCard === false) {
+                    cardEl.classList.add('hidden');
+                    return;
+                }
+                cardEl.classList.remove('hidden');
+                document.getElementById('battle-tag').innerText = data.type || "Mega Battle";
+                document.getElementById('battle-title').innerText = data.title || "";
+                document.getElementById('battle-details').innerText = data.details || "";
+            }
+        });
+
+        // 2. Real-time listener for Tournaments List
+        const tournamentsContainer = document.getElementById('tournaments-container');
+        if (tournamentsContainer) {
+            onSnapshot(collection(db, "tournaments"), (snapshot) => {
+                tournamentsContainer.innerHTML = ""; 
+                if (snapshot.empty) {
+                    tournamentsContainer.innerHTML = `<p class="text-slate-400 text-center py-4 text-xs">No active tournaments available.</p>`;
+                    return;
+                }
+                snapshot.forEach((docSnap) => {
+                    const match = docSnap.data();
+                    const matchId = docSnap.id;
+                    const entryFee = Number(match.entryFee) || 0;
+                    const matchName = match.title || "Custom Match";
+                    const maxSlots = Number(match.slots) || 50;
+                    const joinedCount = match.joinedUsers ? match.joinedUsers.length : 0;
+                    
+                    let roomDetailsHtml = `
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-amber-400 text-center">
+                            Room ID & Password will be provided 10-15 minutes before the match starts.
+                        </div>
+                    `;
+                    
+                    if (match.roomId && match.roomPass) {
+                        roomDetailsHtml = `
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                                <div>
+                                    <span class="text-slate-400 text-[10px]">Room ID:</span> <span class="font-mono text-white font-bold select-all">${match.roomId}</span> | 
+                                    <span class="text-slate-400 text-[10px]">Pass:</span> <span class="font-mono text-emerald-400 font-bold select-all">${match.roomPass}</span>
+                                </div>
+                                <button onclick="copyRoomCredentials('${match.roomId}', '${match.roomPass}')" class="text-emerald-400 hover:text-emerald-300 text-xs px-2 py-1 bg-emerald-500/10 rounded-lg">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    const matchCard = `
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-emerald-400 uppercase">${match.map || "Bermuda"} • ${match.type || "Solo"}</span>
+                                <span class="text-[10px] text-amber-400 font-semibold bg-amber-500/10 px-2.5 py-1 rounded-lg">Prize: ₹${match.prize || "0"}</span>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-xs">${matchName}</h4>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Slots Filled: ${joinedCount} / ${maxSlots} | Per Kill: ₹${match.perKill || "0"}</p>
+                            </div>
+                            ${roomDetailsHtml}
+                            <div class="flex justify-between items-center pt-1 border-t border-slate-800/80">
+                                <span class="text-[10px] text-slate-300">Entry: ₹${entryFee}</span>
+                                <button onclick="joinTournament(${entryFee}, '${matchName}', '${matchId}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition">
+                                    Join Room
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    tournamentsContainer.innerHTML += matchCard;
+                });
+            });
+        }
+
+        // 3. Real-time listener for Match History
+        const historyContainer = document.getElementById('history-container');
+        if (historyContainer) {
+            onSnapshot(collection(db, "matchHistory"), (snapshot) => {
+                historyContainer.innerHTML = "";
+                if (snapshot.empty) {
+                    historyContainer.innerHTML = `<p class="text-slate-400 text-center py-4 text-xs">No completed match history found.</p>`;
+                    return;
+                }
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    historyContainer.innerHTML += `
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-indigo-400">${data.title || "Custom Battle"}</span>
+                                <span class="text-[10px] text-slate-400">${data.date || "Completed"}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-300">Winner / Result: <span class="text-emerald-400 font-semibold">${data.winner || "Declared by Admin"}</span></p>
+                            <p class="text-[10px] text-slate-400">Prize Distributed: ₹${data.prize || "0"}</p>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        window.copyRoomCredentials = function(roomId, roomPass) {
+            navigator.clipboard.writeText(`Room ID: ${roomId}\nPassword: ${roomPass}`);
+            alert("Room ID & Password copied to clipboard!");
+        };
+
+        window.generateUniqueAppId = function() {
+            return `RS7-${Math.floor(1000 + Math.random() * 9000)}`;
+        };
+
+        window.copyAppId = function() {
+            navigator.clipboard.writeText(currentActiveUserAppId);
+            alert("App ID copied to clipboard!");
+        };
+
+        window.copyAdminUpi = function() {
+            navigator.clipboard.writeText(ADMIN_UPI_ID);
+            alert("Admin UPI ID copied to clipboard!");
+        };
+
+        window.handleGoogleLogin = function() {
+            signInWithRedirect(auth, googleProvider).catch(err => alert("Login Error: " + err.message));
+        };
+       
+        window.loginWithEmail = function() {
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            if(!email || !password) { alert("Please enter email and password"); return; }
+            signInWithEmailAndPassword(auth, email, password).catch((error) => alert("Login Error: " + error.message));
+        };
+
+        window.signupWithEmail = function() {
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            if(!email || !password) { alert("Please enter email and password"); return; }
+            createUserWithEmailAndPassword(auth, email, password).catch((error) => alert("Signup Error: " + error.message));
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('auth-modal').classList.add('hidden');
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+
+                let userData;
+                if (!userSnap.exists()) {
+                    userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || user.email.split('@')[0],
+                        appId: generateUniqueAppId(),
+                        gameUid: "",
+                        gameIgn: "",
+                        balance: 0,
+                        coins: 0,
+                        createdAt: new Date()
+                    };
+                    await setDoc(userRef, userData);
+                } else {
+                    userData = userSnap.data();
+                }
+
+                currentActiveUserAppId = userData.appId || "RS7-0000";
+
+                document.getElementById('user-wallet-balance').innerText = `₹${userData.balance || 0}`;
+                document.getElementById('wallet-page-balance').innerText = `₹${userData.balance || 0}`;
+                document.getElementById('user-coin-balance').innerText = `${userData.coins || 0} 🪙`;
+                document.getElementById('user-app-id').innerText = `App ID: ${currentActiveUserAppId}`;
+                document.getElementById('profile-name').innerText = userData.displayName;
+                document.getElementById('profile-email').innerText = userData.email;
+                
+                if(userData.gameUid) document.getElementById('game-uid-input').value = userData.gameUid;
+                if(userData.gameIgn) document.getElementById('game-ign-input').value = userData.gameIgn;
+
+                loadWithdrawalHistory(user.uid);
+            } else {
+                document.getElementById('auth-modal').classList.remove('hidden');
+            }
+        });
+
+        getRedirectResult(auth).catch(err => console.error(err));
+
+        window.handleLogout = function() {
+            signOut(auth).then(() => alert("Logged out successfully!"));
+        };
+
+        window.saveGamingDetails = async function() {
+            const gameUid = document.getElementById('game-uid-input').value.trim();
+            const gameIgn = document.getElementById('game-ign-input').value.trim();
+            const user = auth.currentUser;
+
+            if(!gameUid || !gameIgn) {
+                alert("Please fill in both your Game UID and In-Game Name.");
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", user.uid);
+                await updateDoc(userRef, { gameUid: gameUid, gameIgn: gameIgn });
+                alert("Gaming profile updated successfully!");
+            } catch(e) {
+                console.error(e);
+                alert("Error saving gaming details.");
+            }
+        };
+
+        window.joinTournament = async function(entryFee, matchName, matchId) {
+            const user = auth.currentUser;
+            if(!user) return;
+
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            const userData = userSnap.data();
+
+            if(!userData.gameUid || !userData.gameIgn) {
+                alert("Please enter your Game UID and In-Game Name in Profile section before joining a match!");
+                switchTab('profile');
+                return;
+            }
+
+            if (matchId !== 'megaBattleMatch') {
+                const matchRef = doc(db, "tournaments", matchId);
+                const matchSnap = await getDoc(matchRef);
+                if (matchSnap.exists()) {
+                    const matchData = matchSnap.data();
+                    const joinedUsers = matchData.joinedUsers || [];
+                    const maxSlots = Number(matchData.slots) || 50;
+
+                    if (joinedUsers.includes(user.uid)) {
+                        alert("You have already joined this tournament!");
+                        return;
+                    }
+                    if (joinedUsers.length >= maxSlots) {
+                        alert("Sorry, this match is completely full!");
+                        return;
+                    }
+
+                    const currentBalance = userData.balance || 0;
+                    if(entryFee > 0 && currentBalance < entryFee) {
+                        alert(`Insufficient balance! You need ₹${entryFee} to join ${matchName}. Please add money to continue.`);
+                        switchTab('wallet');
+                        return;
+                    }
+
+                    if(entryFee > 0) {
+                        const newBalance = currentBalance - entryFee;
+                        await updateDoc(userRef, { balance: newBalance });
+                        document.getElementById('user-wallet-balance').innerText = `₹${newBalance}`;
+                        document.getElementById('wallet-page-balance').innerText = `₹${newBalance}`;
+                    }
+
+                    await updateDoc(matchRef, { joinedUsers: arrayUnion(user.uid) });
+                    alert(`Successfully joined ${matchName}! Slot booked.`);
+                    return;
+                }
+            }
+            alert(`Successfully joined ${matchName}! Slot booked.`);
+        };
+
+        window.switchTab = function(tabName) {
+            ['home', 'tourneys', 'history', 'wallet', 'earn', 'profile'].forEach(sec => {
+                const el = document.getElementById(sec + '-section');
+                if(el) el.classList.add('hidden');
+            });
+
+            const activeSec = document.getElementById(tabName + '-section');
+            if(activeSec) activeSec.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-400');
+                btn.classList.add('text-slate-500');
+            });
+
+            const currentBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            if(currentBtn) {
+                currentBtn.classList.remove('text-slate-500');
+                currentBtn.classList.add('text-emerald-400');
+            }
+        };
+
+        window.openAddMoneyModal = function() {
+            document.getElementById('admin-upi-display').innerText = ADMIN_UPI_ID;
+            document.getElementById('add-money-modal').classList.remove('hidden');
+        };
+        window.closeAddMoneyModal = function() {
+            document.getElementById('add-money-modal').classList.add('hidden');
+        };
+
+        window.submitAddMoney = async function() {
+            const utr = document.getElementById('utr-input').value.trim();
+            const fileInput = document.getElementById('screenshot-file').files[0];
+            const user = auth.currentUser;
+
+            if(!utr || !fileInput) {
+                alert("Please provide UTR ID and upload payment screenshot.");
+                return;
+            }
+
+            alert("Uploading screenshot and sending request to admin...");
+            const formData = new FormData();
+            formData.append("image", fileInput);
+
+            try {
+                const ibbApiKey = "c8bda32dd7a09f3926d029535dbb2940";
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${ibbApiKey}`, { method: "POST", body: formData });
+                const data = await res.json();
+
+                if(data.success) {
+                    await addDoc(collection(db, "deposits"), {
+                        uid: user.uid,
+                        email: user.email,
+                        utr: utr,
+                        screenshotUrl: data.data.url,
+                        status: "Pending",
+                        timestamp: new Date()
+                    });
+                    alert("Deposit request submitted successfully!");
+                    closeAddMoneyModal();
+                } else {
+                    alert("Image upload failed.");
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Error submitting deposit request.");
+            }
+        };
+       // ==========================================
+        // WATCH AD & EARN COINS SYSTEM
+        // ==========================================
+        window.watchAdToEarnCoins = function() {
+            // ==========================================
+            // AD NETWORK SDK / SCRIPT INTEGRATION SPACE
+            // ==========================================
+            alert("Loading sponsored ad...");
+            
+            setTimeout(async () => {
+                const user = auth.currentUser;
+                if(user) {
+                    const userRef = doc(db, "users", user.uid);
+                    await updateDoc(userRef, { coins: increment(10) });
+                    
+                    const userSnap = await getDoc(userRef);
+                    const updatedCoins = userSnap.data().coins || 0;
+                    document.getElementById('user-coin-balance').innerText = `${updatedCoins} 🪙`;
+                    alert("Ad watched successfully! 10 coins added.");
+                }
+            }, 2000);
+        };
+
+        // Convert Coins System (100 Coins = ₹10)
+        window.convertCoinsToWallet = async function() {
+            const user = auth.currentUser;
+            if(!user) return;
+
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                const data = userSnap.data();
+                const currentCoins = data.coins || 0;
+                const currentBalance = data.balance || 0;
+
+                if(currentCoins < 100) {
+                    alert("You need at least 100 coins to convert!");
+                    return;
+                }
+
+                let conversionFactor = Math.floor(currentCoins / 100);
+                let coinsToConvert = conversionFactor * 100;
+                let cashEarned = conversionFactor * 10;
+
+                let updatedCoins = currentCoins - coinsToConvert;
+                let updatedBalance = currentBalance + cashEarned;
+
+                await updateDoc(userRef, {
+                    coins: updatedCoins,
+                    balance: updatedBalance
+                });
+
+                document.getElementById('user-coin-balance').innerText = `${updatedCoins} 🪙`;
+                document.getElementById('user-wallet-balance').innerText = `₹${updatedBalance}`;
+                document.getElementById('wallet-page-balance').innerText = `₹${updatedBalance}`;
+
+                alert(`Successfully converted ${coinsToConvert} coins into ₹${cashEarned} and added to your wallet!`);
+            } catch(e) {
+                console.error(e);
+                alert("Conversion failed. Try again.");
+            }
+        };
+
+        // Secure Transfer/Withdrawal to Main Wallet with App ID & Balance Validation
+        window.transferCoinsToMainWallet = async function() {
+            const enteredAppId = document.getElementById('transfer-appid-input').value.trim();
+            const user = auth.currentUser;
+            if(!user) return;
+
+            if(!enteredAppId) {
+                alert("Please enter your App ID!");
+                return;
+            }
+
+            if(enteredAppId !== currentActiveUserAppId) {
+                alert("Access Denied! Incorrect App ID entered. Transfer failed.");
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                const data = userSnap.data();
+                const currentCoins = data.coins || 0;
+
+                if(currentCoins < 100) {
+                    alert("Insufficient coins! You need at least 100 coins (₹10) to transfer.");
+                    return;
+                }
+
+                // Automatically convert available valid 100 blocks or total equivalent
+                let conversionFactor = Math.floor(currentCoins / 100);
+                let coinsToConvert = conversionFactor * 100;
+                let cashEarned = conversionFactor * 10;
+                let updatedCoins = currentCoins - coinsToConvert;
+                let updatedBalance = (data.balance || 0) + cashEarned;
+
+                await updateDoc(userRef, {
+                    coins: updatedCoins,
+                    balance: updatedBalance
+                });
+
+                document.getElementById('user-coin-balance').innerText = `${updatedCoins} 🪙`;
+                document.getElementById('user-wallet-balance').innerText = `₹${updatedBalance}`;
+                document.getElementById('wallet-page-balance').innerText = `₹${updatedBalance}`;
+                document.getElementById('transfer-appid-input').value = "";
+
+                alert(`Successfully transferred ₹${cashEarned} (from ${coinsToConvert} coins) to your wallet!`);
+            } catch(e) {
+                console.error(e);
+                alert("Transfer failed due to a network error.");
+            }
+        };
+
+        window.requestWithdrawal = async function() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const userUpi = document.getElementById('withdraw-upi-input').value.trim();
+            const user = auth.currentUser;
+
+            if(!amount || amount <= 0) { alert("Please enter a valid withdrawal amount."); return; }
+            if(!userUpi) { alert("Please enter your destination UPI ID."); return; }
+
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            const currentBalance = userSnap.data().balance || 0;
+
+            if(amount > currentBalance) {
+                alert("Insufficient wallet balance!");
+                return;
+            }
+
+            const updatedBalance = currentBalance - amount;
+            await updateDoc(userRef, { balance: updatedBalance });
+
+            await addDoc(collection(db, "withdrawals"), {
+                uid: user.uid,
+                amount: amount,
+                upiId: userUpi,
+                status: "Pending",
+                timestamp: new Date()
+            });
+
+            document.getElementById('user-wallet-balance').innerText = `₹${updatedBalance}`;
+            document.getElementById('wallet-page-balance').innerText = `₹${updatedBalance}`;
+            document.getElementById('withdraw-amount').value = "";
+            document.getElementById('withdraw-upi-input').value = "";
+            
+            alert(`Withdrawal request of ₹${amount} submitted!`);
+            loadWithdrawalHistory(user.uid);
+        };
+
+        async function loadWithdrawalHistory(uid) {
+            const historyContainer = document.getElementById('withdrawal-history-list');
+            historyContainer.innerHTML = `<p class="text-[10px] text-slate-400 text-center py-2">Loading history...</p>`;
+
+            try {
+                const q = query(collection(db, "withdrawals"), where("uid", "==", uid));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    historyContainer.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">No withdrawal requests found.</p>`;
+                    return;
+                }
+
+                let html = "";
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const statusColor = data.status === "Success" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-amber-400 bg-amber-500/10 border-amber-500/20";
+                    html += `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex justify-between items-center text-xs">
+                            <div>
+                                <p class="font-bold text-white">₹${data.amount}</p>
+                                <p class="text-[10px] text-slate-400">UPI: ${data.upiId}</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg border text-[10px] font-bold ${statusColor}">
+                                ${data.status}
+                            </span>
+                        </div>
+                    `;
+                });
+                historyContainer.innerHTML = html;
+            } catch (e) {
+                console.error("Error loading history: ", e);
+            }
+        }
+    </script>
+</body>
+</html>
+           
