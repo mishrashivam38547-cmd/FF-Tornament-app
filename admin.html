@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS7_esport - Advanced Admin Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyTfxnBHJvWfq7QEoMszl8OFrwY_rK59Q",
+            authDomain: "rs7esport-7a6cb.firebaseapp.com",
+            projectId: "rs7esport-7a6cb",
+            storageBucket: "rs7esport-7a6cb.firebasestorage.app",
+            messagingSenderId: "260824306083",
+            appId: "1:260824306083:web:86533606cc8ea4bce78a16"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.firebaseApp = app;
+        window.firebaseAuth = getAuth(app);
+        window.firebaseDb = db;
+
+        let currentEditMatchId = null;
+        let currentRoomUploadMatchId = null;
+
+        // ================= REAL-TIME LISTENERS =================
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // 1. Dashboard Stats & User Management Table
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                document.getElementById('admin-total-users').innerText = snapshot.size;
+                
+                const userTableBody = document.getElementById('user-table-tbody');
+                if (userTableBody) {
+                    userTableBody.innerHTML = "";
+                    if (snapshot.empty) {
+                        userTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-500 text-xs">No registered users found in database.</td></tr>`;
+                    } else {
+                        let count = 1;
+                        snapshot.forEach((docSnap) => {
+                            const data = docSnap.data();
+                            userTableBody.innerHTML += `
+                                <tr class="border-b border-slate-800/80 hover:bg-slate-800/30 transition">
+                                    <td class="py-3 px-4 text-slate-400">#${count++}</td>
+                                    <td class="py-3 px-4 font-mono text-emerald-400 font-bold">${data.appId || 'N/A'}</td>
+                                    <td class="py-3 px-4 text-white font-medium">${data.gameIgn || 'Unknown'}</td>
+                                    <td class="py-3 px-4 font-mono text-indigo-400">${data.gameUid || 'N/A'}</td>
+                                    <td class="py-3 px-4 text-slate-300">${data.email || 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            });
+
+            // 2. Dashboard Stats - Active Tournaments
+            onSnapshot(collection(db, "tournaments"), (snapshot) => {
+                document.getElementById('admin-active-tournaments').innerText = snapshot.size;
+                
+                const container = document.getElementById('tournament-list-container');
+                if (container) {
+                    container.innerHTML = "";
+                    if (snapshot.empty) {
+                        container.innerHTML = `<p class="text-xs text-slate-500 col-span-2 text-center py-4">No active tournaments found in database.</p>`;
+                    } else {
+                        snapshot.forEach((docSnap) => {
+                            const data = docSnap.data();
+                            const id = docSnap.id;
+                            const joinedCount = data.joinedUsers ? data.joinedUsers.length : 0;
+                            const maxSlots = data.slots || 50;
+                            
+                            let statusBadge = `<span class="text-[10px] bg-indigo-500/20 text-indigo-400 font-bold px-2.5 py-1 rounded uppercase">Upcoming</span>`;
+                            if(data.status === 'Live') {
+                                statusBadge = `<span class="text-[10px] bg-rose-500/20 text-rose-400 font-bold px-2.5 py-1 rounded uppercase animate-pulse">🔴 Live Now</span>`;
+                            }
+
+                            container.innerHTML += `
+                                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 relative shadow-lg">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2.5 py-1 rounded uppercase">${data.matchType || 'Squad'} • ${data.map || 'Bermuda'}</span>
+                                            ${statusBadge}
+                                        </div>
+                                        <span class="text-xs text-amber-400 font-bold">Prize: ₹${data.prizePool || '1,500'}</span>
+                                    </div>
+                                    <h4 class="font-bold text-base text-white">${data.title || 'Tournament Match'}</h4>
+                                    
+                                    <div class="grid grid-cols-3 gap-2 py-1 text-xs bg-slate-800/40 p-2.5 rounded-xl border border-slate-800/80 text-center">
+                                        <div>
+                                            <span class="text-slate-400 text-[9px] uppercase">Entry Fee</span>
+                                            <p class="font-bold text-white">₹${data.entryFee || '0'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400 text-[9px] uppercase">Per Kill</span>
+                                            <p class="font-bold text-emerald-400">₹${data.perKill || '0'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400 text-[9px] uppercase">Slots</span>
+                                            <p class="font-bold text-indigo-400">${joinedCount}/${maxSlots}</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons Matrix -->
+                                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60 mt-2">
+                                        <button onclick="openRoomCredentialsModal('${id}')" class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 py-2 rounded-xl text-[11px] font-bold transition">
+                                            <i class="fa-solid fa-key"></i> Room ID/Pass
+                                        </button>
+                                        <button onclick="openTournamentModal('edit', '${id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 py-2 rounded-xl text-[11px] font-bold transition">
+                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 pt-1">
+                                        <button onclick="updateMatchStatus('${id}', 'Live')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 py-2 rounded-xl text-[10px] font-bold transition">
+                                            Set Live
+                                        </button>
+                                        <button onclick="completeMatch('${id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 py-2 rounded-xl text-[10px] font-bold transition">
+                                            Complete
+                                        </button>
+                                        <button onclick="deleteMatchCard('${id}')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-2 rounded-xl text-[10px] font-bold transition">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            });
+
+            // 3. Dashboard Stats - Pending Withdrawals Calculation
+            onSnapshot(collection(db, "withdrawals"), (snapshot) => {
+                let pendingTotal = 0;
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (data.status === 'Pending') {
+                        pendingTotal += Number(data.amount || 0);
+                    }
+                });
+                const pendingEl = document.getElementById('admin-pending-withdrawals');
+                if (pendingEl) pendingEl.innerText = `₹${pendingTotal}`;
+            });
+
+            // 4. Completed Match History Real-time
+            onSnapshot(collection(db, "matchHistory"), (snapshot) => {
+                const historyContainer = document.getElementById('history-list-container');
+                if (historyContainer) {
+                    historyContainer.innerHTML = "";
+                    if (snapshot.empty) {
+                        historyContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No completed matches history available.</p>`;
+                    } else {
+                        snapshot.forEach((docSnap) => {
+                            const data = docSnap.data();
+                            const playersCount = data.players ? data.players.length : 0;
+                            const playersJson = encodeURIComponent(JSON.stringify(data.players || []));
+                            
+                            historyContainer.innerHTML += `
+                                <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-bold text-white text-sm">${data.title || 'Custom Match'}</h4>
+                                        <p class="text-[10px] text-slate-400 mt-1">Completed: ${new Date(data.completedAt).toLocaleString()} | Total Players: ${playersCount}</p>
+                                    </div>
+                                    <button onclick="viewMatchPlayers('${playersJson}')" class="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-xs font-bold transition">
+                                        View Players
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            });
+        });
+
+        // ================= MATCH ACTIONS =================
+        window.updateMatchStatus = async function(id, status) {
+            try {
+                await updateDoc(doc(window.firebaseDb, "tournaments", id), { status: status });
+                alert(`Match status updated to ${status}!`);
+            } catch (err) {
+                alert('Error updating status: ' + err.message);
+            }
+        };
+
+        window.openRoomCredentialsModal = function(id) {
+            currentRoomUploadMatchId = id;
+            document.getElementById('room-id-input').value = "";
+            document.getElementById('room-pass-input').value = "";
+            document.getElementById('room-credentials-modal').classList.add('active');
+        };
+        window.closeRoomCredentialsModal = function() {
+            document.getElementById('room-credentials-modal').classList.remove('active');
+        };
+
+        window.saveRoomCredentials = async function() {
+            const roomId = document.getElementById('room-id-input').value.trim();
+            const roomPass = document.getElementById('room-pass-input').value.trim();
+            if(!roomId || !roomPass) return alert("Please enter both ID and Password");
+
+            try {
+                await updateDoc(doc(window.firebaseDb, "tournaments", currentRoomUploadMatchId), {
+                    roomId: roomId,
+                    roomPass: roomPass
+                });
+                alert("Room ID and Password uploaded!");
+                closeRoomCredentialsModal();
+            } catch(e) {
+                alert("Error saving Room Details: " + e.message);
+            }
+        };
+
+        window.completeMatch = async function(matchId) {
+            if(!confirm("Mark this match as completed? This will save joined users to history and remove the match.")) return;
+            
+            try {
+                const matchRef = doc(window.firebaseDb, "tournaments", matchId);
+                const matchSnap = await getDoc(matchRef);
+                if(!matchSnap.exists()) return alert("Match not found!");
+                const matchData = matchSnap.data();
+
+                const joinedUsersUIDs = matchData.joinedUsers || [];
+                let joinedPlayersDetails = [];
+
+                for (let uid of joinedUsersUIDs) {
+                    const userRef = doc(window.firebaseDb, "users", uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const uData = userSnap.data();
+                        joinedPlayersDetails.push({
+                            uid: uid,
+                            appId: uData.appId || "N/A",
+                            gameUid: uData.gameUid || "N/A",
+                            gameIgn: uData.gameIgn || "Unknown"
+                        });
+                    }
+                }
+
+                const historyData = {
+                    ...matchData,
+                    status: 'Completed',
+                    completedAt: new Date().toISOString(),
+                    players: joinedPlayersDetails
+                };
+                
+                await addDoc(collection(window.firebaseDb, "matchHistory"), historyData);
+                await deleteDoc(matchRef);
+                alert("Match completed successfully and saved to history!");
+
+            } catch (error) {
+                console.error(error);
+                alert("Error completing match: " + error.message);
+            }
+        };
+
+        window.deleteMatchCard = async function(id) {
+            if (confirm('Are you sure you want to delete this tournament?')) {
+                try {
+                    await deleteDoc(doc(window.firebaseDb, "tournaments", id));
+                } catch (err) {
+                    alert('Error deleting match: ' + err.message);
+                }
+            }
+        };
+
+        window.openTournamentModal = async function(mode, id = null) {
+            const modal = document.getElementById('tournament-modal');
+            currentEditMatchId = id;
+            
+            if (mode === 'edit' && id) {
+                document.getElementById('modal-heading').innerText = "Edit Match Details";
+                try {
+                    const docSnap = await getDoc(doc(window.firebaseDb, "tournaments", id));
+                    if(docSnap.exists()) {
+                        const d = docSnap.data();
+                        document.getElementById('match-title-input').value = d.title;
+                        document.getElementById('match-type-select').value = d.matchType;
+                        document.getElementById('map-select').value = d.map;
+                        document.getElementById('entry-fee-input').value = d.entryFee;
+                        document.getElementById('prize-pool-input').value = d.prizePool;
+                        document.getElementById('per-kill-input').value = d.perKill;
+                        document.getElementById('slots-input').value = d.slots || 50;
+                    }
+                } catch(e) { console.error(e); }
+            } else {
+                document.getElementById('modal-heading').innerText = "Create New Match";
+                document.getElementById('match-title-input').value = '';
+                document.getElementById('entry-fee-input').value = '';
+                document.getElementById('prize-pool-input').value = '';
+                document.getElementById('per-kill-input').value = '';
+                document.getElementById('slots-input').value = '50';
+            }
+            modal.classList.add('active');
+        };
+
+        window.closeTournamentModal = function() {
+            document.getElementById('tournament-modal').classList.remove('active');
+            currentEditMatchId = null;
+        };
+
+        window.saveMatchData = async function() {
+            const title = document.getElementById('match-title-input').value.trim();
+            const matchType = document.getElementById('match-type-select').value;
+            const map = document.getElementById('map-select').value;
+            const entryFee = document.getElementById('entry-fee-input').value.trim() || '0';
+            const prizePool = document.getElementById('prize-pool-input').value.trim() || '0';
+            const perKill = document.getElementById('per-kill-input').value.trim() || '0';
+            const slots = document.getElementById('slots-input').value.trim() || '50';
+
+            if (!title) return alert('Please enter a match title.');
+
+            const matchObj = {
+                title, matchType, map, entryFee: Number(entryFee), 
+                prizePool: Number(prizePool), perKill: Number(perKill), slots: Number(slots),
+                status: 'Upcoming'
+            };
+
+            try {
+                if (currentEditMatchId) {
+                    await updateDoc(doc(window.firebaseDb, "tournaments", currentEditMatchId), matchObj);
+                    alert('Match updated successfully!');
+                } else {
+                    matchObj.createdAt = new Date().toISOString();
+                    matchObj.joinedUsers = [];
+                    await addDoc(collection(window.firebaseDb, "tournaments"), matchObj);
+                    alert('New match created successfully!');
+                }
+                closeTournamentModal();
+            } catch (err) {
+                alert('Failed to save match: ' + err.message);
+            }
+        };
+
+        window.viewMatchPlayers = function(playersJsonEncoded) {
+            const players = JSON.parse(decodeURIComponent(playersJsonEncoded));
+            const tbody = document.getElementById('history-players-tbody');
+            tbody.innerHTML = "";
+            
+            if(players.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-500 text-xs">No users joined this match.</td></tr>`;
+            } else {
+                players.forEach((p, index) => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-800">
+                            <td class="py-2 px-3 text-slate-300">#${index + 1}</td>
+                            <td class="py-2 px-3 font-mono text-emerald-400">${p.appId}</td>
+                            <td class="py-2 px-3 font-mono text-indigo-400">${p.gameUid}</td>
+                            <td class="py-2 px-3 text-white font-bold">${p.gameIgn}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('history-players-modal').classList.add('active');
+        };
+
+        window.closeHistoryPlayersModal = function() {
+            document.getElementById('history-players-modal').classList.remove('active');
+        };
+    </script>
+
+    <style>
+        .admin-screen { display: none; }
+        .admin-screen.active { display: block; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex z-50">
+        <div>
+            <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-white text-base">RS7<span class="text-emerald-400">_ESPORT</span></h1>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">Admin Control</p>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-1.5 text-xs font-medium overflow-y-auto">
+                <button onclick="switchAdminScreen('dashboard')" class="admin-nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie w-5 text-sm"></i> <span>Dashboard</span>
+                </button>
+                <button onclick="switchAdminScreen('users')" class="admin-nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition text-emerald-400 bg-emerald-500/10 font-bold" data-target="users">
+                    <i class="fa-solid fa-users w-5 text-sm"></i> <span>User Management</span>
+                </button>
+                <button onclick="switchAdminScreen('tournaments')" class="admin-nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800" data-target="tournaments">
+                    <i class="fa-solid fa-trophy w-5 text-sm"></i> <span>Active Tournaments</span>
+                </button>
+                <a href="deposits-withdrawals.html" class="admin-nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800">
+    <i class="fa-solid fa-money-bill-transfer w-5 text-sm text-amber-400"></i>
+    <span>Deposits & Withdrawals</span>
+                </a>
+                <a href="mega-battle-admin.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition">
+    <i class="fa-solid fa-trophy text-rose-500 w-5"></i>
+    <span class="text-xs font-semibold">Mega Battle Manager</span>
+                </a>
+                <button onclick="switchAdminScreen('history')" class="admin-nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800" data-target="history">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-sm text-indigo-400"></i> <span>Match History</span>
+                </button>
+                <button onclick="switchAdminScreen('wallet')" class="admin-nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800" data-target="wallet">
+                    <i class="fa-solid fa-wallet w-5 text-sm"></i> <span>Wallet Control</span>
+                </button>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content Workspace -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-slate-950">
+        
+        <header class="bg-slate-900/60 backdrop-blur border-b border-slate-800 px-6 py-4 flex justify-between items-center z-40 sticky top-0">
+            <div>
+                <h2 id="page-title" class="text-base font-bold text-white">User Management</h2>
+            </div>
+        </header>
+
+        <div class="p-6 space-y-6 flex-1">
+
+            <!-- 1. DASHBOARD OVERVIEW -->
+            <div id="screen-dashboard" class="admin-screen space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-400 font-medium">Total Users</span>
+                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs"><i class="fa-solid fa-users"></i></div>
+                        </div>
+                        <h3 id="admin-total-users" class="text-2xl font-black text-white">0</h3>
+                        <span class="text-[10px] text-emerald-400 font-bold mt-1 inline-block"><i class="fa-solid fa-arrow-up mr-1"></i>Real-time count</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-400 font-medium">Active Tournaments</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs"><i class="fa-solid fa-trophy"></i></div>
+                        </div>
+                        <h3 id="admin-active-tournaments" class="text-2xl font-black text-white">0</h3>
+                        <span class="text-[10px] text-emerald-400 font-bold mt-1 inline-block">Running smoothly</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-400 font-medium">Pending Withdrawals</span>
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs"><i class="fa-solid fa-wallet"></i></div>
+                        </div>
+                        <h3 id="admin-pending-withdrawals" class="text-2xl font-black text-white">₹0</h3>
+                        <span class="text-[10px] text-amber-400 font-bold mt-1 inline-block">Requires approval</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-400 font-medium">Platform Revenue</span>
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        </div>
+                        <h3 id="admin-platform-revenue" class="text-2xl font-black text-white">₹0</h3>
+                        <span class="text-[10px] text-emerald-400 font-bold mt-1 inline-block">Live stats</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. USER MANAGEMENT SCREEN (RESTORED & ACTIVE) -->
+            <div id="screen-users" class="admin-screen active space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-sm text-white">Registered Users List</h3>
+                            <p class="text-xs text-slate-400">All application users and their game credentials.</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                                    <th class="py-3 px-4 rounded-tl-xl">Sl. No.</th>
+                                    <th class="py-3 px-4">App ID</th>
+                                    <th class="py-3 px-4">Game IGN</th>
+                                    <th class="py-3 px-4">Free Fire UID</th>
+                                    <th class="py-3 px-4 rounded-tr-xl">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-tbody">
+                                <!-- Real-time rows inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TOURNAMENT MANAGEMENT -->
+            <div id="screen-tournaments" class="admin-screen space-y-6">
+                <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <div>
+                        <h3 class="font-bold text-sm text-white">Active Tournaments Manager</h3>
+                    </div>
+                    <button onclick="openTournamentModal('create')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-plus mr-1.5"></i> Create New Match
+                    </button>
+                </div>
+                <div id="tournament-list-container" class="grid grid-cols-1 xl:grid-cols-3 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 4. MATCH HISTORY -->
+            <div id="screen-history" class="admin-screen space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <div>
+                        <h3 class="font-bold text-sm text-white">Completed Match History</h3>
+                        <p class="text-xs text-slate-400">View finished matches and extract player App ID / Game UIDs.</p>
+                    </div>
+                    <div id="history-list-container" class="space-y-3"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- TOURNAMENT CREATE / EDIT MODAL -->
+    <div id="tournament-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="modal-heading" class="font-bold text-white text-base">Create New Match</h3>
+                <button onclick="closeTournamentModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-3.5 text-xs">
+                <div>
+                    <label class="text-slate-400 font-medium">Match Title / Name</label>
+                    <input type="text" id="match-title-input" placeholder="e.g. Free Fire MAX Clash" class="w-full bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 font-medium">Match Type</label>
+                        <select id="match-type-select" class="w-full bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                            <option value="Solo">Solo</option>
+                            <option value="Duo">Duo</option>
+                            <option value="Squad">Squad</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 font-medium">Map</label>
+                        <select id="map-select" class="w-full bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                            <option value="Bermuda">Bermuda</option>
+                            <option value="Purgatory">Purgatory</option>
+                            <option value="Kalahari">Kalahari</option>
+                            <option value="Nexterra">Nexterra</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 font-medium">Max Slots</label>
+                        <input type="number" id="slots-input" placeholder="50" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 font-medium">Entry Fee (₹)</label>
+                        <input type="number" id="entry-fee-input" placeholder="0 for Free" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-400 font-medium">Prize Pool (₹)</label>
+                        <input type="number" id="prize-pool-input" placeholder="1500" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 font-medium">Per Kill (₹)</label>
+                        <input type="number" id="per-kill-input" placeholder="8" class="w-full bg-slate-800 border border-slate-700 px-3 py-2.5 rounded-xl text-white mt-1 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeTournamentModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition border border-slate-700 text-xs">Cancel</button>
+                <button onclick="saveMatchData()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl transition text-xs">Save Match Details</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROOM ID & PASSWORD MODAL -->
+    <div id="room-credentials-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 class="font-bold text-white text-sm">Upload Room ID & Password</h3>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="text-slate-400 font-medium">Room ID</label>
+                    <input type="text" id="room-id-input" placeholder="e.g. 849302" class="w-full bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-white font-mono mt-1 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-slate-400 font-medium">Room Password</label>
+                    <input type="text" id="room-pass-input" placeholder="e.g. rs7pass" class="w-full bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-white font-mono mt-1 focus:outline-none">
+                </div>
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="closeRoomCredentialsModal()" class="flex-1 bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+                <button onclick="saveRoomCredentials()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-xl text-xs">Upload Info</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW JOINED PLAYERS MODAL -->
+    <div id="history-players-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-3xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-sm">Players in Completed Match</h3>
+                <button onclick="closeHistoryPlayersModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="max-h-80 overflow-y-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-slate-800 text-slate-400">
+                            <th class="py-2 px-3 rounded-tl-lg">Sl.</th>
+                            <th class="py-2 px-3">App ID</th>
+                            <th class="py-2 px-3">Free Fire UID</th>
+                            <th class="py-2 px-3 rounded-tr-lg">In-Game Name (IGN)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-players-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchAdminScreen(screenName) {
+            document.querySelectorAll('.admin-screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            const targetScreen = document.getElementById(`screen-${screenName}`);
+            if (targetScreen) targetScreen.classList.add('active');
+
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+                if (btn.getAttribute('data-target') === screenName) {
+                    btn.classList.add('text-emerald-400', 'bg-emerald-500/10', 'font-bold');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-emerald-400', 'bg-emerald-500/10', 'font-bold');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'users': 'User Management',
+                'tournaments': 'Active Tournaments',
+                'history': 'Completed Matches History',
+                'wallet': 'Wallet Control'
+            };
+            document.getElementById('page-title').innerText = titles[screenName] || 'Admin Panel';
+        }
+    </script>
+</body>
+</html>
