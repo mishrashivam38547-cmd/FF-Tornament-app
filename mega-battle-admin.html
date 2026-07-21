@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Battle Admin Panel</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans p-4 max-w-md mx-auto pb-24 select-none">
+
+    <!-- Header -->
+    <header class="flex justify-between items-center border-b border-slate-900 pb-4 mb-4">
+        <div class="flex items-center space-x-2">
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 font-bold">
+                MB
+            </div>
+            <div>
+                <h1 class="text-sm font-black tracking-wider text-rose-400">MEGA BATTLE ADMIN</h1>
+                <p class="text-[10px] text-slate-400">Manage Featured Match</p>
+            </div>
+        </div>
+        <!-- Apne main admin panel ya index ka link yahan de sakte hain -->
+        <a href="index.html" class="text-xs bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-slate-300 hover:text-white">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Back
+        </a>
+    </header>
+
+    <!-- Form Container -->
+    <main class="space-y-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-trophy text-amber-400 mr-2"></i> Match Configuration</h3>
+                <span id="save-status" class="text-[10px] text-emerald-400 font-semibold hidden">Saved!</span>
+            </div>
+            <p class="text-[10px] text-slate-400">Yahan se aap Mega Battle card ki details aur status change kar sakte hain.</p>
+
+            <div class="space-y-3 pt-2">
+                <!-- Toggle Show/Hide -->
+                <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-300">Show Mega Battle on App</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="admin-show-card" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+
+                <!-- Type Selector -->
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase text-slate-400 font-semibold">Card Tag (Type)</label>
+                    <select id="admin-tournament-type" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500">
+                        <option value="Mega Battle">Mega Battle</option>
+                        <option value="Giveaway">Giveaway</option>
+                        <option value="VIP Custom">VIP Custom</option>
+                    </select>
+                </div>
+
+                <!-- Match Name Section -->
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase text-slate-400 font-semibold">Match Name / Title</label>
+                    <input type="text" id="admin-tournament-title" placeholder="e.g. Free Fire MAX Solo Clash" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500">
+                </div>
+
+                <!-- Prize Pool & Details -->
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase text-slate-400 font-semibold">Prize Pool & Details</label>
+                    <input type="text" id="admin-tournament-details" placeholder="e.g. Prize Pool: ₹10,000 | Entry: Free" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-rose-500">
+                </div>
+
+                <button onclick="saveMegaBattleSettings()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-md mt-2">
+                    Publish Changes Live
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyTfxnBHJvWfq7QEoMszl8OFrwY_rK59Q",
+            authDomain: "rs7esport-7a6cb.firebaseapp.com",
+            projectId: "rs7esport-7a6cb",
+            storageBucket: "rs7esport-7a6cb.firebasestorage.app",
+            messagingSenderId: "260824306083",
+            appId: "1:260824306083:web:86533606cc8ea4bce78a16"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Load current data when admin page opens
+        async function loadData() {
+            try {
+                const docRef = doc(db, "settings", "megaBattleMatch");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('admin-show-card').checked = data.showCard ?? true;
+                    document.getElementById('admin-tournament-type').value = data.type || "Mega Battle";
+                    document.getElementById('admin-tournament-title').value = data.title || "";
+                    document.getElementById('admin-tournament-details').value = data.details || "";
+                }
+            } catch (e) {
+                console.error("Error loading data:", e);
+            }
+        }
+        loadData();
+
+        // Save data to Firebase
+        window.saveMegaBattleSettings = async function() {
+            const showCard = document.getElementById('admin-show-card').checked;
+            const type = document.getElementById('admin-tournament-type').value;
+            const title = document.getElementById('admin-tournament-title').value.trim();
+            const details = document.getElementById('admin-tournament-details').value.trim();
+
+            if(!title) {
+                alert("Please enter a match name/title.");
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, "settings", "megaBattleMatch"), {
+                    showCard: showCard,
+                    type: type,
+                    title: title,
+                    details: details,
+                    updatedAt: new Date()
+                });
+
+                const statusEl = document.getElementById('save-status');
+                statusEl.classList.remove('hidden');
+                setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                alert("Mega Battle updated successfully!");
+            } catch (e) {
+                console.error("Error saving:", e);
+                alert("Failed to save changes.");
+            }
+        };
+    </script>
+</body>
+</html>
